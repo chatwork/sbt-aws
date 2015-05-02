@@ -1,5 +1,5 @@
 lazy val commonSettings = Seq(
-  version in ThisBuild := "1.0.0",
+  version in ThisBuild := "1.0.0-SNAPSHOT",
   organization in ThisBuild := "com.github.j5ik2o"
 )
 
@@ -7,7 +7,7 @@ val aws4sVersion = "1.0.2-SNAPSHOT"
 
 val awsSdkVersion = "1.9.22"
 
-lazy val root = (project in file(".")).
+lazy val root = (project in sbt.file(".")).
   settings(commonSettings: _*).
   settings(
     sbtPlugin := true,
@@ -21,10 +21,7 @@ lazy val root = (project in file(".")).
       "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/"
     ),
     libraryDependencies ++= Seq(
-      "com.amazonaws" % "aws-java-sdk" % awsSdkVersion,
-      "org.sisioh" %% "aws4s-dynamodb" % aws4sVersion withSources(),
       "org.sisioh" %% "aws4s-s3" % aws4sVersion withSources(),
-      "org.sisioh" %% "aws4s-sqs" % aws4sVersion withSources(),
       "commons-codec" % "commons-codec" % "1.8",
       "commons-io" % "commons-io" % "2.4"
     )

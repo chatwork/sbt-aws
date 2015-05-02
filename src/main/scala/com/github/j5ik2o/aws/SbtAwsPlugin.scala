@@ -11,26 +11,34 @@ import org.apache.commons.io.FileUtils
 import org.sisioh.aws4s.s3.Implicits._
 import sbt.Keys._
 import sbt._
-import sbt.plugins.JvmPlugin
+
+import scala.util.{Success, Try}
 
 object SbtAwsPlugin extends AutoPlugin {
-
-  override def requires: Plugins = JvmPlugin
 
   override def trigger = allRequirements
 
   object autoImport {
 
-    val regionName = SettingKey[String]("aws-region-name")
-    val credentialProfileName = SettingKey[String]("aws-credential-profile-name")
+    object AWS {
 
-    val bucketName = SettingKey[String]("s3-bucket-name")
-    val key = SettingKey[String]("s3-key")
-    val overwrite = SettingKey[Boolean]("s3-overwrite-object")
-    val file = SettingKey[File]("s3-file")
-    val resourceUrl = SettingKey[URL]("s3-resource-url")
-    val objectMetadata = SettingKey[ObjectMetadata]("s3-object-metadata")
-    val upload = TaskKey[Unit]("s3-upload", "Uploads files to an S3 bucket.")
+      val regionName = SettingKey[String]("aws-region-name")
+      val credentialProfileName = SettingKey[String]("aws-credential-profile-name")
+
+      object S3 {
+
+        val bucketName = SettingKey[String]("s3-bucket-name")
+        val key = SettingKey[String]("s3-key")
+        val overwriteObject = SettingKey[Boolean]("s3-overwrite-object")
+        val file = SettingKey[File]("s3-file")
+        val resourceUrl = SettingKey[String]("s3-resource-url")
+        val objectMetadata = SettingKey[ObjectMetadata]("s3-object-metadata")
+
+        val upload = TaskKey[Unit]("s3-upload", "Uploads files to an S3 bucket.")
+
+      }
+
+    }
 
   }
 
@@ -61,31 +69,34 @@ object SbtAwsPlugin extends AutoPlugin {
     DigestUtils.md5Hex(FileUtils.readFileToByteArray(file))
 
   import autoImport._
+  import AWS.S3._
+  import AWS._
 
-  def s3Upload(logger: Logger,
-               regionName: String, credentialProfileName: String,
-               bucketName: String, key: String, overwrite: Boolean, file: File, objectMetadata: ObjectMetadata) = {
+  private def s3Upload(logger: Logger,
+                       regionName: String, credentialProfileName: String,
+                       bucketName: String, key: String,
+                       overwrite: Boolean,
+                       file: File, objectMetadata: ObjectMetadata): Try[Unit] = {
     val client = createClient(classOf[AmazonS3Client], Region.getRegion(Regions.fromName(regionName)), credentialProfileName)
     val metadata = existingObjectMetadata(client, bucketName, key)
-    logger.debug("check-1")
     if (metadata.isEmpty || (overwrite && metadata.get.getETag != md5(file))) {
-      logger.debug("check-2")
-      client.requestPutObject(new PutObjectRequest(bucketName, key, file).withMetadata(objectMetadata)).get
-      logger.debug("check-3")
+      client.requestPutObject(new PutObjectRequest(bucketName, key, file).withMetadata(objectMetadata)).flatMap{ result =>
+        client.requestGetResourceUrl(bucketName, key).map(_ => ())
+      }
+    } else {
+      Success(())
     }
-    logger.debug("check-4")
   }
 
-  val aws4sVersion = "1.0.2-SNAPSHOT"
-
-  val awsSdkVersion = "1.9.22"
 
   override def projectSettings: Seq[Def.Setting[_]] = Seq(
     credentialProfileName := "default",
     regionName := Regions.AP_NORTHEAST_1.getName,
+    overwriteObject := false,
+    objectMetadata := new ObjectMetadata(),
     upload <<= (streams, regionName, credentialProfileName,
-      bucketName, key, overwrite, file, objectMetadata) map { (stream, rn, cpn, bn, k, ow, f, om) =>
-      s3Upload(stream.log, rn, cpn, bn, k, ow, f, om)
+      bucketName, key, overwriteObject, file, objectMetadata) map { (stream, r, cpn, bn, k, ow, f, om) =>
+      s3Upload(stream.log, r, cpn, bn, k, ow, f, om)
     }
   )
 

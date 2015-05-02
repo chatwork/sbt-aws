@@ -1,1 +1,1 @@
-logLevel := Level.Warn
+logLevel := Level.Debug

@@ -1,1 +1,3 @@
-> clean
+> s3-upload
+
+> s3-resource-url
