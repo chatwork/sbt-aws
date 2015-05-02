@@ -1,14 +1,6 @@
-name := "sbt-aws-plugin"
-
-organization := "com.github.j5ik2o"
-
-version := "1.0.0"
-
-scalaVersion := "2.10.5"
-
 lazy val commonSettings = Seq(
-  version in ThisBuild := version.value,
-  organization in ThisBuild := organization.value
+  version in ThisBuild := "1.0.0",
+  organization in ThisBuild := "com.github.j5ik2o"
 )
 
 val aws4sVersion = "1.0.2-SNAPSHOT"
@@ -19,9 +11,10 @@ lazy val root = (project in file(".")).
   settings(commonSettings: _*).
   settings(
     sbtPlugin := true,
-    name := name.value,
+    name := "sbt-aws-plugin",
     description := "TODO",
     publishMavenStyle := false,
+    scalaVersion := "2.10.5",
     resolvers ++= Seq(
       "Sonatype OSS Snapshot Repository" at "https://oss.sonatype.org/content/repositories/snapshots/",
       "Sonatype OSS Release Repository" at "https://oss.sonatype.org/content/repositories/releases/",
