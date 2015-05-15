@@ -28,8 +28,8 @@ object SbtAwsPlugin extends AutoPlugin {
     ebApplicationName in aws := "",
     ebApplicationDescription in aws := None,
     ebVersionLabel in aws := "1.0.0-SNAPSHOT",
-    ebCreateApplication in aws <<= createApplicationTask,
-    ebCreateApplicationVersion in aws <<= createApplicationVersionTask
+    ebCreateApplication in aws <<= ebCreateApplicationTask,
+    ebCreateApplicationVersion in aws <<= ebCreateApplicationVersionTask
   )
 
 }

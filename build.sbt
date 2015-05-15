@@ -23,11 +23,10 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.amazonaws" % "aws-java-sdk-core" % awsSdkVersion withSources(),
-  "com.amazonaws" % "aws-java-sdk-s3" % awsSdkVersion withSources(),
-  "com.amazonaws" % "aws-java-sdk-elasticbeanstalk" % awsSdkVersion withSources(),
+  "org.sisioh" %% "aws4s-core" % aws4sVersion withSources(),
   "org.sisioh" %% "aws4s-s3" % aws4sVersion withSources(),
   "org.sisioh" %% "aws4s-eb" % aws4sVersion withSources(),
+  "org.sisioh" %% "aws4s-cfn" % aws4sVersion withSources(),
   "commons-codec" % "commons-codec" % "1.8",
   "commons-io" % "commons-io" % "2.4"
 )
