@@ -2,7 +2,7 @@ package org.sisioh.sbt.aws
 
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.cloudformation.model.Stack
-import com.amazonaws.services.elasticbeanstalk.model.{OptionSpecification, ConfigurationOptionSetting, ApplicationVersionDescription, ApplicationDescription}
+import com.amazonaws.services.elasticbeanstalk.model.{ OptionSpecification, ConfigurationOptionSetting, ApplicationVersionDescription, ApplicationDescription }
 import com.amazonaws.services.s3.model.ObjectMetadata
 import sbt._
 
@@ -67,16 +67,13 @@ trait CfnKeys {
   val cfnStackDelete = taskKey[Unit]("cfn-stack-delete")
   val cfnStackUpdate = taskKey[String]("cfn-stack-update")
 
-
 }
 
-case class EbConfigurationTemplate
-(name: String, description: String,
- solutionStackName: String,
- optionSettings: Seq[ConfigurationOptionSetting],
- optionsToRemoves: Seq[OptionSpecification],
- recreate: Boolean
-)
+case class EbConfigurationTemplate(name: String, description: String,
+                                   solutionStackName: String,
+                                   optionSettings: Seq[ConfigurationOptionSetting],
+                                   optionsToRemoves: Seq[OptionSpecification],
+                                   recreate: Boolean)
 
 trait S3Keys {
 
@@ -99,5 +96,4 @@ object AwsKeys extends AwsKeys {
   object S3Keys extends S3Keys
   object CfnKeys extends CfnKeys
 }
-
 

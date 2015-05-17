@@ -2,8 +2,7 @@ package org.sisioh.sbt.aws
 
 import com.amazonaws.regions.Regions
 import SbtAws._
-import org.sisioh.config.{Configuration => SisiohConfiguration}
-import org.sisioh.sbt.aws
+import org.sisioh.config.{ Configuration => SisiohConfiguration }
 import sbt.Keys._
 import sbt._
 
@@ -13,7 +12,7 @@ object SbtAwsPlugin extends AutoPlugin {
 
   object autoImport {
 
-    val AwsKeys = aws.AwsKeys
+    val AwsKeys = org.sisioh.sbt.aws.AwsKeys
 
   }
 

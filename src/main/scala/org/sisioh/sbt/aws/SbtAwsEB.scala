@@ -11,7 +11,7 @@ import org.sisioh.aws4s.eb.Implicits._
 import org.sisioh.aws4s.eb.model._
 import sbt._
 
-import scala.util.{Success, Try}
+import scala.util.{ Success, Try }
 
 trait SbtAwsEB {
   this: SbtAws.type =>
@@ -36,12 +36,12 @@ trait SbtAwsEB {
     client.describeApplicationsAsTry(
       DescribeApplicationsRequestFactory.create().withApplicationNames(applicationName)
     ).flatMap { result =>
-      if (result.applications.nonEmpty) {
-        client.deleteApplicationAsTry(
-          new DeleteApplicationRequest(applicationName)
-        )
-      } else Success(())
-    }
+        if (result.applications.nonEmpty) {
+          client.deleteApplicationAsTry(
+            new DeleteApplicationRequest(applicationName)
+          )
+        } else Success(())
+      }
   }
 
   def ebDeleteApplicationTask(): Def.Initialize[Task[Unit]] = Def.task {
@@ -54,13 +54,13 @@ trait SbtAwsEB {
         .create()
         .withApplicationName(applicationName)
     ).flatMap { result =>
-      if (!result.getApplicationVersions.isEmpty) {
-        client.deleteApplicationVersionAsTry(
-          DeleteApplicationVersionRequestFactory
-            .create(applicationName, versionLabel)
-        )
-      } else Success()
-    }
+        if (!result.getApplicationVersions.isEmpty) {
+          client.deleteApplicationVersionAsTry(
+            DeleteApplicationVersionRequestFactory
+              .create(applicationName, versionLabel)
+          )
+        } else Success()
+      }
   }
 
   def ebDeleteApplicationVersionTask(): Def.Initialize[Task[Unit]] = Def.task {
@@ -111,24 +111,24 @@ trait SbtAwsEB {
     client.describeApplicationsAsTry(
       DescribeApplicationsRequestFactory.create().withApplicationNames(applicationName)
     ).flatMap { result =>
-      if (result.getApplications.isEmpty) {
-        client.createApplicationAsTry(
-          CreateApplicationRequestFactory
-            .create(applicationName)
-            .withDescriptionOpt(description)
-        ).map {
-          _.applicationOpt.get
-        }
-      } else {
-        client.updateApplicationAsTry(
-          UpdateApplicationRequestFactory
-            .create(applicationName)
-            .withDescriptionOpt(description)
-        ).map {
-          _.applicationOpt.get
+        if (result.getApplications.isEmpty) {
+          client.createApplicationAsTry(
+            CreateApplicationRequestFactory
+              .create(applicationName)
+              .withDescriptionOpt(description)
+          ).map {
+              _.applicationOpt.get
+            }
+        } else {
+          client.updateApplicationAsTry(
+            UpdateApplicationRequestFactory
+              .create(applicationName)
+              .withDescriptionOpt(description)
+          ).map {
+              _.applicationOpt.get
+            }
         }
       }
-    }
   }
 
   def ebCreateApplicationTask(): Def.Initialize[Task[ApplicationDescription]] = Def.task {
@@ -141,18 +141,18 @@ trait SbtAwsEB {
         .create()
         .withApplicationName(applicationName)
     ).flatMap { result =>
-      if (result.getApplicationVersions.isEmpty) {
-        client.createApplicationVersionAsTry(
-          CreateApplicationVersionRequestFactory
-            .create(applicationName, versionLabel)
-        ).map(_.applicationVersionOpt.get)
-      } else {
-        client.updateApplicationVersionAsTry(
-          UpdateApplicationVersionRequestFactory
-            .create(applicationName, versionLabel)
-        ).map(_.applicationVersionOpt.get)
+        if (result.getApplicationVersions.isEmpty) {
+          client.createApplicationVersionAsTry(
+            CreateApplicationVersionRequestFactory
+              .create(applicationName, versionLabel)
+          ).map(_.applicationVersionOpt.get)
+        } else {
+          client.updateApplicationVersionAsTry(
+            UpdateApplicationVersionRequestFactory
+              .create(applicationName, versionLabel)
+          ).map(_.applicationVersionOpt.get)
+        }
       }
-    }
   }
 
   def ebCreateApplicationVersionTask(): Def.Initialize[Task[ApplicationVersionDescription]] = Def.task {
@@ -172,32 +172,42 @@ trait SbtAwsEB {
           .create()
           .withApplicationNames(applicationName)
       ).map { result =>
-        result.applications
-          .head.configurationTemplates
-          .find(_ == template.name).get
-      }.flatMap { result =>
-        if (template.recreate) {
-          for {
-            _ <- client.deleteConfigurationTemplateAsTry(
-              DeleteConfigurationTemplateRequestFactory
-                .create()
-                .withApplicationName(applicationName)
-                .withTemplateName(template.name)
-            )
-            result <- client.createConfigurationTemplateAsTry(
-              CreateConfigurationTemplateRequestFactory
+          result.applications
+            .head.configurationTemplates
+            .find(_ == template.name).get
+        }.flatMap { result =>
+          if (template.recreate) {
+            for {
+              _ <- client.deleteConfigurationTemplateAsTry(
+                DeleteConfigurationTemplateRequestFactory
+                  .create()
+                  .withApplicationName(applicationName)
+                  .withTemplateName(template.name)
+              )
+              result <- client.createConfigurationTemplateAsTry(
+                CreateConfigurationTemplateRequestFactory
+                  .create()
+                  .withApplicationName(applicationName)
+                  .withTemplateName(template.name)
+                  .withDescription(template.description)
+                  .withOptionSettings(template.optionSettings)
+              )
+            } yield {
+              result.applicationNameOpt.get
+            }
+          } else {
+            client.updateConfigurationTemplateAsTry(
+              UpdateConfigurationTemplateRequestFactory
                 .create()
                 .withApplicationName(applicationName)
                 .withTemplateName(template.name)
                 .withDescription(template.description)
                 .withOptionSettings(template.optionSettings)
-            )
-          } yield {
-            result.applicationNameOpt.get
+            ).map(_.applicationNameOpt.get)
           }
-        } else {
-          client.updateConfigurationTemplateAsTry(
-            UpdateConfigurationTemplateRequestFactory
+        }.orElse {
+          client.createConfigurationTemplateAsTry(
+            CreateConfigurationTemplateRequestFactory
               .create()
               .withApplicationName(applicationName)
               .withTemplateName(template.name)
@@ -205,16 +215,6 @@ trait SbtAwsEB {
               .withOptionSettings(template.optionSettings)
           ).map(_.applicationNameOpt.get)
         }
-      }.orElse {
-        client.createConfigurationTemplateAsTry(
-          CreateConfigurationTemplateRequestFactory
-            .create()
-            .withApplicationName(applicationName)
-            .withTemplateName(template.name)
-            .withDescription(template.description)
-            .withOptionSettings(template.optionSettings)
-        ).map(_.applicationNameOpt.get)
-      }
     }
   }
 

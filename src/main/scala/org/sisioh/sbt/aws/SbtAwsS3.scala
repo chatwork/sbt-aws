@@ -9,7 +9,7 @@ import org.sisioh.aws4s.s3.Implicits._
 import sbt.Keys._
 import sbt._
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 
 trait SbtAwsS3 {
   this: SbtAws.type =>

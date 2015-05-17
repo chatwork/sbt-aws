@@ -9,11 +9,11 @@ import com.amazonaws.services.cloudformation.model.Stack
 import AwsKeys.CfnKeys._
 import AwsKeys._
 import org.sisioh.aws4s.cfn.Implicits._
-import org.sisioh.aws4s.cfn.model.{DescribeStacksRequestFactory, ValidateTemplateRequestFactory}
+import org.sisioh.aws4s.cfn.model.{ DescribeStacksRequestFactory, ValidateTemplateRequestFactory }
 import sbt.Keys._
 import sbt._
 
-import scala.util.{Success, Failure, Try}
+import scala.util.{ Success, Failure, Try }
 
 trait SbtAwsCfn {
   this: SbtAws.type =>
@@ -44,11 +44,11 @@ trait SbtAwsCfn {
     val files = (cfnTemplates in aws).value
     logger.info("stack validate: files = " + files)
     val results = files.map(validateTemplate(cfnClient.value, logger))
-    results.foreach{ tr =>
-        tr._2 match {
-          case Failure(e) => logger.error(s"validation of ${tr._1} failed with: \n ${e.getMessage}")
-          case _ =>
-        }
+    results.foreach { tr =>
+      tr._2 match {
+        case Failure(e) => logger.error(s"validation of ${tr._1} failed with: \n ${e.getMessage}")
+        case _          =>
+      }
     }
     if (results.exists(_._2.isFailure)) {
       sys.error("some AWS CloudFormation templates failed to validate!")
@@ -61,13 +61,13 @@ trait SbtAwsCfn {
     val stackName = (cfnStackName in aws).value
     logger.info("stack name: name = " + stackName)
     val request = DescribeStacksRequestFactory.create().withStackName(stackName)
-    val result = cfnClient.value.describeStacksAsTry(request).map{ result =>
+    val result = cfnClient.value.describeStacksAsTry(request).map { result =>
       result.stacks
-    }.recoverWith{
+    }.recoverWith {
       case ex: AmazonServiceException if ex.getStatusCode == 400 =>
         Success(Seq.empty)
     }
-    result.foreach{ stacks =>
+    result.foreach { stacks =>
       stacks.foreach(stack => logger.info(stack.toString))
     }
     result.get

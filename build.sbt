@@ -1,3 +1,5 @@
+import scalariform.formatter.preferences._
+
 sonatypeProfileName := "org.sisioh"
 
 organization in ThisBuild := "org.sisioh"
@@ -14,7 +16,7 @@ scalaVersion := "2.10.5"
 
 val aws4sVersion = "1.0.5"
 
-val awsSdkVersion = "1.9.22"
+val sisiohConfigVersion = "0.0.7"
 
 resolvers ++= Seq(
   "Sonatype OSS Snapshot Repository" at "https://oss.sonatype.org/content/repositories/snapshots/",
@@ -27,7 +29,7 @@ libraryDependencies ++= Seq(
   "org.sisioh" %% "aws4s-s3" % aws4sVersion withSources(),
   "org.sisioh" %% "aws4s-eb" % aws4sVersion withSources(),
   "org.sisioh" %% "aws4s-cfn" % aws4sVersion withSources(),
-  "org.sisioh" %% "sisioh-config" % "0.0.4" withSources(),
+  "org.sisioh" %% "sisioh-config" % sisiohConfigVersion withSources(),
   "commons-codec" % "commons-codec" % "1.8",
   "commons-io" % "commons-io" % "2.4"
 )
@@ -40,3 +42,12 @@ def projectId(state: State) = extracted(state).currentProject.id
 
 def extracted(state: State) = Project extract state
 
+scalariformSettings
+
+ScalariformKeys.preferences :=
+  ScalariformKeys.preferences.value
+    .setPreference(AlignParameters, true)
+    .setPreference(AlignSingleLineCaseStatements, true)
+    .setPreference(DoubleIndentClassDeclaration, true)
+    .setPreference(PreserveDanglingCloseParenthesis, true)
+    .setPreference(MultilineScaladocCommentsStartOnFirstLine, false)

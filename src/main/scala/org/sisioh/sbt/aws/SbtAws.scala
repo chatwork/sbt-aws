@@ -4,7 +4,7 @@ import java.io.File
 
 import com.amazonaws.AmazonWebServiceClient
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
-import com.amazonaws.auth.{AWSCredentialsProviderChain, EnvironmentVariableCredentialsProvider, InstanceProfileCredentialsProvider, SystemPropertiesCredentialsProvider}
+import com.amazonaws.auth.{ AWSCredentialsProviderChain, EnvironmentVariableCredentialsProvider, InstanceProfileCredentialsProvider, SystemPropertiesCredentialsProvider }
 import com.amazonaws.regions.Region
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.io.FileUtils
@@ -27,9 +27,5 @@ object SbtAws extends SbtAwsS3 with SbtAwsEB with SbtAwsCfn {
   private[aws] def md5(file: File): String =
     DigestUtils.md5Hex(FileUtils.readFileToByteArray(file))
 
-
 }
-
-
-
 
