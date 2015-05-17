@@ -1,10 +1,6 @@
-version in ThisBuild := "1.0.0-SNAPSHOT"
+sonatypeProfileName := "org.sisioh"
 
-organization in ThisBuild := "com.github.j5ik2o"
-
-val aws4sVersion = "1.0.3-SNAPSHOT"
-
-val awsSdkVersion = "1.9.22"
+organization in ThisBuild := "org.sisioh"
 
 sbtPlugin := true
 
@@ -15,6 +11,10 @@ description := "TODO"
 publishMavenStyle := false
 
 scalaVersion := "2.10.5"
+
+val aws4sVersion = "1.0.5"
+
+val awsSdkVersion = "1.9.22"
 
 resolvers ++= Seq(
   "Sonatype OSS Snapshot Repository" at "https://oss.sonatype.org/content/repositories/snapshots/",
@@ -27,6 +27,7 @@ libraryDependencies ++= Seq(
   "org.sisioh" %% "aws4s-s3" % aws4sVersion withSources(),
   "org.sisioh" %% "aws4s-eb" % aws4sVersion withSources(),
   "org.sisioh" %% "aws4s-cfn" % aws4sVersion withSources(),
+  "org.sisioh" %% "sisioh-config" % "0.0.4" withSources(),
   "commons-codec" % "commons-codec" % "1.8",
   "commons-io" % "commons-io" % "2.4"
 )
