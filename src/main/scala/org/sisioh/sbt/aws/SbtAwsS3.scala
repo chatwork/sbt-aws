@@ -1,10 +1,10 @@
-package com.github.j5ik2o.aws
+package org.sisioh.sbt.aws
 
 import com.amazonaws.regions.Region
 import com.amazonaws.services.s3._
 import com.amazonaws.services.s3.model._
-import com.github.j5ik2o.aws.AwsKeys.S3Keys._
-import com.github.j5ik2o.aws.AwsKeys._
+import AwsKeys.S3Keys._
+import AwsKeys._
 import org.sisioh.aws4s.s3.Implicits._
 import sbt.Keys._
 import sbt._

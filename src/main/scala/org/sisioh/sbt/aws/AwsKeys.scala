@@ -1,9 +1,12 @@
-package com.github.j5ik2o.aws
+package org.sisioh.sbt.aws
 
 import com.amazonaws.regions.Regions
+import com.amazonaws.services.cloudformation.model.Stack
 import com.amazonaws.services.elasticbeanstalk.model.{OptionSpecification, ConfigurationOptionSetting, ApplicationVersionDescription, ApplicationDescription}
 import com.amazonaws.services.s3.model.ObjectMetadata
 import sbt._
+
+import org.sisioh.config.{ Configuration => SisiohConfiguration }
 
 trait AwsKeys {
 
@@ -12,6 +15,12 @@ trait AwsKeys {
   lazy val region = SettingKey[Regions]("region")
 
   lazy val credentialProfileName = SettingKey[String]("credential-profile-name")
+
+  lazy val environmentName = SettingKey[String]("env")
+
+  lazy val configFile = SettingKey[File]("configFile")
+
+  lazy val config = SettingKey[SisiohConfiguration]("config")
 
 }
 
@@ -30,6 +39,34 @@ trait EBKeys {
   lazy val ebCreateApplication = TaskKey[ApplicationDescription]("create-application")
 
   lazy val ebCreateApplicationVersion = TaskKey[ApplicationVersionDescription]("create-application-version")
+
+}
+
+trait CfnKeys {
+
+  type Parameters = Map[String, String]
+  type Tags = Map[String, String]
+
+  val cfnTemplatesSourceFolder = settingKey[File]("cfn-template-source-folder")
+  val cfnTemplates = settingKey[Seq[File]]("cfn-templates")
+
+  val cfnStackTemplate = taskKey[String]("cfn-stack-template")
+  val cfnStackParams = taskKey[Parameters]("cfn-stack-params")
+  val cfnStackTags = settingKey[Tags]("cfn-stack-tags")
+  val cfnStackCapabilities = settingKey[Seq[String]]("cfn-stack-capabilities")
+  val cfnStackRegion = settingKey[String]("cfn-stack-region")
+  val cfnStackName = settingKey[String]("cfn-stack-name")
+
+  // stack operations
+  val cfnStackValidate = taskKey[Seq[File]]("cfn-validate-templates")
+  val cfnStackStatus = taskKey[Option[String]]("cfn-stack-status")
+  val cfnStackWait = taskKey[Option[String]]("cfn-stack-wait")
+
+  val cfnStackDescribe = taskKey[Option[Stack]]("cfn-stack-describe")
+  val cfnStackCreate = taskKey[String]("cfn-stack-create")
+  val cfnStackDelete = taskKey[Unit]("cfn-stack-delete")
+  val cfnStackUpdate = taskKey[String]("cfn-stack-update")
+
 
 }
 
@@ -60,6 +97,7 @@ trait S3Keys {
 object AwsKeys extends AwsKeys {
   object EBKeys extends EBKeys
   object S3Keys extends S3Keys
+  object CfnKeys extends CfnKeys
 }
 
 

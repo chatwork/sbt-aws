@@ -1,4 +1,4 @@
-package com.github.j5ik2o.aws
+package org.sisioh.sbt.aws
 
 import java.io.File
 
@@ -6,24 +6,10 @@ import com.amazonaws.AmazonWebServiceClient
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
 import com.amazonaws.auth.{AWSCredentialsProviderChain, EnvironmentVariableCredentialsProvider, InstanceProfileCredentialsProvider, SystemPropertiesCredentialsProvider}
 import com.amazonaws.regions.Region
-import com.amazonaws.services.elasticbeanstalk._
-import com.amazonaws.services.elasticbeanstalk.model._
-import com.amazonaws.services.s3._
-import com.amazonaws.services.s3.model._
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.io.FileUtils
-import org.sisioh.aws4s.eb.Implicits._
-import org.sisioh.aws4s.eb.model._
-import org.sisioh.aws4s.s3.Implicits._
-import sbt._
-import Keys._
-import AwsKeys._
-import AwsKeys.S3Keys._
-import AwsKeys.EBKeys._
 
-import scala.util.{Failure, Success, Try}
-
-object SbtAws extends SbtAwsS3 with SbtAwsEB {
+object SbtAws extends SbtAwsS3 with SbtAwsEB with SbtAwsCfn {
 
   private[aws] def newCredentialsProvider(profileName: String) = {
     new AWSCredentialsProviderChain(
