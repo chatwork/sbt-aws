@@ -27,8 +27,17 @@ object SbtAwsPlugin extends AutoPlugin {
     environmentName in aws := System.getProperty("env", "dev"),
     configFile in aws := file((environmentName in aws).value + ".conf"),
     config in aws := SisiohConfiguration.parseFile((configFile in aws).value),
-    s3OverwriteObject in aws := false,
+    poolingInterval in aws := 1000,
+    s3OverwriteObject in aws := {
+      (config in aws).value.getBooleanValue(s3OverwriteObject.key.label).getOrElse(false)
+    },
+    s3CreateBucket in aws := {
+      (config in aws).value.getBooleanValue(s3CreateBucket.key.label).getOrElse(false)
+    },
     s3ObjectMetadata in aws := None,
+    s3File := None,
+    s3Key := "",
+    s3BucketName := "",
     s3Upload in aws <<= s3UploadTask,
     ebApplicationName in aws := "",
     ebApplicationDescription in aws := None,
@@ -43,11 +52,17 @@ object SbtAwsPlugin extends AutoPlugin {
       templates.get
     },
     cfnStackTemplate in aws <<= stackTemplatesTask,
-    cfnStackParams in aws := Map.empty,
+    cfnStackParams in aws := {
+      val r = (config in aws).value.getConfiguration(cfnStackParams.key.label)
+        .map(_.entrySet.map { case (k, v) => (k, v.render()) }.toMap).getOrElse(Map.empty)
+      r
+    },
     cfnStackTags in aws := Map.empty,
     cfnStackCapabilities in aws := Seq.empty,
     cfnStackRegion in aws := "",
-    cfnStackName in aws := (config in aws).value.getStringValue("cfn-stack-name").get,
+    cfnStackName in aws := {
+      (config in aws).value.getStringValue("cfn-stack-name").get
+    },
     // ---
     cfnStackValidate in aws <<= stackValidateTask(),
     cfnStackDescribe in aws <<= describeStacksTask().map(s => s.headOption),

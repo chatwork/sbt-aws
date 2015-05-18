@@ -162,6 +162,7 @@ trait SbtAwsCfn {
     val params = (cfnStackParams in aws).value
     val tags = (cfnStackTags in aws).value
     val client = cfnClient.value
+    val interval = (poolingInterval in aws).value
     logger.info("stack name: name = " + stackName)
     val result = createStack(client, stackName, templateBody, capabilities, params, tags)
     result.foreach { result =>
@@ -171,7 +172,7 @@ trait SbtAwsCfn {
     progressStatuses.foreach {
       s =>
         logger.info(s"status = $s")
-        Thread.sleep(10000)
+        Thread.sleep(interval)
     }
     headOption()
   }
@@ -197,6 +198,7 @@ trait SbtAwsCfn {
     val logger = streams.value.log
     val stackName = (cfnStackName in aws).value
     val client = cfnClient.value
+    val interval = (poolingInterval in aws).value
     logger.info("stack name: name = " + stackName)
     val result = deleteStack(client, stackName)
     result.foreach { result =>
@@ -206,7 +208,7 @@ trait SbtAwsCfn {
     progressStatuses.foreach {
       s =>
         logger.info(s"status = $s")
-        Thread.sleep(10000)
+        Thread.sleep(interval)
     }
     headOption()
   }
@@ -231,6 +233,7 @@ trait SbtAwsCfn {
     val capabilities = (cfnStackCapabilities in aws).value
     val params = (cfnStackParams in aws).value
     val client = cfnClient.value
+
     logger.info("stack name: name = " + stackName)
     val result = updateStack(client, stackName, templateBody, capabilities, params).map(e => Some(e)).recoverWith {
       case ex: AmazonServiceException if ex.getStatusCode == 400 =>
@@ -252,6 +255,8 @@ trait SbtAwsCfn {
     val capabilities = (cfnStackCapabilities in aws).value
     val params = (cfnStackParams in aws).value
     val client = cfnClient.value
+    val interval = (poolingInterval in aws).value
+
     logger.info("stack name: name = " + stackName)
     val result = updateStack(client, stackName, templateBody, capabilities, params)
     result.foreach { result =>
@@ -261,7 +266,7 @@ trait SbtAwsCfn {
     progressStatuses.foreach {
       s =>
         logger.info(s"status = $s")
-        Thread.sleep(10000)
+        Thread.sleep(interval)
     }
     headOption()
   }
@@ -277,11 +282,12 @@ trait SbtAwsCfn {
   def waitStackTask(): Def.Initialize[Task[Option[String]]] = Def.task {
     val client = cfnClient.value
     val stackName = (cfnStackName in aws).value
+    val interval = (poolingInterval in aws).value
 
     val (progressStatuses, headOption) = waitStack(client, stackName)
     progressStatuses.foreach {
       s =>
-        Thread.sleep(10000)
+        Thread.sleep(interval)
     }
     headOption()
 

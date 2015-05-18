@@ -2,43 +2,44 @@ package org.sisioh.sbt.aws
 
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.cloudformation.model.Stack
-import com.amazonaws.services.elasticbeanstalk.model.{ OptionSpecification, ConfigurationOptionSetting, ApplicationVersionDescription, ApplicationDescription }
+import com.amazonaws.services.elasticbeanstalk.model.{ ApplicationDescription, ApplicationVersionDescription, ConfigurationOptionSetting, OptionSpecification }
 import com.amazonaws.services.s3.model.ObjectMetadata
-import sbt._
-
 import org.sisioh.config.{ Configuration => SisiohConfiguration }
+import sbt._
 
 trait AwsKeys {
 
-  lazy val aws = TaskKey[Unit]("aws")
+  lazy val aws = taskKey[Unit]("aws")
 
-  lazy val region = SettingKey[Regions]("region")
+  lazy val region = settingKey[Regions]("region")
 
-  lazy val credentialProfileName = SettingKey[String]("credential-profile-name")
+  lazy val credentialProfileName = settingKey[String]("credential-profile-name")
 
-  lazy val environmentName = SettingKey[String]("env")
+  lazy val environmentName = settingKey[String]("env")
 
-  lazy val configFile = SettingKey[File]("configFile")
+  lazy val configFile = settingKey[File]("configFile")
 
-  lazy val config = SettingKey[SisiohConfiguration]("config")
+  lazy val config = settingKey[SisiohConfiguration]("config")
+
+  lazy val poolingInterval = settingKey[Int]("pooling-interval")
 
 }
 
 trait EBKeys {
 
-  lazy val ebApplicationName = SettingKey[String]("eb-application-name")
+  lazy val ebApplicationName = settingKey[String]("eb-application-name")
 
-  lazy val ebApplicationDescription = SettingKey[Option[String]]("eb-application-desc")
+  lazy val ebApplicationDescription = settingKey[Option[String]]("eb-application-desc")
 
-  lazy val ebVersionLabel = SettingKey[String]("eb-version-label")
+  lazy val ebVersionLabel = settingKey[String]("eb-version-label")
 
-  lazy val ebTemplateName = SettingKey[String]("eb-template-name")
+  lazy val ebTemplateName = settingKey[String]("eb-template-name")
 
-  lazy val ebTemplates = SettingKey[Seq[EbConfigurationTemplate]]("eb-templates")
+  lazy val ebTemplates = settingKey[Seq[EbConfigurationTemplate]]("eb-templates")
 
-  lazy val ebCreateApplication = TaskKey[ApplicationDescription]("create-application")
+  lazy val ebCreateApplication = taskKey[ApplicationDescription]("create-application")
 
-  lazy val ebCreateApplicationVersion = TaskKey[ApplicationVersionDescription]("create-application-version")
+  lazy val ebCreateApplicationVersion = taskKey[ApplicationVersionDescription]("create-application-version")
 
 }
 
@@ -75,31 +76,36 @@ trait CfnKeys {
 
 }
 
+trait S3Keys {
+
+  lazy val s3BucketName = settingKey[String]("s3-bucket-name")
+
+  lazy val s3Key = settingKey[String]("s3-key")
+
+  lazy val s3File = settingKey[Option[File]]("s3-file")
+
+  lazy val s3ObjectMetadata = settingKey[Option[ObjectMetadata]]("s3-object-metadata")
+
+  lazy val s3OverwriteObject = settingKey[Boolean]("s3-overwrite-object")
+
+  lazy val s3Upload = taskKey[Option[String]]("s3-upload")
+
+  lazy val s3CreateBucket = settingKey[Boolean]("s3-create-bucket")
+
+}
+
+object AwsKeys extends AwsKeys {
+
+  object EBKeys extends EBKeys
+
+  object S3Keys extends S3Keys
+
+  object CfnKeys extends CfnKeys
+
+}
+
 case class EbConfigurationTemplate(name: String, description: String,
                                    solutionStackName: String,
                                    optionSettings: Seq[ConfigurationOptionSetting],
                                    optionsToRemoves: Seq[OptionSpecification],
                                    recreate: Boolean)
-
-trait S3Keys {
-
-  lazy val s3BucketName = SettingKey[String]("s3-bucket-name")
-
-  lazy val s3Key = SettingKey[String]("s3-key")
-
-  lazy val s3File = SettingKey[File]("s3-file")
-
-  lazy val s3ObjectMetadata = SettingKey[Option[ObjectMetadata]]("s3-object-metadata")
-
-  lazy val s3OverwriteObject = SettingKey[Boolean]("s3-overwrite-object", "Overwrite file on S3.")
-
-  lazy val s3Upload = TaskKey[Option[String]]("s3-upload", "Uploads files to an S3 bucket.")
-
-}
-
-object AwsKeys extends AwsKeys {
-  object EBKeys extends EBKeys
-  object S3Keys extends S3Keys
-  object CfnKeys extends CfnKeys
-}
-

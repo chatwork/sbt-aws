@@ -14,7 +14,7 @@ publishMavenStyle := false
 
 scalaVersion := "2.10.5"
 
-val aws4sVersion = "1.0.5"
+val aws4sVersion = "1.0.7"
 
 val sisiohConfigVersion = "0.0.7"
 
