@@ -1,4 +1,4 @@
-logLevel := Level.Debug
+logLevel := Level.Info
 
 resolvers ++= Seq(
   "Sonatype OSS Snapshot Repository" at "https://oss.sonatype.org/content/repositories/snapshots/",

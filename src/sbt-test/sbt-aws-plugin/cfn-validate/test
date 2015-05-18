@@ -1,3 +1,2 @@
-> aws::cfnStackValidate
+> aws::cfnStackStatus
 
-> aws::cfnStackDescribe

@@ -1,8 +1,8 @@
 package org.sisioh.sbt.aws
 
 import com.amazonaws.regions.Regions
-import SbtAws._
 import org.sisioh.config.{ Configuration => SisiohConfiguration }
+import org.sisioh.sbt.aws.SbtAws._
 import sbt.Keys._
 import sbt._
 
@@ -42,11 +42,22 @@ object SbtAwsPlugin extends AutoPlugin {
       val templates = (cfnTemplatesSourceFolder in aws).value ** GlobFilter("*.template")
       templates.get
     },
-    watchSources <++= (cfnTemplates in aws) map identity,
+    cfnStackTemplate in aws <<= stackTemplatesTask,
+    cfnStackParams in aws := Map.empty,
+    cfnStackTags in aws := Map.empty,
+    cfnStackCapabilities in aws := Seq.empty,
+    cfnStackRegion in aws := "",
     cfnStackName in aws := (config in aws).value.getStringValue("cfn-stack-name").get,
-    cfnStackValidate in aws <<= stackValidateTask,
-    cfnStackCapabilities in aws := Seq(),
-    cfnStackDescribe <<= describeStacksTask().map(s => s.headOption)
+    // ---
+    cfnStackValidate in aws <<= stackValidateTask(),
+    cfnStackDescribe in aws <<= describeStacksTask().map(s => s.headOption),
+    cfnStackStatus in aws <<= statusStackTask(),
+    cfnStackCreate in aws <<= createStackTask(),
+    cfnStackUpdate in aws <<= updateStackTask(),
+    cfnStackDelete in aws <<= deleteStackTask(),
+    cfnStackWait in aws <<= waitStackTask(),
+    watchSources <++= (cfnTemplates in aws) map identity
   )
 
 }
+
