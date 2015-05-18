@@ -6,11 +6,10 @@ import java.util
 import com.amazonaws.AmazonServiceException
 import com.amazonaws.regions.Region
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClient
-import com.amazonaws.services.cloudformation.model.{ UpdateStackResult, Parameter, Stack, Tag }
+import com.amazonaws.services.cloudformation.model.{ Parameter, Stack, Tag, UpdateStackResult }
 import org.sisioh.aws4s.cfn.Implicits._
 import org.sisioh.aws4s.cfn.model._
-import org.sisioh.sbt.aws.AwsKeys.CfnKeys._
-import org.sisioh.sbt.aws.AwsKeys._
+import org.sisioh.sbt.aws.SbtAwsPlugin.AwsKeys._
 import sbt.Keys._
 import sbt._
 

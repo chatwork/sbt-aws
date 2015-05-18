@@ -5,11 +5,10 @@ import java.io.File
 import com.amazonaws.regions.Region
 import com.amazonaws.services.elasticbeanstalk._
 import com.amazonaws.services.elasticbeanstalk.model._
-import AwsKeys.EBKeys._
-import AwsKeys._
 import org.sisioh.aws4s.eb.Implicits._
 import org.sisioh.aws4s.eb.model._
 import sbt._
+import SbtAwsPlugin.AwsKeys._
 
 import scala.util.{ Success, Try }
 

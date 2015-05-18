@@ -5,10 +5,9 @@ import com.amazonaws.services.s3._
 import com.amazonaws.services.s3.model._
 import org.sisioh.aws4s.s3.Implicits._
 import org.sisioh.aws4s.s3.model.PutObjectRequestFactory
-import org.sisioh.sbt.aws.AwsKeys.S3Keys._
-import org.sisioh.sbt.aws.AwsKeys._
 import sbt._
 
+import SbtAwsPlugin.AwsKeys._
 import scala.util.{ Failure, Success, Try }
 
 trait SbtAwsS3 {
