@@ -63,9 +63,15 @@ trait CfnKeys {
   val cfnStackWait = taskKey[Option[String]]("cfn-stack-wait")
 
   val cfnStackDescribe = taskKey[Option[Stack]]("cfn-stack-describe")
+
   val cfnStackCreate = taskKey[String]("cfn-stack-create")
+  val cfnStackCreateAndWait = taskKey[Option[String]]("cfn-stack-create-wait")
+
+  val cfnStackUpdate = taskKey[Option[String]]("cfn-stack-update")
+  val cfnStackUpdateAndWait = taskKey[Option[String]]("cfn-stack-update-wait")
+
   val cfnStackDelete = taskKey[Unit]("cfn-stack-delete")
-  val cfnStackUpdate = taskKey[String]("cfn-stack-update")
+  val cfnStackDeleteAndWait = taskKey[Option[String]]("cfn-stack-delete-wait")
 
 }
 

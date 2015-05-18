@@ -53,8 +53,11 @@ object SbtAwsPlugin extends AutoPlugin {
     cfnStackDescribe in aws <<= describeStacksTask().map(s => s.headOption),
     cfnStackStatus in aws <<= statusStackTask(),
     cfnStackCreate in aws <<= createStackTask(),
+    cfnStackCreateAndWait in aws <<= createStackAndWaitTask(),
     cfnStackUpdate in aws <<= updateStackTask(),
+    cfnStackUpdateAndWait in aws <<= updateStackAndWaitTask(),
     cfnStackDelete in aws <<= deleteStackTask(),
+    cfnStackDeleteAndWait in aws <<= deleteStackAndWaitTask(),
     cfnStackWait in aws <<= waitStackTask(),
     watchSources <++= (cfnTemplates in aws) map identity
   )
