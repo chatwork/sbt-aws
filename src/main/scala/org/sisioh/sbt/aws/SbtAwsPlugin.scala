@@ -22,9 +22,13 @@ object SbtAwsPlugin extends AutoPlugin {
 
     lazy val environmentName = settingKey[String]("env")
 
-    lazy val configFile = settingKey[File]("configFile")
+    lazy val configFileFolder = settingKey[File]("config-folder")
+
+    lazy val configFile = settingKey[File]("config-file")
 
     lazy val config = settingKey[SisiohConfiguration]("config")
+
+    lazy val awsConfig = settingKey[SisiohConfiguration]("aws-config")
 
     lazy val poolingInterval = settingKey[Int]("pooling-interval")
 
@@ -66,7 +70,7 @@ object SbtAwsPlugin extends AutoPlugin {
 
     val cfnStackDescribe = taskKey[Option[Stack]]("cfn-stack-describe")
 
-    val cfnStackCreate = taskKey[String]("cfn-stack-create")
+    val cfnStackCreate = taskKey[Option[String]]("cfn-stack-create")
     val cfnStackCreateAndWait = taskKey[Option[String]]("cfn-stack-create-wait")
 
     val cfnStackUpdate = taskKey[Option[String]]("cfn-stack-update")
@@ -74,6 +78,8 @@ object SbtAwsPlugin extends AutoPlugin {
 
     val cfnStackDelete = taskKey[Unit]("cfn-stack-delete")
     val cfnStackDeleteAndWait = taskKey[Option[String]]("cfn-stack-delete-wait")
+
+    val cfnStackCreateOrUpdateAndWait = taskKey[Option[String]]("cfn-stack-create-or-update-wait")
 
     // ---
 
@@ -102,8 +108,18 @@ object SbtAwsPlugin extends AutoPlugin {
     credentialProfileName in aws := "default",
     region in aws := Regions.AP_NORTHEAST_1,
     environmentName in aws := System.getProperty("env", "dev"),
-    configFile in aws := file((environmentName in aws).value + ".conf"),
-    config in aws := SisiohConfiguration.parseFile((configFile in aws).value),
+    configFileFolder in aws := file("env"),
+    configFile in aws := {
+      val parent = (configFileFolder in aws).value
+      val file = parent / ((environmentName in aws).value + ".conf")
+      file
+    },
+    config in aws := {
+      Option(SisiohConfiguration.parseFile((configFile in aws).value)).getOrElse(SisiohConfiguration.empty)
+    },
+    awsConfig in aws := {
+      (config in aws).value.getConfiguration(aws.key.label).getOrElse(SisiohConfiguration.empty)
+    },
     poolingInterval in aws := 1000,
     s3OverwriteObject in aws := {
       (config in aws).value.getBooleanValue(s3OverwriteObject.key.label).getOrElse(false)
@@ -122,7 +138,7 @@ object SbtAwsPlugin extends AutoPlugin {
     ebCreateApplication in aws <<= ebCreateApplicationTask,
     ebCreateApplicationVersion in aws <<= ebCreateApplicationVersionTask,
     cfnTemplatesSourceFolder in aws <<= baseDirectory {
-      base => base / "src/main/aws"
+      base => base / "aws/cfn/templates"
     },
     cfnTemplates in aws := {
       val templates = (cfnTemplatesSourceFolder in aws).value ** GlobFilter("*.template")
@@ -130,15 +146,21 @@ object SbtAwsPlugin extends AutoPlugin {
     },
     cfnStackTemplate in aws <<= stackTemplatesTask,
     cfnStackParams in aws := {
-      val r = (config in aws).value.getConfiguration(cfnStackParams.key.label)
-        .map(_.entrySet.map { case (k, v) => (k, v.render()) }.toMap).getOrElse(Map.empty)
-      r
+      (awsConfig in aws).value.getConfiguration(cfnStackParams.key.label)
+        .map(_.entrySet.map { case (k, v) => (k, v.unwrapped().toString) }.toMap).getOrElse(Map.empty)
     },
-    cfnStackTags in aws := Map.empty,
-    cfnStackCapabilities in aws := Seq.empty,
+    cfnStackTags in aws := {
+      (awsConfig in aws).value.getConfiguration(cfnStackTags.key.label)
+        .map(_.entrySet.map { case (k, v) => (k, v.unwrapped().toString) }.toMap).getOrElse(Map.empty)
+    },
+    cfnStackCapabilities in aws := {
+      (awsConfig in aws).value
+        .getStringValues(cfnStackCapabilities.key.label)
+        .getOrElse(Seq.empty)
+    },
     cfnStackRegion in aws := "",
     cfnStackName in aws := {
-      (config in aws).value.getStringValue("cfn-stack-name").get
+      (awsConfig in aws).value.getStringValue(cfnStackName.key.label).get
     },
     // ---
     cfnStackValidate in aws <<= stackValidateTask(),
@@ -151,6 +173,7 @@ object SbtAwsPlugin extends AutoPlugin {
     cfnStackDelete in aws <<= deleteStackTask(),
     cfnStackDeleteAndWait in aws <<= deleteStackAndWaitTask(),
     cfnStackWait in aws <<= waitStackTask(),
+    cfnStackCreateOrUpdateAndWait in aws <<= createOrUpdateStackTask(),
     watchSources <++= (cfnTemplates in aws) map identity
   )
 
