@@ -8,9 +8,37 @@ sbtPlugin := true
 
 name := "sbt-aws-plugin"
 
-description := "TODO"
+description := "aws plugin for sbt"
 
-publishMavenStyle := false
+publishMavenStyle := true
+
+publishArtifact in Test := false
+
+pomIncludeRepository := {
+  _ => false
+}
+
+pomExtra := {
+  <url>https://github.com/sisioh/aws4s</url>
+    <licenses>
+      <license>
+        <name>Apache 2</name>
+        <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      </license>
+    </licenses>
+    <scm>
+      <url>git@github.com:sisioh/sbt-aws-plugin.git</url>
+      <connection>scm:git:github.com/sisioh/sbt-aws-plugin</connection>
+      <developerConnection>scm:git:git@github.com:sisioh/sbt-aws-plugin.git</developerConnection>
+    </scm>
+    <developers>
+      <developer>
+        <id>j5ik2o</id>
+        <name>Junichi Kato</name>
+        <url>http://j5ik2o.me/</url>
+      </developer>
+    </developers>
+}
 
 scalaVersion := "2.10.5"
 
