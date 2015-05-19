@@ -81,8 +81,8 @@ aws/cfn/templates
 ```scala
 val root = (project in file(".").settings(
     region in aws := com.amazonaws.regions.Regions.AP_NORTHEAST_1,
-    cfnStackName := "stackA",
-    cfnStackParams := Map("key" -> "value")
+    cfnStackName in aws := "stackA",
+    cfnStackParams in aws := Map("key" -> "value")
 )
 
 ```
