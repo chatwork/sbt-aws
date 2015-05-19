@@ -107,7 +107,7 @@ object SbtAwsPlugin extends AutoPlugin {
   override def projectSettings: Seq[Def.Setting[_]] = Seq(
     credentialProfileName in aws := "default",
     region in aws := Regions.AP_NORTHEAST_1,
-    environmentName in aws := System.getProperty("env", "dev"),
+    environmentName in aws := System.getProperty("sbt.aws.profile", "dev"),
     configFileFolder in aws := file("env"),
     configFile in aws := {
       val parent = (configFileFolder in aws).value
