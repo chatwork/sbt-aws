@@ -14,7 +14,7 @@ Add the following to your sbt build (Scala 2.10.x, and Scala 2.11.x):
 ```scala
 resolvers += "Sonatype OSS Release Repository" at "https://oss.sonatype.org/content/repositories/releases/"
 
-libraryDependencies += "org.sisioh" %% "sbt-aws-plugin" % "1.0.0"
+libraryDependencies += "org.sisioh" %% "sbt-aws-plugin" % "1.0.1"
 ```
 
 ### Snapshot Version
@@ -22,7 +22,7 @@ libraryDependencies += "org.sisioh" %% "sbt-aws-plugin" % "1.0.0"
 ```scala
 resolvers += "Sonatype OSS Snapshot Repository" at "https://oss.sonatype.org/content/repositories/snapshots/"
 
-libraryDependencies += "org.sisioh" %% "sbt-aws-plugin" % "1.0.0-SNAPSHOT"
+libraryDependencies += "org.sisioh" %% "sbt-aws-plugin" % "1.0.2-SNAPSHOT"
 ```
 
 ## Usage
@@ -81,8 +81,8 @@ aws/cfn/templates
 ```scala
 val root = (project in file(".").settings(
     region in aws := com.amazonaws.regions.Regions.AP_NORTHEAST_1,
-    cfnStackName := "stackA",
-    cfnStackParams := Map("key" -> "value")
+    cfnStackName in aws := "stackA",
+    cfnStackParams in aws := Map("key" -> "value")
 )
 
 ```
