@@ -14,7 +14,7 @@ Add the following to your sbt build (Scala 2.10.x, and Scala 2.11.x):
 ```scala
 resolvers += "Sonatype OSS Release Repository" at "https://oss.sonatype.org/content/repositories/releases/"
 
-libraryDependencies += "org.sisioh" %% "sbt-aws-plugin" % "1.0.0"
+libraryDependencies += "org.sisioh" %% "sbt-aws-plugin" % "1.0.1"
 ```
 
 ### Snapshot Version
