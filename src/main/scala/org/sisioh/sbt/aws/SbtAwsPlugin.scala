@@ -18,7 +18,7 @@ object SbtAwsPlugin extends AutoPlugin {
 
     lazy val region = settingKey[Regions]("region")
 
-    lazy val credentialProfileName = settingKey[String]("credential-profile-name")
+    lazy val credentialProfileName = settingKey[Option[String]]("credential-profile-name")
 
     lazy val environmentName = settingKey[String]("env")
 
@@ -61,7 +61,7 @@ object SbtAwsPlugin extends AutoPlugin {
     val cfnStackTags = settingKey[Tags]("cfn-stack-tags")
     val cfnStackCapabilities = settingKey[Seq[String]]("cfn-stack-capabilities")
     val cfnStackRegion = settingKey[String]("cfn-stack-region")
-    val cfnStackName = settingKey[String]("cfn-stack-name")
+    val cfnStackName = settingKey[Option[String]]("cfn-stack-name")
 
     // stack operations
     val cfnStackValidate = taskKey[Seq[File]]("cfn-validate-templates")
@@ -105,7 +105,7 @@ object SbtAwsPlugin extends AutoPlugin {
   import AwsKeys._
 
   override def projectSettings: Seq[Def.Setting[_]] = Seq(
-    credentialProfileName in aws := "default",
+    credentialProfileName in aws := None,
     region in aws := Regions.AP_NORTHEAST_1,
     environmentName in aws := System.getProperty("sbt.aws.profile", "dev"),
     configFileFolder in aws := file("env"),
@@ -160,7 +160,7 @@ object SbtAwsPlugin extends AutoPlugin {
     },
     cfnStackRegion in aws := "",
     cfnStackName in aws := {
-      (awsConfig in aws).value.getStringValue(cfnStackName.key.label).get
+      (awsConfig in aws).value.getStringValue(cfnStackName.key.label)
     },
     // ---
     cfnStackValidate in aws <<= stackValidateTask(),
