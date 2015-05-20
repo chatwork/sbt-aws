@@ -1,7 +1,9 @@
 package org.sisioh.sbt.aws
 
 import java.io.FileNotFoundException
+import java.text.SimpleDateFormat
 import java.util
+import java.util.Date
 
 import com.amazonaws.AmazonServiceException
 import com.amazonaws.regions.Region
@@ -23,9 +25,26 @@ trait SbtAwsCfn {
     createClient(classOf[AmazonCloudFormationClient], Region.getRegion((region in aws).value), (credentialProfileName in aws).value)
   }
 
-  def stackTemplatesTask(): Def.Initialize[Task[String]] = Def.task {
+  def uploadTemplateFileTask(): Def.Initialize[Task[String]] = Def.task {
+    val logger = streams.value.log
     val files = (cfnTemplates in aws).value
-    IO.read(files.headOption.getOrElse(throw new FileNotFoundException("*.template not found in this project")))
+    val file = files.headOption.getOrElse(throw new FileNotFoundException("*.template not found in this project"))
+
+    logger.info(IO.read(file))
+
+    val bucketName = (cfnS3BucketName in aws).value
+    val sdf = new SimpleDateFormat("yyyyMMdd'_'HHmmss")
+    val timestamp = sdf.format(new Date())
+
+    val artifactId = (cfnArtifactId in aws).value
+    val version = (cfnVersion in aws).value
+
+    val keyFunctor = (cfnS3KeyFunctor in aws).value
+    val key = keyFunctor(s"${artifactId}-${version}-${timestamp}.templete")
+
+    logger.info(s"upload $file to $bucketName/$key")
+    val result = s3PutObject(s3Client.value, bucketName, key, file, false, true)
+    result.get
   }
 
   def validateTemplate(client: AmazonCloudFormationClient, log: Logger)(template: sbt.File): (File, Try[Seq[String]]) = {
@@ -140,14 +159,15 @@ trait SbtAwsCfn {
   }
 
   def createStack(client: AmazonCloudFormationClient,
-                  stackName: String, templateBody: String,
+                  stackName: String,
+                  templateUrl: String,
                   capabilities: Seq[String],
                   parameters: Map[String, String],
                   tags: Map[String, String]) = {
     val request = CreateStackRequestFactory
       .create()
       .withStackName(stackName)
-      .withTemplateBody(templateBody)
+      .withTemplateURL(templateUrl)
       .withCapabilities(capabilities)
       .withParameters(parameters)
       .withTags(tags)
@@ -157,14 +177,14 @@ trait SbtAwsCfn {
   def createStackTask(): Def.Initialize[Task[Option[String]]] = Def.task {
     val logger = streams.value.log
     val stackName = (cfnStackName in aws).value
-    val templateBody = (cfnStackTemplate in aws).value
+    val templateUrl = (cfnUploadTemplate in aws).value
     val capabilities = (cfnStackCapabilities in aws).value
     val params = (cfnStackParams in aws).value
     val tags = (cfnStackTags in aws).value
     val client = cfnClient.value
 
     logger.info(s"stackName = $stackName")
-    logger.info(s"templateBody = $templateBody")
+    logger.info(s"templateUrl = $templateUrl")
     logger.info(s"capabilities = $capabilities")
     logger.info(s"stackParams = $params")
     logger.info(s"tags = $tags")
@@ -172,7 +192,7 @@ trait SbtAwsCfn {
     stackName.flatMap { sn =>
       describeStacks(client, sn).flatMap { stacks =>
         stacks.headOption.map { stack =>
-          createStack(client, sn, templateBody, capabilities, params, tags).map(Some(_))
+          createStack(client, sn, templateUrl, capabilities, params, tags).map(Some(_))
         }.getOrElse {
           Success(None)
         }
@@ -191,7 +211,7 @@ trait SbtAwsCfn {
   def createStackAndWaitTask(): Def.Initialize[Task[Option[String]]] = Def.task {
     val logger = streams.value.log
     val stackName = (cfnStackName in aws).value
-    val templateBody = (cfnStackTemplate in aws).value
+    val templateUrl = (cfnUploadTemplate in aws).value
     val capabilities = (cfnStackCapabilities in aws).value
     val params = (cfnStackParams in aws).value
     val tags = (cfnStackTags in aws).value
@@ -199,7 +219,7 @@ trait SbtAwsCfn {
     val interval = (poolingInterval in aws).value
 
     logger.info(s"stackName = $stackName")
-    logger.info(s"templateBody = $templateBody")
+    logger.info(s"templateUrl = $templateUrl")
     logger.info(s"capabilities = $capabilities")
     logger.info(s"stackParams = $params")
     logger.info(s"tags = $tags")
@@ -207,7 +227,7 @@ trait SbtAwsCfn {
     stackName.flatMap { sn =>
       describeStacks(client, sn).flatMap { stacks =>
         stacks.headOption.map { stack =>
-          createStack(client, sn, templateBody, capabilities, params, tags).map(Some(_))
+          createStack(client, sn, templateUrl, capabilities, params, tags).map(Some(_))
         }.getOrElse {
           Success(None)
         }
@@ -295,13 +315,14 @@ trait SbtAwsCfn {
   }
 
   def updateStack(client: AmazonCloudFormationClient,
-                  stackName: String, templateBody: String,
+                  stackName: String,
+                  templateUrl: String,
                   capabilities: Seq[String],
                   parameters: Map[String, String]): Try[Option[UpdateStackResult]] = {
     val request = UpdateStackRequestFactory
       .create()
       .withStackName(stackName)
-      .withTemplateBody(templateBody)
+      .withTemplateURL(templateUrl)
       .withCapabilities(capabilities)
       .withParameters(parameters)
     client.updateStackAsTry(request).map(e => Some(e)).recoverWith {
@@ -313,20 +334,20 @@ trait SbtAwsCfn {
   def updateStackTask(): Def.Initialize[Task[Option[String]]] = Def.task {
     val logger = streams.value.log
     val stackName = (cfnStackName in aws).value
-    val templateBody = (cfnStackTemplate in aws).value
+    val templateUrl = (cfnUploadTemplate in aws).value
     val capabilities = (cfnStackCapabilities in aws).value
     val params = (cfnStackParams in aws).value
     val client = cfnClient.value
 
     logger.info(s"stackName = $stackName")
-    logger.info(s"templateBody = $templateBody")
+    logger.info(s"templateUrl = $templateUrl")
     logger.info(s"capabilities = $capabilities")
     logger.info(s"stackParams = $params")
 
     stackName.flatMap { sn =>
       describeStacks(client, sn).flatMap { stacks =>
         stacks.headOption.map { stack =>
-          updateStack(client, sn, templateBody, capabilities, params)
+          updateStack(client, sn, templateUrl, capabilities, params)
         }.getOrElse {
           Success(None)
         }
@@ -345,21 +366,21 @@ trait SbtAwsCfn {
   def updateStackAndWaitTask(): Def.Initialize[Task[Option[String]]] = Def.task {
     val logger = streams.value.log
     val stackName = (cfnStackName in aws).value
-    val templateBody = (cfnStackTemplate in aws).value
+    val templateUrl = (cfnUploadTemplate in aws).value
     val capabilities = (cfnStackCapabilities in aws).value
     val params = (cfnStackParams in aws).value
     val client = cfnClient.value
     val interval = (poolingInterval in aws).value
 
     logger.info(s"stackName = $stackName")
-    logger.info(s"templateBody = $templateBody")
+    logger.info(s"templateUrl = $templateUrl")
     logger.info(s"capabilities = $capabilities")
     logger.info(s"stackParams = $params")
 
     stackName.flatMap { sn =>
       describeStacks(client, sn).flatMap { stacks =>
         stacks.headOption.map { stack =>
-          updateStack(client, sn, templateBody, capabilities, params)
+          updateStack(client, sn, templateUrl, capabilities, params)
         }.getOrElse {
           Success(None)
         }
@@ -384,7 +405,7 @@ trait SbtAwsCfn {
   def createOrUpdateStackTask(): Def.Initialize[Task[Option[String]]] = Def.task {
     val logger = streams.value.log
     val stackName = (cfnStackName in aws).value
-    val templateBody = (cfnStackTemplate in aws).value
+    val templateUrl = (cfnUploadTemplate in aws).value
     val capabilities = (cfnStackCapabilities in aws).value
     val params = (cfnStackParams in aws).value
     val client = cfnClient.value
@@ -392,7 +413,7 @@ trait SbtAwsCfn {
     val tags = (cfnStackTags in aws).value
 
     logger.info(s"stackName = $stackName")
-    logger.info(s"templateBody = $templateBody")
+    logger.info(s"templateUrl = $templateUrl")
     logger.info(s"capabilities = $capabilities")
     logger.info(s"stackParams = $params")
     logger.info(s"tags = $tags")
@@ -400,9 +421,9 @@ trait SbtAwsCfn {
     stackName.flatMap { sn =>
       describeStacks(client, sn).flatMap { stacks =>
         stacks.headOption.map { stack =>
-          updateStack(client, sn, templateBody, capabilities, params)
+          updateStack(client, sn, templateUrl, capabilities, params)
         }.getOrElse {
-          createStack(client, sn, templateBody, capabilities, params, tags)
+          createStack(client, sn, templateUrl, capabilities, params, tags)
         }
       }.map {
         case result: CreateStackResult =>

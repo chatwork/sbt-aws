@@ -47,8 +47,10 @@ trait SbtAwsS3 {
         } else Success(())
         result <- client.putObjectAsTry(PutObjectRequestFactory.create(bucketName, key, file).withMetadataOpt(metadataOpt))
         resourceUrl <- client.getResourceUrlAsTry(bucketName, key)
-      } yield Some(resourceUrl)
-    } else Success(None)
+      } yield resourceUrl
+    } else {
+      client.getResourceUrlAsTry(bucketName, key)
+    }
 
   def s3PutObject(client: AmazonS3Client, bucketName: String, key: String, file: File, overwrite: Boolean, createBucket: Boolean) = {
     for {
@@ -57,7 +59,7 @@ trait SbtAwsS3 {
     } yield url
   }
 
-  def s3UploadTask: Def.Initialize[Task[Option[String]]] = Def.task {
+  def s3UploadTask: Def.Initialize[Task[String]] = Def.task {
     val client = s3Client.value
     val bucketName = (s3BucketName in aws).value
     val key = (s3Key in aws).value

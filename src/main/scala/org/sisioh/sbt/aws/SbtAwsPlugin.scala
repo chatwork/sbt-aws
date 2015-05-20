@@ -56,12 +56,18 @@ object SbtAwsPlugin extends AutoPlugin {
     val cfnTemplatesSourceFolder = settingKey[File]("cfn-template-source-folder")
     val cfnTemplates = settingKey[Seq[File]]("cfn-templates")
 
-    val cfnStackTemplate = taskKey[String]("cfn-stack-template")
     val cfnStackParams = taskKey[Parameters]("cfn-stack-params")
     val cfnStackTags = settingKey[Tags]("cfn-stack-tags")
     val cfnStackCapabilities = settingKey[Seq[String]]("cfn-stack-capabilities")
     val cfnStackRegion = settingKey[String]("cfn-stack-region")
+
+    val cfnArtifactId = settingKey[String]("cfn-artifacti-id")
+    val cfnVersion = settingKey[String]("cfn-version")
     val cfnStackName = settingKey[Option[String]]("cfn-stack-name")
+    val cfnS3BucketName = settingKey[String]("cfn-s3-bucket-name")
+    val cfnS3KeyFunctor = settingKey[String => String]("cfn-s3-key-functor")
+
+    val cfnUploadTemplate = taskKey[String]("cfn-upload-template")
 
     // stack operations
     val cfnStackValidate = taskKey[Seq[File]]("cfn-validate-templates")
@@ -93,7 +99,7 @@ object SbtAwsPlugin extends AutoPlugin {
 
     lazy val s3OverwriteObject = settingKey[Boolean]("s3-overwrite-object")
 
-    lazy val s3Upload = taskKey[Option[String]]("s3-upload")
+    lazy val s3Upload = taskKey[String]("s3-upload")
 
     lazy val s3CreateBucket = settingKey[Boolean]("s3-create-bucket")
   }
@@ -144,7 +150,11 @@ object SbtAwsPlugin extends AutoPlugin {
       val templates = (cfnTemplatesSourceFolder in aws).value ** GlobFilter("*.template")
       templates.get
     },
-    cfnStackTemplate in aws <<= stackTemplatesTask,
+    cfnArtifactId := (name in ThisProject).value,
+    cfnVersion := (version in ThisProject).value,
+    cfnS3BucketName in aws := "cfn-template",
+    cfnS3KeyFunctor in aws := identity,
+    cfnUploadTemplate in aws <<= uploadTemplateFileTask(),
     cfnStackParams in aws := {
       (awsConfig in aws).value.getConfiguration(cfnStackParams.key.label)
         .map(_.entrySet.map { case (k, v) => (k, v.unwrapped().toString) }.toMap).getOrElse(Map.empty)

@@ -4,7 +4,7 @@ import java.io.File
 
 import com.amazonaws.AmazonWebServiceClient
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
-import com.amazonaws.auth.{AWSCredentialsProviderChain, EnvironmentVariableCredentialsProvider, InstanceProfileCredentialsProvider, SystemPropertiesCredentialsProvider}
+import com.amazonaws.auth.{ AWSCredentialsProviderChain, EnvironmentVariableCredentialsProvider, InstanceProfileCredentialsProvider, SystemPropertiesCredentialsProvider }
 import com.amazonaws.regions.Region
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.io.FileUtils
