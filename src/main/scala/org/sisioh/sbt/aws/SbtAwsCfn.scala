@@ -22,7 +22,10 @@ trait SbtAwsCfn {
   this: SbtAws.type =>
 
   lazy val cfnClient = Def.task {
-    createClient(classOf[AmazonCloudFormationClient], Region.getRegion((region in aws).value), (credentialProfileName in aws).value)
+    createClient(
+      classOf[AmazonCloudFormationClient],
+      Region.getRegion((region in aws).value),
+      (credentialProfileName in aws).value)
   }
 
   def uploadTemplateFileTask(): Def.Initialize[Task[String]] = Def.task {
@@ -40,7 +43,7 @@ trait SbtAwsCfn {
     val version = (cfnVersion in aws).value
 
     val keyFunctor = (cfnS3KeyFunctor in aws).value
-    val key = keyFunctor(s"${artifactId}-${version}-${timestamp}.templete")
+    val key = keyFunctor(s"$artifactId-$version-$timestamp.templete")
 
     logger.info(s"upload $file to $bucketName/$key")
     val result = s3PutObject(s3Client.value, bucketName, key, file, false, true)
@@ -76,7 +79,7 @@ trait SbtAwsCfn {
     files
   }
 
-  def describeStacks(client: AmazonCloudFormationClient, stackName: String) = {
+  def describeStacks(client: AmazonCloudFormationClient, stackName: String): Try[Seq[Stack]] = {
     val request = DescribeStacksRequestFactory.create().withStackName(stackName)
     client.describeStacksAsTry(request).map { result =>
       result.stacks
@@ -97,10 +100,10 @@ trait SbtAwsCfn {
     }.map { stacks =>
       if (stacks.isEmpty) {
         logger.info("stacks is empty.")
-      }
-      stacks.foreach { stack =>
-        logger.info(stack.toString)
-      }
+      } else
+        stacks.foreach { stack =>
+          logger.info(stack.toString)
+        }
       stacks
     }.getOrElse(Seq.empty)
   }
@@ -122,14 +125,16 @@ trait SbtAwsCfn {
 
     stackName.flatMap { sn =>
       logger.info(s"status: stackName = $stackName")
-      getStackStatus(client, sn).map { status =>
-        logger.info(s"$stackName's status is $status")
-        Some(status)
-      }.getOrElse {
-        logger.info(s"$stackName does not exists.")
-        None
-      }
-    }.getOrElse(None)
+      getStackStatus(client, sn).map { statusOpt =>
+        statusOpt.map { status =>
+          logger.info(s"$stackName's status is $status")
+          Some(status)
+        }.getOrElse {
+          logger.info(s"$stackName does not exists.")
+          None
+        }
+      }.get
+    }
   }
 
   implicit private def parametersToList(params: Parameters): util.Collection[Parameter] = {
@@ -172,42 +177,21 @@ trait SbtAwsCfn {
     client.createStackAsTry(request)
   }
 
+  lazy val cfnStackCapabilitiesTask: Def.Initialize[Task[Seq[String]]] = Def.task {
+    if ((cfnCapabilityIam in aws).value)
+      (cfnStackCapabilities in aws).value :+ Capability.CAPABILITY_IAM.toString
+    else
+      (cfnStackCapabilities in aws).value
+  }
+
   def createStackTask(): Def.Initialize[Task[Option[String]]] = Def.task {
     val logger = streams.value.log
     val stackName = (cfnStackName in aws).value
     val templateUrl = (cfnUploadTemplate in aws).value
-    val capabilities = (cfnStackCapabilities in aws).value
+    val capabilities = cfnStackCapabilitiesTask.value
     val params = (cfnStackParams in aws).value
     val tags = (cfnStackTags in aws).value
     val client = cfnClient.value
-
-    stackName.flatMap { sn =>
-      describeStacks(client, sn).flatMap { stacks =>
-        stacks.headOption.map { stack =>
-          logger.info(s"create stack: stackName = $stackName, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params, tags = $tags")
-          createStack(client, sn, templateUrl, capabilities, params, tags).map(Some(_))
-        }.getOrElse {
-          logger.info(s"does not exists $stackName")
-          Success(None)
-        }
-      }.map { resultOpt =>
-        resultOpt.map { result =>
-          logger.info(s"created stack $stackName / ${result.stackIdOpt.get}")
-          result.stackIdOpt.get
-        }
-      }.get
-    }
-  }
-
-  def createStackAndWaitTask(): Def.Initialize[Task[Option[String]]] = Def.task {
-    val logger = streams.value.log
-    val stackName = (cfnStackName in aws).value
-    val templateUrl = (cfnUploadTemplate in aws).value
-    val capabilities = (cfnStackCapabilities in aws).value
-    val params = (cfnStackParams in aws).value
-    val tags = (cfnStackTags in aws).value
-    val client = cfnClient.value
-    val interval = (poolingInterval in aws).value
 
     stackName.flatMap { sn =>
       describeStacks(client, sn).flatMap { stacks =>
@@ -221,16 +205,26 @@ trait SbtAwsCfn {
       }.map { resultOpt =>
         resultOpt.flatMap { result =>
           logger.info(s"created stack $stackName / ${result.stackIdOpt.get}")
-          val (progressStatuses, headOption) = waitStack(client, sn)
-          progressStatuses.foreach {
-            s =>
-              logger.info(s"status = $s")
-              Thread.sleep(interval)
-          }
-          headOption()
+          result.stackIdOpt
         }
       }.get
     }
+  }
+
+  def createStackAndWaitTask(): Def.Initialize[Task[Option[String]]] = Def.task {
+    val logger = streams.value.log
+    val client = cfnClient.value
+    val interval = (poolingInterval in aws).value
+
+    createStackTask().value.flatMap { sn =>
+      val (progressStatuses, headOption) = waitStack(client, sn)
+      progressStatuses.foreach { s =>
+        logger.info(s"status = $s")
+        Thread.sleep(interval)
+      }
+      headOption()
+    }
+
   }
 
   def deleteStack(client: AmazonCloudFormationClient,
@@ -239,7 +233,7 @@ trait SbtAwsCfn {
     client.deleteStackAsTry(request)
   }
 
-  def deleteStackTask(): Def.Initialize[Task[Unit]] = Def.task {
+  def deleteStackTask(): Def.Initialize[Task[Option[String]]] = Def.task {
     val logger = streams.value.log
     val stackName = (cfnStackName in aws).value
     val client = cfnClient.value
@@ -248,48 +242,34 @@ trait SbtAwsCfn {
       describeStacks(client, sn).flatMap { stacks =>
         stacks.headOption.map { stack =>
           logger.info(s"delete stack: stackName = $stackName")
-          deleteStack(client, sn).map(Some(_))
+          deleteStack(client, sn).map(_ => Some(sn))
         }.getOrElse {
           logger.info(s"does not exists $stackName")
           Success(None)
         }
       }.map { resultOpt =>
-        resultOpt.map { result =>
-          logger.info(s"deleted stack $stackName")
-          result
+        resultOpt.map { _ =>
+          logger.info(s"deleted stack $sn")
+          sn
         }
       }.get
-    }.getOrElse(())
+    }
   }
 
   def deleteStackAndWaitTask(): Def.Initialize[Task[Option[String]]] = Def.task {
     val logger = streams.value.log
-    val stackName = (cfnStackName in aws).value
     val client = cfnClient.value
     val interval = (poolingInterval in aws).value
 
-    stackName.flatMap { sn =>
-      describeStacks(client, sn).flatMap { stacks =>
-        stacks.headOption.map { stack =>
-          logger.info(s"delete stack: stackName = $stackName")
-          deleteStack(client, sn).map(Some(_))
-        }.getOrElse {
-          logger.info(s"does not exists $stackName")
-          Success(None)
-        }
-      }.map { resultOpt =>
-        resultOpt.flatMap { result =>
-          logger.info(s"deleted stack $stackName")
-          val (progressStatuses, headOption) = waitStack(client, sn)
-          progressStatuses.foreach {
-            s =>
-              logger.info(s"status = $s")
-              Thread.sleep(interval)
-          }
-          headOption()
-        }
-      }.get
+    deleteStackTask().value.flatMap { sn =>
+      val (progressStatuses, headOption) = waitStack(client, sn)
+      progressStatuses.foreach { s =>
+        logger.info(s"status = $s")
+        Thread.sleep(interval)
+      }
+      headOption()
     }
+
   }
 
   def updateStack(client: AmazonCloudFormationClient,
@@ -313,38 +293,9 @@ trait SbtAwsCfn {
     val logger = streams.value.log
     val stackName = (cfnStackName in aws).value
     val templateUrl = (cfnUploadTemplate in aws).value
-    val capabilities = (cfnStackCapabilities in aws).value
+    val capabilities = cfnStackCapabilitiesTask.value
     val params = (cfnStackParams in aws).value
     val client = cfnClient.value
-
-    stackName.flatMap { sn =>
-      describeStacks(client, sn).flatMap { stacks =>
-        stacks.headOption.map { stack =>
-          logger.info(s"update stack: stackName = $stackName, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params")
-          updateStack(client, sn, templateUrl, capabilities, params)
-        }.getOrElse {
-          Success(None)
-        }
-      }.map { resultOpt =>
-        resultOpt.map { result =>
-          logger.info(s"updated stack $stackName / ${result.stackIdOpt.get}")
-          Some(result.stackIdOpt.get)
-        }.getOrElse {
-          logger.info("No updates are to be performed.")
-          None
-        }
-      }.get
-    }
-  }
-
-  def updateStackAndWaitTask(): Def.Initialize[Task[Option[String]]] = Def.task {
-    val logger = streams.value.log
-    val stackName = (cfnStackName in aws).value
-    val templateUrl = (cfnUploadTemplate in aws).value
-    val capabilities = (cfnStackCapabilities in aws).value
-    val params = (cfnStackParams in aws).value
-    val client = cfnClient.value
-    val interval = (poolingInterval in aws).value
 
     stackName.flatMap { sn =>
       describeStacks(client, sn).flatMap { stacks =>
@@ -357,46 +308,56 @@ trait SbtAwsCfn {
         }
       }.map { resultOpt =>
         resultOpt.flatMap { result =>
-          logger.info(s"updated stack: $stackName / ${result.stackIdOpt.get}")
-          val (progressStatuses, headOption) = waitStack(client, sn)
-          progressStatuses.foreach {
-            s =>
-              logger.info(s"status = $s")
-              Thread.sleep(interval)
-          }
-          headOption()
+          logger.info(s"updated stack $stackName / ${result.stackIdOpt.get}")
+          result.stackIdOpt
         }
       }.get
     }
+  }
+
+  def updateStackAndWaitTask(): Def.Initialize[Task[Option[String]]] = Def.task {
+    val logger = streams.value.log
+    val client = cfnClient.value
+    val interval = (poolingInterval in aws).value
+
+    updateStackTask().value.flatMap { sn =>
+      val (progressStatuses, headOption) = waitStack(client, sn)
+      progressStatuses.foreach {
+        s =>
+          logger.info(s"status = $s")
+          Thread.sleep(interval)
+      }
+      headOption()
+    }
+
   }
 
   def createOrUpdateStackTask(): Def.Initialize[Task[Option[String]]] = Def.task {
     val logger = streams.value.log
     val stackName = (cfnStackName in aws).value
     val templateUrl = (cfnUploadTemplate in aws).value
-    val capabilities = (cfnStackCapabilities in aws).value
+    val capabilities = cfnStackCapabilitiesTask.value
     val params = (cfnStackParams in aws).value
     val client = cfnClient.value
-    val interval = (poolingInterval in aws).value
     val tags = (cfnStackTags in aws).value
 
     stackName.flatMap { sn =>
       describeStacks(client, sn).flatMap { stacks =>
         stacks.headOption.map { stack =>
-          logger.info(s"update stack: stackName = $stackName, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params")
+          logger.info(s"update stack: stackName = $sn, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params")
           updateStack(client, sn, templateUrl, capabilities, params)
         }.getOrElse {
-          logger.info(s"create stack: stackName = $stackName, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params, tags = $tags")
+          logger.info(s"create stack: stackName = $sn, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params, tags = $tags")
           createStack(client, sn, templateUrl, capabilities, params, tags).map { result => println(result.toString); result }
         }
       }.map {
         case result: CreateStackResult =>
-          logger.info(s"created stack: $stackName / ${result.stackIdOpt.get}")
+          logger.info(s"created stack: $sn / ${result.stackIdOpt.get}")
           result.stackIdOpt
         case resultOpt: Option[_] =>
           resultOpt.map {
             case result: UpdateStackResult =>
-              logger.info(s"updated stack $stackName / ${result.stackIdOpt.get}")
+              logger.info(s"updated stack $sn / ${result.stackIdOpt.get}")
               result.stackIdOpt
           }.getOrElse {
             logger.info("No updates are to be performed.")
@@ -408,48 +369,19 @@ trait SbtAwsCfn {
 
   def createOrUpdateStackAndWaitTask(): Def.Initialize[Task[Option[String]]] = Def.task {
     val logger = streams.value.log
-    val stackName = (cfnStackName in aws).value
-    val templateUrl = (cfnUploadTemplate in aws).value
-    val capabilities = (cfnStackCapabilities in aws).value
-    val params = (cfnStackParams in aws).value
     val client = cfnClient.value
     val interval = (poolingInterval in aws).value
-    val tags = (cfnStackTags in aws).value
 
-    stackName.flatMap { sn =>
-      describeStacks(client, sn).flatMap { stacks =>
-        stacks.headOption.map { stack =>
-          logger.info(s"update stack: stackName = $stackName, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params")
-          updateStack(client, sn, templateUrl, capabilities, params)
-        }.getOrElse {
-          logger.info(s"create stack: stackName = $stackName, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params, tags = $tags")
-          createStack(client, sn, templateUrl, capabilities, params, tags).map { result => println(result.toString); result }
-        }
-      }.map {
-        case result: CreateStackResult =>
-          logger.info(s"created stack: $stackName / ${result.stackIdOpt.get}")
-          true
-        case resultOpt: Option[_] =>
-          resultOpt.map {
-            case result: UpdateStackResult =>
-              logger.info(s"updated stack $stackName / ${result.stackIdOpt.get}")
-              true
-          }.getOrElse {
-            logger.info("No updates are to be performed.")
-            false
-          }
-      }.map {
-        case true =>
-          val (progressStatuses, headOption) = waitStack(client, sn)
-          progressStatuses.foreach {
-            s =>
-              logger.info(s"status = $s")
-              Thread.sleep(interval)
-          }
-          headOption()
-        case false => None
-      }.get
+    createOrUpdateStackTask().value.flatMap { sn =>
+      val (progressStatuses, headOption) = waitStack(client, sn)
+      progressStatuses.foreach {
+        s =>
+          logger.info(s"status = $s")
+          Thread.sleep(interval)
+      }
+      headOption()
     }
+
   }
 
   def waitStack(client: AmazonCloudFormationClient,

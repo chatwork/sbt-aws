@@ -66,6 +66,7 @@ object SbtAwsPlugin extends AutoPlugin {
     val cfnStackName = settingKey[Option[String]]("cfn-stack-name")
     val cfnS3BucketName = settingKey[String]("cfn-s3-bucket-name")
     val cfnS3KeyFunctor = settingKey[String => String]("cfn-s3-key-functor")
+    val cfnCapabilityIam = settingKey[Boolean]("cfn-capability-iam")
 
     val cfnUploadTemplate = taskKey[String]("cfn-upload-template")
 
@@ -82,7 +83,7 @@ object SbtAwsPlugin extends AutoPlugin {
     val cfnStackUpdate = taskKey[Option[String]]("cfn-stack-update")
     val cfnStackUpdateAndWait = taskKey[Option[String]]("cfn-stack-update-wait")
 
-    val cfnStackDelete = taskKey[Unit]("cfn-stack-delete")
+    val cfnStackDelete = taskKey[Option[String]]("cfn-stack-delete")
     val cfnStackDeleteAndWait = taskKey[Option[String]]("cfn-stack-delete-wait")
 
     val cfnStackCreateOrUpdate = taskKey[Option[String]]("cfn-stack-create-or-update")
@@ -178,6 +179,9 @@ object SbtAwsPlugin extends AutoPlugin {
     cfnStackRegion in aws := "",
     cfnStackName in aws := {
       (awsConfig in aws).value.getStringValue(cfnStackName.key.label)
+    },
+    cfnCapabilityIam in aws := {
+      (awsConfig in aws).value.getBooleanValue(cfnCapabilityIam.key.label).getOrElse(false)
     },
     // ---
     cfnUploadTemplate in aws <<= uploadTemplateFileTask(),
