@@ -85,6 +85,7 @@ object SbtAwsPlugin extends AutoPlugin {
     val cfnStackDelete = taskKey[Unit]("cfn-stack-delete")
     val cfnStackDeleteAndWait = taskKey[Option[String]]("cfn-stack-delete-wait")
 
+    val cfnStackCreateOrUpdate = taskKey[Option[String]]("cfn-stack-create-or-update")
     val cfnStackCreateOrUpdateAndWait = taskKey[Option[String]]("cfn-stack-create-or-update-wait")
 
     // ---
@@ -143,6 +144,7 @@ object SbtAwsPlugin extends AutoPlugin {
     ebVersionLabel in aws := "1.0.0-SNAPSHOT",
     ebCreateApplication in aws <<= ebCreateApplicationTask,
     ebCreateApplicationVersion in aws <<= ebCreateApplicationVersionTask,
+    // --- cfn
     cfnTemplatesSourceFolder in aws <<= baseDirectory {
       base => base / "aws/cfn/templates"
     },
@@ -150,11 +152,16 @@ object SbtAwsPlugin extends AutoPlugin {
       val templates = (cfnTemplatesSourceFolder in aws).value ** GlobFilter("*.template")
       templates.get
     },
-    cfnArtifactId := (name in ThisProject).value,
-    cfnVersion := (version in ThisProject).value,
-    cfnS3BucketName in aws := "cfn-template",
+    cfnArtifactId := {
+      (awsConfig in aws).value.getStringValue(cfnArtifactId.key.label).getOrElse((name in ThisProject).value)
+    },
+    cfnVersion := {
+      (awsConfig in aws).value.getStringValue(cfnVersion.key.label).getOrElse((version in ThisProject).value)
+    },
+    cfnS3BucketName in aws := {
+      (awsConfig in aws).value.getStringValue(cfnS3BucketName.key.label).getOrElse("cfn-template")
+    },
     cfnS3KeyFunctor in aws := identity,
-    cfnUploadTemplate in aws <<= uploadTemplateFileTask(),
     cfnStackParams in aws := {
       (awsConfig in aws).value.getConfiguration(cfnStackParams.key.label)
         .map(_.entrySet.map { case (k, v) => (k, v.unwrapped().toString) }.toMap).getOrElse(Map.empty)
@@ -173,6 +180,7 @@ object SbtAwsPlugin extends AutoPlugin {
       (awsConfig in aws).value.getStringValue(cfnStackName.key.label)
     },
     // ---
+    cfnUploadTemplate in aws <<= uploadTemplateFileTask(),
     cfnStackValidate in aws <<= stackValidateTask(),
     cfnStackDescribe in aws <<= describeStacksTask().map(s => s.headOption),
     cfnStackStatus in aws <<= statusStackTask(),
@@ -183,7 +191,8 @@ object SbtAwsPlugin extends AutoPlugin {
     cfnStackDelete in aws <<= deleteStackTask(),
     cfnStackDeleteAndWait in aws <<= deleteStackAndWaitTask(),
     cfnStackWait in aws <<= waitStackTask(),
-    cfnStackCreateOrUpdateAndWait in aws <<= createOrUpdateStackTask(),
+    cfnStackCreateOrUpdate in aws <<= createOrUpdateStackTask(),
+    cfnStackCreateOrUpdateAndWait in aws <<= createOrUpdateStackAndWaitTask(),
     watchSources <++= (cfnTemplates in aws) map identity
   )
 

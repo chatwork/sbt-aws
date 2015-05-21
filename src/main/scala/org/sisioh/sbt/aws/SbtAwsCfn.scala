@@ -16,7 +16,7 @@ import sbt.Keys._
 import sbt._
 
 import scala.collection.JavaConverters._
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 trait SbtAwsCfn {
   this: SbtAws.type =>
@@ -30,7 +30,7 @@ trait SbtAwsCfn {
     val files = (cfnTemplates in aws).value
     val file = files.headOption.getOrElse(throw new FileNotFoundException("*.template not found in this project"))
 
-    logger.info(IO.read(file))
+    logger.debug(IO.read(file))
 
     val bucketName = (cfnS3BucketName in aws).value
     val sdf = new SimpleDateFormat("yyyyMMdd'_'HHmmss")
@@ -67,7 +67,7 @@ trait SbtAwsCfn {
     results.foreach { tr =>
       tr._2 match {
         case Failure(e) => logger.error(s"validation of ${tr._1} failed with: \n ${e.getMessage}")
-        case _          =>
+        case _ =>
       }
     }
     if (results.exists(_._2.isFailure)) {
@@ -91,9 +91,8 @@ trait SbtAwsCfn {
     val stackName = (cfnStackName in aws).value
     val client = cfnClient.value
 
-    logger.info(s"stackName = $stackName")
-
     stackName.map { sn =>
+      logger.info(s"describe stack: stackName = $stackName")
       describeStacks(client, sn).get
     }.map { stacks =>
       if (stacks.isEmpty) {
@@ -110,6 +109,9 @@ trait SbtAwsCfn {
     val request = DescribeStacksRequestFactory.create().withStackName(stackName)
     client.describeStacksAsTry(request).map { result =>
       result.stacks.headOption.flatMap { stack => stack.stackStatusOpt }
+    }.recoverWith {
+      case ex: AmazonServiceException if ex.getStatusCode == 400 =>
+        Success(None)
     }
   }
 
@@ -118,13 +120,9 @@ trait SbtAwsCfn {
     val stackName = (cfnStackName in aws).value
     val client = cfnClient.value
 
-    logger.info(s"stackName = $stackName")
-
     stackName.flatMap { sn =>
-      getStackStatus(client, sn).recoverWith {
-        case ex: AmazonServiceException if ex.getStatusCode == 400 =>
-          Success(None)
-      }.map { status =>
+      logger.info(s"status: stackName = $stackName")
+      getStackStatus(client, sn).map { status =>
         logger.info(s"$stackName's status is $status")
         Some(status)
       }.getOrElse {
@@ -138,11 +136,11 @@ trait SbtAwsCfn {
     val ps: Iterable[Parameter] = for {
       (k, v) <- params
     } yield {
-      val p = new Parameter()
-      p.setParameterKey(k)
-      p.setParameterValue(v)
-      p
-    }
+        val p = new Parameter()
+        p.setParameterKey(k)
+        p.setParameterValue(v)
+        p
+      }
     ps.toList.asJava
   }
 
@@ -150,11 +148,11 @@ trait SbtAwsCfn {
     val ps: Iterable[Tag] = for {
       (k, v) <- tags
     } yield {
-      val p = new Tag()
-      p.setKey(k)
-      p.setValue(v)
-      p
-    }
+        val p = new Tag()
+        p.setKey(k)
+        p.setValue(v)
+        p
+      }
     ps.toList.asJava
   }
 
@@ -163,7 +161,7 @@ trait SbtAwsCfn {
                   templateUrl: String,
                   capabilities: Seq[String],
                   parameters: Map[String, String],
-                  tags: Map[String, String]) = {
+                  tags: Map[String, String]): Try[CreateStackResult] = {
     val request = CreateStackRequestFactory
       .create()
       .withStackName(stackName)
@@ -183,26 +181,19 @@ trait SbtAwsCfn {
     val tags = (cfnStackTags in aws).value
     val client = cfnClient.value
 
-    logger.info(s"stackName = $stackName")
-    logger.info(s"templateUrl = $templateUrl")
-    logger.info(s"capabilities = $capabilities")
-    logger.info(s"stackParams = $params")
-    logger.info(s"tags = $tags")
-
     stackName.flatMap { sn =>
       describeStacks(client, sn).flatMap { stacks =>
         stacks.headOption.map { stack =>
+          logger.info(s"create stack: stackName = $stackName, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params, tags = $tags")
           createStack(client, sn, templateUrl, capabilities, params, tags).map(Some(_))
         }.getOrElse {
+          logger.info(s"does not exists $stackName")
           Success(None)
         }
       }.map { resultOpt =>
         resultOpt.map { result =>
           logger.info(s"created stack $stackName / ${result.stackIdOpt.get}")
-          Some(result.stackIdOpt.get)
-        }.getOrElse {
-          logger.info(s"does not exists $stackName")
-          None
+          result.stackIdOpt.get
         }
       }.get
     }
@@ -218,21 +209,17 @@ trait SbtAwsCfn {
     val client = cfnClient.value
     val interval = (poolingInterval in aws).value
 
-    logger.info(s"stackName = $stackName")
-    logger.info(s"templateUrl = $templateUrl")
-    logger.info(s"capabilities = $capabilities")
-    logger.info(s"stackParams = $params")
-    logger.info(s"tags = $tags")
-
     stackName.flatMap { sn =>
       describeStacks(client, sn).flatMap { stacks =>
         stacks.headOption.map { stack =>
+          logger.info(s"create stack: stackName = $stackName, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params, tags = $tags")
           createStack(client, sn, templateUrl, capabilities, params, tags).map(Some(_))
         }.getOrElse {
+          logger.info(s"does not exists $stackName")
           Success(None)
         }
       }.map { resultOpt =>
-        resultOpt.map { result =>
+        resultOpt.flatMap { result =>
           logger.info(s"created stack $stackName / ${result.stackIdOpt.get}")
           val (progressStatuses, headOption) = waitStack(client, sn)
           progressStatuses.foreach {
@@ -241,16 +228,13 @@ trait SbtAwsCfn {
               Thread.sleep(interval)
           }
           headOption()
-        }.getOrElse {
-          logger.info(s"does not exists $stackName")
-          None
         }
       }.get
     }
   }
 
   def deleteStack(client: AmazonCloudFormationClient,
-                  stackName: String) = {
+                  stackName: String): Try[Unit] = {
     val request = DeleteStackRequestFactory.create().withStackName(stackName)
     client.deleteStackAsTry(request)
   }
@@ -260,22 +244,19 @@ trait SbtAwsCfn {
     val stackName = (cfnStackName in aws).value
     val client = cfnClient.value
 
-    logger.info(s"stackName = $stackName")
-
     stackName.flatMap { sn =>
       describeStacks(client, sn).flatMap { stacks =>
         stacks.headOption.map { stack =>
+          logger.info(s"delete stack: stackName = $stackName")
           deleteStack(client, sn).map(Some(_))
         }.getOrElse {
+          logger.info(s"does not exists $stackName")
           Success(None)
         }
       }.map { resultOpt =>
         resultOpt.map { result =>
           logger.info(s"deleted stack $stackName")
-          Some(result)
-        }.getOrElse {
-          logger.info(s"does not exists $stackName")
-          None
+          result
         }
       }.get
     }.getOrElse(())
@@ -287,17 +268,17 @@ trait SbtAwsCfn {
     val client = cfnClient.value
     val interval = (poolingInterval in aws).value
 
-    logger.info(s"stackName = $stackName")
-
     stackName.flatMap { sn =>
       describeStacks(client, sn).flatMap { stacks =>
         stacks.headOption.map { stack =>
+          logger.info(s"delete stack: stackName = $stackName")
           deleteStack(client, sn).map(Some(_))
         }.getOrElse {
+          logger.info(s"does not exists $stackName")
           Success(None)
         }
       }.map { resultOpt =>
-        resultOpt.map { result =>
+        resultOpt.flatMap { result =>
           logger.info(s"deleted stack $stackName")
           val (progressStatuses, headOption) = waitStack(client, sn)
           progressStatuses.foreach {
@@ -306,9 +287,6 @@ trait SbtAwsCfn {
               Thread.sleep(interval)
           }
           headOption()
-        }.getOrElse {
-          logger.info(s"does not exists $stackName")
-          None
         }
       }.get
     }
@@ -339,14 +317,10 @@ trait SbtAwsCfn {
     val params = (cfnStackParams in aws).value
     val client = cfnClient.value
 
-    logger.info(s"stackName = $stackName")
-    logger.info(s"templateUrl = $templateUrl")
-    logger.info(s"capabilities = $capabilities")
-    logger.info(s"stackParams = $params")
-
     stackName.flatMap { sn =>
       describeStacks(client, sn).flatMap { stacks =>
         stacks.headOption.map { stack =>
+          logger.info(s"update stack: stackName = $stackName, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params")
           updateStack(client, sn, templateUrl, capabilities, params)
         }.getOrElse {
           Success(None)
@@ -372,21 +346,18 @@ trait SbtAwsCfn {
     val client = cfnClient.value
     val interval = (poolingInterval in aws).value
 
-    logger.info(s"stackName = $stackName")
-    logger.info(s"templateUrl = $templateUrl")
-    logger.info(s"capabilities = $capabilities")
-    logger.info(s"stackParams = $params")
-
     stackName.flatMap { sn =>
       describeStacks(client, sn).flatMap { stacks =>
         stacks.headOption.map { stack =>
+          logger.info(s"update stack: stackName = $stackName, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params")
           updateStack(client, sn, templateUrl, capabilities, params)
         }.getOrElse {
+          logger.info("No updates are to be performed.")
           Success(None)
         }
       }.map { resultOpt =>
-        resultOpt.map { result =>
-          logger.info(s"updated stack $stackName / ${result.stackIdOpt.get}")
+        resultOpt.flatMap { result =>
+          logger.info(s"updated stack: $stackName / ${result.stackIdOpt.get}")
           val (progressStatuses, headOption) = waitStack(client, sn)
           progressStatuses.foreach {
             s =>
@@ -394,9 +365,6 @@ trait SbtAwsCfn {
               Thread.sleep(interval)
           }
           headOption()
-        }.getOrElse {
-          logger.info("No updates are to be performed.")
-          None
         }
       }.get
     }
@@ -412,22 +380,54 @@ trait SbtAwsCfn {
     val interval = (poolingInterval in aws).value
     val tags = (cfnStackTags in aws).value
 
-    logger.info(s"stackName = $stackName")
-    logger.info(s"templateUrl = $templateUrl")
-    logger.info(s"capabilities = $capabilities")
-    logger.info(s"stackParams = $params")
-    logger.info(s"tags = $tags")
+    stackName.flatMap { sn =>
+      describeStacks(client, sn).flatMap { stacks =>
+        stacks.headOption.map { stack =>
+          logger.info(s"update stack: stackName = $stackName, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params")
+          updateStack(client, sn, templateUrl, capabilities, params)
+        }.getOrElse {
+          logger.info(s"create stack: stackName = $stackName, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params, tags = $tags")
+          createStack(client, sn, templateUrl, capabilities, params, tags).map { result => println(result.toString); result }
+        }
+      }.map {
+        case result: CreateStackResult =>
+          logger.info(s"created stack: $stackName / ${result.stackIdOpt.get}")
+          result.stackIdOpt
+        case resultOpt: Option[_] =>
+          resultOpt.map {
+            case result: UpdateStackResult =>
+              logger.info(s"updated stack $stackName / ${result.stackIdOpt.get}")
+              result.stackIdOpt
+          }.getOrElse {
+            logger.info("No updates are to be performed.")
+            None
+          }
+      }.get
+    }
+  }
+
+  def createOrUpdateStackAndWaitTask(): Def.Initialize[Task[Option[String]]] = Def.task {
+    val logger = streams.value.log
+    val stackName = (cfnStackName in aws).value
+    val templateUrl = (cfnUploadTemplate in aws).value
+    val capabilities = (cfnStackCapabilities in aws).value
+    val params = (cfnStackParams in aws).value
+    val client = cfnClient.value
+    val interval = (poolingInterval in aws).value
+    val tags = (cfnStackTags in aws).value
 
     stackName.flatMap { sn =>
       describeStacks(client, sn).flatMap { stacks =>
         stacks.headOption.map { stack =>
+          logger.info(s"update stack: stackName = $stackName, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params")
           updateStack(client, sn, templateUrl, capabilities, params)
         }.getOrElse {
-          createStack(client, sn, templateUrl, capabilities, params, tags)
+          logger.info(s"create stack: stackName = $stackName, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params, tags = $tags")
+          createStack(client, sn, templateUrl, capabilities, params, tags).map { result => println(result.toString); result }
         }
       }.map {
         case result: CreateStackResult =>
-          logger.info(s"created stack $stackName / ${result.stackIdOpt.get}")
+          logger.info(s"created stack: $stackName / ${result.stackIdOpt.get}")
           true
         case resultOpt: Option[_] =>
           resultOpt.map {
@@ -448,7 +448,7 @@ trait SbtAwsCfn {
           }
           headOption()
         case false => None
-      }.getOrElse(None)
+      }.get
     }
   }
 
