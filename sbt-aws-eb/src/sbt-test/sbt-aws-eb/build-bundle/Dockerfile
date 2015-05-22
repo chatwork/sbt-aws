@@ -1,0 +1,1 @@
+FROM chatwork/ubuntu-java
