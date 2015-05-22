@@ -14,8 +14,8 @@ val updateReadme = { state: State =>
   val readmeFile = file(readme)
   val newReadme = Predef.augmentString(IO.read(readmeFile)).lines.map{ line =>
     val matchReleaseOrSnapshot = line.contains("SNAPSHOT") == v.contains("SNAPSHOT")
-    if(line.startsWith("libraryDependencies") && matchReleaseOrSnapshot){
-      s"""libraryDependencies += "${org}" %% "${n}" % "$v""""
+    if(line.startsWith("addSbtPlugin") && matchReleaseOrSnapshot){
+      s"""addSbtPlugin("${org}" %% "${n}" % "$v)""""
     }else line
   }.mkString("", "\n", "\n")
   IO.write(readmeFile, newReadme)

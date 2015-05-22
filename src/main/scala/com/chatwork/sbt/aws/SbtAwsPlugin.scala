@@ -1,11 +1,11 @@
-package org.sisioh.sbt.aws
+package com.chatwork.sbt.aws
 
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.cloudformation.model.Stack
 import com.amazonaws.services.elasticbeanstalk.model.{ ApplicationDescription, ApplicationVersionDescription }
 import com.amazonaws.services.s3.model.ObjectMetadata
 import org.sisioh.config.{ Configuration => SisiohConfiguration }
-import org.sisioh.sbt.aws.SbtAws._
+import SbtAws._
 import sbt.Keys._
 import sbt._
 

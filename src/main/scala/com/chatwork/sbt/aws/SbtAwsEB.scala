@@ -1,4 +1,4 @@
-package org.sisioh.sbt.aws
+package com.chatwork.sbt.aws
 
 import java.io.File
 import java.text.SimpleDateFormat
@@ -9,7 +9,7 @@ import com.amazonaws.services.elasticbeanstalk._
 import com.amazonaws.services.elasticbeanstalk.model._
 import org.sisioh.aws4s.eb.Implicits._
 import org.sisioh.aws4s.eb.model._
-import org.sisioh.sbt.aws.SbtAwsPlugin.AwsKeys._
+import SbtAwsPlugin.AwsKeys._
 import sbt.Keys._
 import sbt._
 

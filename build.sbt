@@ -1,12 +1,15 @@
 import scalariform.formatter.preferences._
 
-sonatypeProfileName := "org.sisioh"
+val root = 
 
-organization in ThisBuild := "org.sisioh"
+
+sonatypeProfileName := "com.chatwork"
+
+organization in ThisBuild := "com.chatwork"
 
 sbtPlugin := true
 
-name := "sbt-aws-plugin"
+name := "sbt-aws"
 
 description := "aws plugin for sbt"
 
@@ -19,7 +22,7 @@ pomIncludeRepository := {
 }
 
 pomExtra := {
-  <url>https://github.com/sisioh/aws4s</url>
+  <url>https://github.com/chatwork/sb-aws</url>
     <licenses>
       <license>
         <name>Apache 2</name>
@@ -27,9 +30,9 @@ pomExtra := {
       </license>
     </licenses>
     <scm>
-      <url>git@github.com:sisioh/sbt-aws-plugin.git</url>
-      <connection>scm:git:github.com/sisioh/sbt-aws-plugin</connection>
-      <developerConnection>scm:git:git@github.com:sisioh/sbt-aws-plugin.git</developerConnection>
+      <url>git@github.com:chatwork/sbt-aws.git</url>
+      <connection>scm:git:github.com/chatwork/sbt-aws</connection>
+      <developerConnection>scm:git:git@github.com:chatwork/sbt-aws.git</developerConnection>
     </scm>
     <developers>
       <developer>
