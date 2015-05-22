@@ -6,6 +6,8 @@ import sbt.{AutoPlugin, Def, Plugins}
 
 object SbtAwsS3Plugin extends AutoPlugin {
 
+  override def trigger = allRequirements
+
   override def requires: Plugins = SbtAwsCorePlugin
 
   object autoImport extends SbtAwsS3Keys

@@ -3,10 +3,13 @@ package com.chatwork.sbt.aws.core
 import com.amazonaws.regions.Regions
 import sbt._
 import org.sisioh.config.{ Configuration => SisiohConfiguration }
+import sbt.plugins.IvyPlugin
 
 object SbtAwsCorePlugin extends AutoPlugin {
 
   override def trigger = allRequirements
+
+  override def requires: Plugins = IvyPlugin
 
   object autoImport extends SbtAwsCoreKeys
 

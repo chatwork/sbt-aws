@@ -8,6 +8,8 @@ import sbt._
 
 object SbtAwsCfnPlugin extends AutoPlugin {
 
+  override def trigger = allRequirements
+
   override def requires: Plugins = SbtAwsS3Plugin
 
   object autoImport extends SbtAwsCfnKeys
