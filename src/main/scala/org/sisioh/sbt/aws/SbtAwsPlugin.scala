@@ -127,7 +127,7 @@ object SbtAwsPlugin extends AutoPlugin {
   override def projectSettings: Seq[Def.Setting[_]] = Seq(
     credentialProfileName in aws := None,
     region in aws := Regions.AP_NORTHEAST_1,
-    environmentName in aws := System.getProperty("sbt.aws.profile", "dev"),
+    environmentName in aws := System.getProperty("aws.env", "dev"),
     configFileFolder in aws := file("env"),
     configFile in aws := {
       val parent = (configFileFolder in aws).value
@@ -153,17 +153,15 @@ object SbtAwsPlugin extends AutoPlugin {
     s3BucketName := "",
     s3Upload in aws <<= s3UploadTask,
     // ---
-    ebBuildBundle in aws <<= ebBuildBundleTask(),
-    ebUploadBundle in aws <<= ebUploadBundleTask(),
-
     ebBundleTargetFiles in aws := Seq.empty,
     ebBundleFileName in aws := "",
     ebS3BucketName in aws := "",
     ebS3KeyCreator in aws := identity,
-
     ebApplicationName in aws := "",
     ebApplicationDescription in aws := None,
     ebVersionLabel in aws := "1.0.0-SNAPSHOT",
+    ebBuildBundle in aws <<= ebBuildBundleTask(),
+    ebUploadBundle in aws <<= ebUploadBundleTask(),
     ebCreateApplication in aws <<= ebCreateApplicationTask,
     ebCreateApplicationVersion in aws <<= ebCreateApplicationVersionTask,
     // --- cfn
