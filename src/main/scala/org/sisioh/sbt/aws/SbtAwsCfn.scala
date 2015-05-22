@@ -16,7 +16,7 @@ import sbt.Keys._
 import sbt._
 
 import scala.collection.JavaConverters._
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 
 trait SbtAwsCfn {
   this: SbtAws.type =>
@@ -70,7 +70,7 @@ trait SbtAwsCfn {
     results.foreach { tr =>
       tr._2 match {
         case Failure(e) => logger.error(s"validation of ${tr._1} failed with: \n ${e.getMessage}")
-        case _ =>
+        case _          =>
       }
     }
     if (results.exists(_._2.isFailure)) {
@@ -141,11 +141,11 @@ trait SbtAwsCfn {
     val ps: Iterable[Parameter] = for {
       (k, v) <- params
     } yield {
-        val p = new Parameter()
-        p.setParameterKey(k)
-        p.setParameterValue(v)
-        p
-      }
+      val p = new Parameter()
+      p.setParameterKey(k)
+      p.setParameterValue(v)
+      p
+    }
     ps.toList.asJava
   }
 
@@ -153,11 +153,11 @@ trait SbtAwsCfn {
     val ps: Iterable[Tag] = for {
       (k, v) <- tags
     } yield {
-        val p = new Tag()
-        p.setKey(k)
-        p.setValue(v)
-        p
-      }
+      val p = new Tag()
+      p.setKey(k)
+      p.setValue(v)
+      p
+    }
     ps.toList.asJava
   }
 

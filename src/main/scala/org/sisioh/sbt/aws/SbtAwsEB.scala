@@ -1,14 +1,17 @@
 package org.sisioh.sbt.aws
 
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
 
 import com.amazonaws.regions.Region
 import com.amazonaws.services.elasticbeanstalk._
 import com.amazonaws.services.elasticbeanstalk.model._
 import org.sisioh.aws4s.eb.Implicits._
 import org.sisioh.aws4s.eb.model._
+import org.sisioh.sbt.aws.SbtAwsPlugin.AwsKeys._
+import sbt.Keys._
 import sbt._
-import SbtAwsPlugin.AwsKeys._
 
 import scala.util.{ Success, Try }
 
@@ -19,16 +22,36 @@ trait SbtAwsEB {
     createClient(classOf[AWSElasticBeanstalkClient], Region.getRegion((region in aws).value), (credentialProfileName in aws).value)
   }
 
-  def copyFilesToSourceBundle(files: Seq[(File, File)]) = {
-    IO.copy(files)
+  def ebBuildBundleTask(): Def.Initialize[Task[File]] = Def.task {
+    val logger = streams.value.log
+    val files = (ebBundleTargetFiles in aws).value
+    val path = baseDirectory.value / "target" / (ebBundleFileName in aws).value
+    IO.zip(files, path)
+    logger.info(s"created application-bundle: $path")
+    path
   }
 
-  def createSourceBundle(base: File, zipFile: File): Try[Unit] = Try {
-    IO.zip(Path.allSubpaths(base), zipFile)
-  }
+  def ebUploadBundleTask(): Def.Initialize[Task[Unit]] = Def.task {
+    val logger = streams.value.log
+    val path = (ebBuildBundle in aws).value
 
-  def createSourceBundleTask(): Def.Initialize[Task[Unit]] = Def.task {
+    val projectName = (name in thisProjectRef).value
+    val projectVersion = (version in thisProjectRef).value
 
+    val sdf = new SimpleDateFormat("yyyyMMdd'_'HHmmss")
+    val timestamp = sdf.format(new Date())
+
+    val bucketName = (ebS3BucketName in aws).value
+    val keyCreator = (ebS3KeyCreator in aws).value
+
+    val baseKey = s"$projectName/$projectName-$projectVersion-$timestamp.zip"
+    val key = keyCreator(baseKey)
+
+    val overwrite = projectVersion.endsWith("-SNAPSHOT")
+
+    logger.info(s"upload $path to $bucketName/$key")
+    s3PutObject(s3Client.value, bucketName, key, path, overwrite, false).get
+    logger.info(s"uploaded $bucketName/$key")
   }
 
   def ebDeleteApplication(client: AWSElasticBeanstalkClient, applicationName: String): Try[Unit] = {

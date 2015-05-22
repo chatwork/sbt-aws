@@ -34,6 +34,18 @@ object SbtAwsPlugin extends AutoPlugin {
 
     // ---
 
+    lazy val ebBuildBundle = taskKey[File]("build-bundle")
+
+    lazy val ebUploadBundle = taskKey[Unit]("upload-bundle")
+
+    lazy val ebBundleTargetFiles = taskKey[Seq[(File, String)]]("zip-target-file")
+
+    lazy val ebBundleFileName = settingKey[String]("zip-file")
+
+    lazy val ebS3BucketName = settingKey[String]("eb-s3-bucket-name")
+
+    lazy val ebS3KeyCreator = taskKey[String => String]("eb-s3-key-creator")
+
     lazy val ebApplicationName = settingKey[String]("eb-application-name")
 
     lazy val ebApplicationDescription = settingKey[Option[String]]("eb-application-desc")
@@ -140,6 +152,15 @@ object SbtAwsPlugin extends AutoPlugin {
     s3Key := "",
     s3BucketName := "",
     s3Upload in aws <<= s3UploadTask,
+    // ---
+    ebBuildBundle in aws <<= ebBuildBundleTask(),
+    ebUploadBundle in aws <<= ebUploadBundleTask(),
+
+    ebBundleTargetFiles in aws := Seq.empty,
+    ebBundleFileName in aws := "",
+    ebS3BucketName in aws := "",
+    ebS3KeyCreator in aws := identity,
+
     ebApplicationName in aws := "",
     ebApplicationDescription in aws := None,
     ebVersionLabel in aws := "1.0.0-SNAPSHOT",
