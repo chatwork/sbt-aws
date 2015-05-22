@@ -14,7 +14,11 @@ Add the following to your `project/plugin.sbt` (Scala 2.10.x, and Scala 2.11.x):
 ```scala
 resolvers += "Sonatype OSS Release Repository" at "https://oss.sonatype.org/content/repositories/releases/"
 
-addSbtPlugin("com.chatwork" % "sbt-aws" % "1.0.0")
+addSbtPlugin("com.chatwork" % "sbt-aws-s3" % "1.0.0")
+
+addSbtPlugin("com.chatwork" % "sbt-aws-cfn" % "1.0.0")
+
+addSbtPlugin("com.chatwork" % "sbt-aws-eb" % "1.0.0")
 ```
 
 ### Snapshot Version
@@ -22,7 +26,11 @@ addSbtPlugin("com.chatwork" % "sbt-aws" % "1.0.0")
 ```scala
 resolvers += "Sonatype OSS Snapshot Repository" at "https://oss.sonatype.org/content/repositories/snapshots/"
 
-addSbtPlugin("com.chatwork" % "sbt-aws" % "1.0.0-SNAPSHOT")
+addSbtPlugin("com.chatwork" % "sbt-aws-s3" % "1.0.0-SNAPSHOT")
+
+addSbtPlugin("com.chatwork" % "sbt-aws-cfn" % "1.0.0-SNAPSHOT")
+
+addSbtPlugin("com.chatwork" % "sbt-aws-eb" % "1.0.0-SNAPSHOT")
 ```
 
 ## Usage
