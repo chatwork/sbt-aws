@@ -14,7 +14,7 @@ Add the following to your `project/plugin.sbt` (Scala 2.10.x, and Scala 2.11.x):
 ```scala
 resolvers += "Sonatype OSS Release Repository" at "https://oss.sonatype.org/content/repositories/releases/"
 
-addSbtPlugin("com.chatwork" % "sbt-aws" % "1.0.2")
+addSbtPlugin("com.chatwork" % "sbt-aws" % "1.0.0")
 ```
 
 ### Snapshot Version
@@ -22,7 +22,7 @@ addSbtPlugin("com.chatwork" % "sbt-aws" % "1.0.2")
 ```scala
 resolvers += "Sonatype OSS Snapshot Repository" at "https://oss.sonatype.org/content/repositories/snapshots/"
 
-addSbtPlugin("com.chatwork" % "sbt-aws" % "1.0.3-SNAPSHOT")
+addSbtPlugin("com.chatwork" % "sbt-aws" % "1.0.0-SNAPSHOT")
 ```
 
 ## Usage
@@ -56,13 +56,13 @@ cfnStackParams in aws := Map(
 
 ### Profile Function
 
-You can switch the configuration file by specifying the `-Dsbt.aws.profile`.
+You can switch the configuration file by specifying the `-Daws.env`.
 
 `env/staging.conf` is loaded.
 
 
 ```sh
-$ sbt -Dsbt.aws.profile=staging aws::CfnStackCreateOrUpdate
+$ sbt -Daws.env=staging aws::CfnStackCreateOrUpdate
 ```
 
 
