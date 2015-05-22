@@ -1,9 +1,9 @@
 # sbt-aws
 
-[![Build Status](https://travis-ci.org/sisioh/sbt-aws.svg)](https://travis-ci.org/sisioh/sbt-aws)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.sisioh/sbt-aws_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.sisioh/sbt-aws_2.11)
-[![Scaladoc](http://javadoc-badge.appspot.com/org.sisioh/sbt-aws.svg?label=scaladoc)](http://javadoc-badge.appspot.com/org.sisioh/sbt-aws_2.11)
-[![Reference Status](https://www.versioneye.com/java/org.sisioh:sbt-aws_2.11/reference_badge.svg?style=flat)](https://www.versioneye.com/java/org.sisioh:sbt-aws_2.11/references)
+[![Build Status](https://travis-ci.org/chatwork/sbt-aws.svg)](https://travis-ci.org/chatwork/sbt-aws)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.chatwork/sbt-aws_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.chatwork/sbt-aws_2.11)
+[![Scaladoc](http://javadoc-badge.appspot.com/com.chatwork/sbt-aws.svg?label=scaladoc)](http://javadoc-badge.appspot.com/com.chatwork/sbt-aws_2.11)
+[![Reference Status](https://www.versioneye.com/java/com.chatwork:sbt-aws_2.11/reference_badge.svg?style=flat)](https://www.versioneye.com/java/com.chatwork:sbt-aws_2.11/references)
 
 ## Installation
 
@@ -14,7 +14,7 @@ Add the following to your `project/plugin.sbt` (Scala 2.10.x, and Scala 2.11.x):
 ```scala
 resolvers += "Sonatype OSS Release Repository" at "https://oss.sonatype.org/content/repositories/releases/"
 
-addSbtPlugin("org.sisioh" % "sbt-aws" % "1.0.2")
+addSbtPlugin("com.chatwork" % "sbt-aws" % "1.0.2")
 ```
 
 ### Snapshot Version
@@ -22,7 +22,7 @@ addSbtPlugin("org.sisioh" % "sbt-aws" % "1.0.2")
 ```scala
 resolvers += "Sonatype OSS Snapshot Repository" at "https://oss.sonatype.org/content/repositories/snapshots/"
 
-addSbtPlugin("org.sisioh" % "sbt-aws" % "1.0.3-SNAPSHOT")
+addSbtPlugin("com.chatwork" % "sbt-aws" % "1.0.3-SNAPSHOT")
 ```
 
 ## Usage
