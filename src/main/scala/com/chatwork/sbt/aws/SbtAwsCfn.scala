@@ -1,4 +1,4 @@
-package org.sisioh.sbt.aws
+package com.chatwork.sbt.aws
 
 import java.io.FileNotFoundException
 import java.text.SimpleDateFormat
@@ -11,7 +11,7 @@ import com.amazonaws.services.cloudformation.AmazonCloudFormationClient
 import com.amazonaws.services.cloudformation.model._
 import org.sisioh.aws4s.cfn.Implicits._
 import org.sisioh.aws4s.cfn.model._
-import org.sisioh.sbt.aws.SbtAwsPlugin.AwsKeys._
+import SbtAwsPlugin.AwsKeys._
 import sbt.Keys._
 import sbt._
 

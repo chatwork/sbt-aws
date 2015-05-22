@@ -1,4 +1,4 @@
-package org.sisioh.sbt.aws
+package com.chatwork.sbt.aws
 
 import com.amazonaws.regions.Region
 import com.amazonaws.services.s3._

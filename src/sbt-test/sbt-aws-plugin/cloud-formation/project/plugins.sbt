@@ -11,5 +11,5 @@ resolvers ++= Seq(
   if(pluginVersion == null)
     throw new RuntimeException("""|The system property 'plugin.version' is not defined.
                                  |Specify this property using the scriptedLaunchOpts -D.""".stripMargin)
-  else addSbtPlugin("org.sisioh" % "sbt-aws-plugin" % pluginVersion)
+  else addSbtPlugin("com.chatwork" % "sbt-aws" % pluginVersion)
 }
