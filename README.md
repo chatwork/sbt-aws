@@ -115,7 +115,7 @@ $ sbt aws::cfnStackCreateOrUpdateAndWait // wait to complete deploy
 ```
 
 ```sh
-> aws::cfnStackDeleteAndWait
+$ sbt aws::cfnStackDeleteAndWait
 [info] delete stack request   : test1
 [info] delete stack requested : test1
 [info] status = DELETE_IN_PROGRESS
