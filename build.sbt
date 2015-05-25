@@ -55,53 +55,46 @@ lazy val pluginSettings = baseSettings ++ ScriptedPlugin.scriptedSettings ++ sca
       Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
   },
   scriptedBufferLog := false,
-    ScalariformKeys.preferences :=
-  ScalariformKeys.preferences.value
-    .setPreference(AlignParameters, true)
-    .setPreference(AlignSingleLineCaseStatements, true)
-    .setPreference(DoubleIndentClassDeclaration, true)
-    .setPreference(PreserveDanglingCloseParenthesis, true)
-    .setPreference(MultilineScaladocCommentsStartOnFirstLine, false)
+  ScalariformKeys.preferences :=
+    ScalariformKeys.preferences.value
+      .setPreference(AlignParameters, true)
+      .setPreference(AlignSingleLineCaseStatements, true)
+      .setPreference(DoubleIndentClassDeclaration, true)
+      .setPreference(PreserveDanglingCloseParenthesis, true)
+      .setPreference(MultilineScaladocCommentsStartOnFirstLine, false)
 )
 
 
 lazy val core = (project in file("sbt-aws-core")).settings(pluginSettings: _*).settings(
   name := "sbt-aws-core",
   libraryDependencies ++= Seq(
-    "org.sisioh" %% "sisioh-config" % sisiohConfigVersion withSources(),
-    "commons-codec" % "commons-codec" % "1.8",
-    "commons-io" % "commons-io" % "2.4",
-    "org.sisioh" %% "aws4s-core" % aws4sVersion withSources()
+    "org.sisioh" %% "sisioh-config" % sisiohConfigVersion,
+    "org.sisioh" %% "aws4s-core" % aws4sVersion,
+    "commons-io" % "commons-io" % "2.4"
   )
 )
 
 lazy val s3 = (project in file("sbt-aws-s3")).settings(pluginSettings: _*).settings(
   name := "sbt-aws-s3",
   libraryDependencies ++= Seq(
-    "org.sisioh" %% "aws4s-s3" % aws4sVersion withSources()
+    "org.sisioh" %% "aws4s-s3" % aws4sVersion
   )
 ).dependsOn(core)
 
 lazy val eb = (project in file("sbt-aws-eb")).settings(pluginSettings: _*).settings(
   name := "sbt-aws-eb",
   libraryDependencies ++= Seq(
-    "org.sisioh" %% "aws4s-eb" % aws4sVersion withSources()
+    "org.sisioh" %% "aws4s-eb" % aws4sVersion
   )
 ).dependsOn(s3)
 
 lazy val cfn = (project in file("sbt-aws-cfn")).settings(pluginSettings: _*).settings(
   name := "sbt-aws-cfn",
   libraryDependencies ++= Seq(
-    "org.sisioh" %% "aws4s-cfn" % aws4sVersion withSources()
+    "org.sisioh" %% "aws4s-cfn" % aws4sVersion
   )
 ).dependsOn(s3)
-
-lazy val root = (project in file(".")).settings(baseSettings: _*).settings(
-  name := "sbt-aws"
-).aggregate(core, s3, eb, cfn)
-
 
 def projectId(state: State) = extracted(state).currentProject.id
 
 def extracted(state: State) = Project extract state
-
