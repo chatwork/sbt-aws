@@ -19,7 +19,7 @@ object SbtAwsCfnPlugin extends AutoPlugin {
 
   override def projectSettings: Seq[Def.Setting[_]] = Seq(
     cfnTemplatesSourceFolder in aws <<= baseDirectory {
-      base => base / "aws/cfn/templates"
+      base => base / defaultTemplateDirectory
     },
     cfnTemplates in aws := {
       val templates = (cfnTemplatesSourceFolder in aws).value ** GlobFilter("*.template")
