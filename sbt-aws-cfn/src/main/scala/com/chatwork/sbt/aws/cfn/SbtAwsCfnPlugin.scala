@@ -57,9 +57,6 @@ object SbtAwsCfnPlugin extends AutoPlugin {
   def getConfigValue[A : ClassTag](config: SisiohConfiguration, settingKey: SettingKey[_], defaultValue: A) =
     getConfigValueOpt(config, settingKey).getOrElse(defaultValue)
 
-
-
-
   override def projectSettings: Seq[Def.Setting[_]] = Seq(
     cfnTemplatesSourceFolder in aws <<= baseDirectory {
       base => base / defaultTemplateDirectory

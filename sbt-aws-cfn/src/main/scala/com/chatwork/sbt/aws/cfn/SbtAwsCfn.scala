@@ -391,7 +391,7 @@ trait SbtAwsCfn extends SbtAwsS3 {
 
   def waitStack(client: AmazonCloudFormationClient,
                 stackName: String) = {
-    def statuses: Stream[String] = Stream.cons(getStackStatus(client, stackName).get.get, statuses)
+    def statuses: Stream[String] = Stream.cons(getStackStatus(client, stackName).get.getOrElse(""), statuses)
 
     val progressStatuses: Stream[String] = statuses.takeWhile { status => status.endsWith("_PROGRESS") }
     (progressStatuses, () => statuses.headOption)
