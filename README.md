@@ -73,7 +73,49 @@ You can switch the configuration file by specifying the `-Daws.env`.
 $ sbt -Daws.env=staging aws::CfnStackCreateOrUpdate
 ```
 
+#### sbt-aws-eb for ElasticBeanstalk
 
+- Please set the required files to the application bundle to ebBundleTargetFiles.
+
+```scala
+ebBundleTargetFiles in aws <<= Def.task {
+  val base = baseDirectory.value
+  val packageJarFile = (packageBin in Compile).value
+  Seq(
+    (base / "Dockerfile", "Dockerfile"),
+    (base / "Dockerrun.aws.json", "Dockerrun.aws.json"),
+    (packageJarFile, packageJarFile.name)
+  )
+}
+
+ebS3BucketName in aws := "sbt-aws-eb"
+
+ebS3CreateBucket in aws := true // if necessary
+```
+
+```sh
+$ sbt aws::ebBuildBundle
+[info] Updating {file:/Users/j5ik2o/sbt-aws/sbt-aws-eb/src/sbt-test/sbt-aws-eb/build-bundle/}build-bundle...
+[info] Resolving org.fusesource.jansi#jansi;1.4 ...
+[info] Done updating.
+[info] Compiling 1 Scala source to /Users/j5ik2o/sbt-aws/sbt-aws-eb/src/sbt-test/sbt-aws-eb/build-bundle/target/scala-2.10/classes...
+[info] Packaging /Users/j5ik2o/sbt-aws/sbt-aws-eb/src/sbt-test/sbt-aws-eb/build-bundle/target/scala-2.10/build-bundle_2.10-0.1-SNAPSHOT.jar ...
+[info] Done packaging.
+[info] created application-bundle: /Users/j5ik2o/sbt-aws/sbt-aws-eb/src/sbt-test/sbt-aws-eb/build-bundle/target/build-bundle-bundle.zip
+```
+
+```sh
+$ sbt aws::ebUploadBundle
+[info] Updating {file:/Users/j5ik2o/sbt-aws/sbt-aws-eb/src/sbt-test/sbt-aws-eb/upload-bundle/}upload-bundle...
+[info] Resolving org.fusesource.jansi#jansi;1.4 ...
+[info] Done updating.
+[info] Compiling 1 Scala source to /Users/j5ik2o/sbt-aws/sbt-aws-eb/src/sbt-test/sbt-aws-eb/upload-bundle/target/scala-2.10/classes...
+[info] Packaging /Users/j5ik2o/sbt-aws/sbt-aws-eb/src/sbt-test/sbt-aws-eb/upload-bundle/target/scala-2.10/upload-bundle_2.10-0.1-SNAPSHOT.jar ...
+[info] Done packaging.
+[info] created application-bundle: /Users/j5ik2o/sbt-aws/sbt-aws-eb/src/sbt-test/sbt-aws-eb/upload-bundle/target/upload-bundle-bundle.zip
+[info] upload /Users/j5ik2o/sbt-aws/sbt-aws-eb/src/sbt-test/sbt-aws-eb/upload-bundle/target/upload-bundle-bundle.zip to sbt-aws-eb/upload-bundle/upload-bundle-0.1-SNAPSHOT-20150525_172404.zip
+```
+            
 #### sbt-aws-cfn for CloudFormation
 
 - Put the CloudFormation template files in the 'aws/cfn/templates' folder
