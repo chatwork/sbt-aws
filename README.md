@@ -14,11 +14,11 @@ Add the following to your `project/plugin.sbt` (Scala 2.10.x, and Scala 2.11.x):
 ```scala
 resolvers += "Sonatype OSS Release Repository" at "https://oss.sonatype.org/content/repositories/releases/"
 
-addSbtPlugin("com.chatwork" %% "sbt-aws" % "1.0.2)"
+addSbtPlugin("com.chatwork" %% "sbt-aws" % "1.0.3)"
 
-addSbtPlugin("com.chatwork" %% "sbt-aws" % "1.0.2)"
+addSbtPlugin("com.chatwork" %% "sbt-aws" % "1.0.3)"
 
-addSbtPlugin("com.chatwork" %% "sbt-aws" % "1.0.2)"
+addSbtPlugin("com.chatwork" %% "sbt-aws" % "1.0.3)"
 ```
 
 ### Snapshot Version
