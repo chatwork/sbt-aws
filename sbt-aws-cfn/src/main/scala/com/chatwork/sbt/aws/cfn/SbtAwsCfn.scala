@@ -21,6 +21,9 @@ import scala.collection.JavaConverters._
 import scala.util.{ Failure, Success, Try }
 
 object SbtAwsCfn extends SbtAwsS3 {
+
+  val defaultTemplateDirectory = "aws/cfn/templates"
+
   lazy val cfnClient = Def.task {
     createClient(
       classOf[AmazonCloudFormationClient],
