@@ -101,6 +101,29 @@ cfnStackName in aws := Some("example-stack")
 
 ```sh
 $ sbt aws::cfnStackCreateOrUpdateAndWait // wait to complete deploy
+[info] upload /Users/j5ik2o/sbt-aws/sbt-aws-cfn/src/sbt-test/sbt-aws-cfn/create-or-update-and-wait/aws/cfn/templates/S3.template to cfn-template/create-or-update-and-wait/create-or-update-and-wait-0.1-SNAPSHOT-20150525_185939.templete
+[info] create stack request : stackName = test1, templateUrl = https://cfn-template.s3-ap-northeast-1.amazonaws.com/create-or-update-and-wait/create-or-update-and-wait-0.1-SNAPSHOT-20150525_185939.templete, capabilities = List(), stackParams = Map(S3BucketName1 -> dmmy-test-00002, S3BucketName0 -> dmmy-test-00001), tags = Map()
+{StackId: arn:aws:cloudformation:ap-northeast-1:327747897717:stack/test1/c1fdf600-02c4-11e5-a322-506cf9a1c096}
+[info] created stack: test1 / arn:aws:cloudformation:ap-northeast-1:327747897717:stack/test1/c1fdf600-02c4-11e5-a322-506cf9a1c096
+[info] status = CREATE_IN_PROGRESS
+[info] status = CREATE_IN_PROGRESS
+[info] status = CREATE_IN_PROGRESS
+[info] status = CREATE_IN_PROGRESS
+[info] status = CREATE_IN_PROGRESS
+[info] status = CREATE_IN_PROGRESS
+[success] Total time: 25 s, completed 2015/05/25 19:00:04
+```
+
+```sh
+> aws::cfnStackDeleteAndWait
+[info] delete stack request   : test1
+[info] delete stack requested : test1
+[info] status = DELETE_IN_PROGRESS
+[info] status = DELETE_IN_PROGRESS
+[info] status = DELETE_IN_PROGRESS
+[info] status = DELETE_IN_PROGRESS
+[info] status = DELETE_IN_PROGRESS
+[success] Total time: 25 s, completed 2015/05/25 20:00:04
 ```
 
 #### Configuration File Support by Typesafe Config
