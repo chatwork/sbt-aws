@@ -37,6 +37,7 @@ trait SbtAwsEb extends SbtAwsS3 {
   def ebUploadBundleTask(): Def.Initialize[Task[Unit]] = Def.task {
     val logger = streams.value.log
     val path = (ebBuildBundle in aws).value
+    val createBucket = (ebS3CreateBucket in aws).value
 
     val projectName = (name in thisProjectRef).value
     val projectVersion = (version in thisProjectRef).value
@@ -53,7 +54,7 @@ trait SbtAwsEb extends SbtAwsS3 {
     val overwrite = projectVersion.endsWith("-SNAPSHOT")
 
     logger.info(s"upload $path to $bucketName/$key")
-    s3PutObject(s3Client.value, bucketName, key, path, overwrite, false).get
+    s3PutObject(s3Client.value, bucketName, key, path, overwrite, createBucket).get
     logger.info(s"uploaded $bucketName/$key")
   }
 

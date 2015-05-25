@@ -19,12 +19,13 @@ object SbtAwsEbPlugin extends AutoPlugin {
 
   override def projectSettings: Seq[Def.Setting[_]] = Seq(
     ebBundleTargetFiles in aws := Seq.empty,
-    ebBundleFileName in aws := "bundle.zip",
+    ebBundleFileName in aws := (name in thisProjectRef).value + "-bundle.zip",
     ebS3BucketName in aws := "eb-bucket",
     ebS3KeyCreator in aws := identity,
     ebApplicationName in aws := (name in thisProjectRef).value,
     ebApplicationDescription in aws := None,
     ebVersionLabel in aws := (version in thisProjectRef).value,
+    ebS3CreateBucket in aws := false,
     ebBuildBundle in aws <<= ebBuildBundleTask(),
     ebUploadBundle in aws <<= ebUploadBundleTask(),
     ebCreateApplication in aws <<= ebCreateApplicationTask,
