@@ -38,6 +38,10 @@ lazy val baseSettings = Seq(
           <url>http://j5ik2o.me/</url>
         </developer>
       </developers>
+  },
+  credentials := {
+    val ivyCredentials = (baseDirectory in LocalRootProject).value / ".credentials"
+    Credentials(ivyCredentials) :: Nil
   }
 )
 
@@ -61,11 +65,7 @@ lazy val pluginSettings = baseSettings ++ ScriptedPlugin.scriptedSettings ++ sca
       .setPreference(AlignSingleLineCaseStatements, true)
       .setPreference(DoubleIndentClassDeclaration, true)
       .setPreference(PreserveDanglingCloseParenthesis, true)
-      .setPreference(MultilineScaladocCommentsStartOnFirstLine, false),
-  credentials := {
-    val ivyCredentials = (baseDirectory in LocalRootProject).value / ".credentials"
-    Credentials(ivyCredentials) :: Nil
-  }
+      .setPreference(MultilineScaladocCommentsStartOnFirstLine, false)
 )
 
 
