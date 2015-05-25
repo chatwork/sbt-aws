@@ -8,3 +8,7 @@ ebBundleTargetFiles in aws <<= Def.task {
     (packageJarFile, packageJarFile.name)
   )
 }
+
+ebS3BucketName in aws := "sbt-aws-eb"
+
+ebS3CreateBucket in aws := true
