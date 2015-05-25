@@ -33,9 +33,8 @@ lazy val baseSettings = Seq(
       </scm>
       <developers>
         <developer>
-          <id>j5ik2o</id>
+          <id>cw-junichikato</id>
           <name>Junichi Kato</name>
-          <url>http://j5ik2o.me/</url>
         </developer>
       </developers>
   },
