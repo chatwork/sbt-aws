@@ -80,8 +80,7 @@ $ sbt -Daws.env=staging aws::CfnStackCreateOrUpdate
 
 ```
 aws/cfn/templates
-  + s3.template
-  + rds.template
+  + infra.template
 ```
 
 - Set the value to the setting item into build.sbt.
