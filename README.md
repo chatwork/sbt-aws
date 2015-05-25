@@ -78,6 +78,8 @@ $ sbt -Daws.env=staging aws::CfnStackCreateOrUpdate
 - Please set the required files to the application bundle to ebBundleTargetFiles.
 
 ```scala
+region in aws := com.amazonaws.regions.Regions.AP_NORTHEAST_1
+
 ebBundleTargetFiles in aws <<= Def.task {
   val base = baseDirectory.value
   val packageJarFile = (packageBin in Compile).value
@@ -127,7 +129,14 @@ aws/cfn/templates
 
 - Set the value to the setting item into build.sbt.
 
+
 ```scala
-val root = (project in file(".").settings(
-    region in aws := com.amazonaws.regions.Regions.AP_NORTHEAST_1,
+region in aws := com.amazonaws.regions.Regions.AP_NORTHEAST_1
+
+cfnStackName in aws := Some("example-stack")
+```
+
+```sh
+$ sbt aws::cfnStackCreateOrUpdateAndWait // wait to complete deploy
+```
   
