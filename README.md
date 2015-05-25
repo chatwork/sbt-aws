@@ -35,43 +35,6 @@ addSbtPlugin("com.chatwork" %% "sbt-aws-eb" % "1.0.7-SNAPSHOT)"
 
 ## Usage
 
-#### Configuration File Support by Typesafe Config
-
-`env/dev.conf` is loaded, in defaults.
-
-```
-"aws": {
-
-  "cfnStackName": "test1"
-
-  "cfnStackParams": {
-    "S3BucketName0": "test1-dmmy-test-00001",
-    "S3BucketName1": "test1-dmmy-test-00002"
-  }
-
-}
-```
-
-The above is the same mean as the following.
-
-```scala
-cfnStackName in aws := "test1",
-cfnStackParams in aws := Map(
-   "S3BucketName0" -> "test1-dmmy-test-00001",
-   "S3BucketName1" -> "test1-dmmy-test-00002",
-)
-```
-
-#### Profile Function
-
-You can switch the configuration file by specifying the `-Daws.env`.
-
-`env/staging.conf` is loaded.
-
-
-```sh
-$ sbt -Daws.env=staging aws::CfnStackCreateOrUpdate
-```
 
 #### sbt-aws-eb for ElasticBeanstalk
 
@@ -139,4 +102,43 @@ cfnStackName in aws := Some("example-stack")
 ```sh
 $ sbt aws::cfnStackCreateOrUpdateAndWait // wait to complete deploy
 ```
+
+#### Configuration File Support by Typesafe Config
+
+`env/dev.conf` is loaded, in defaults.
+
+```
+"aws": {
+
+  "cfnStackName": "test1"
+
+  "cfnStackParams": {
+    "S3BucketName0": "test1-dmmy-test-00001",
+    "S3BucketName1": "test1-dmmy-test-00002"
+  }
+
+}
+```
+
+The above is the same mean as the following.
+
+```scala
+cfnStackName in aws := "test1",
+cfnStackParams in aws := Map(
+   "S3BucketName0" -> "test1-dmmy-test-00001",
+   "S3BucketName1" -> "test1-dmmy-test-00002",
+)
+```
+
+#### Profile Function
+
+You can switch the configuration file by specifying the `-Daws.env`.
+
+`env/staging.conf` is loaded.
+
+
+```sh
+$ sbt -Daws.env=staging aws::CfnStackCreateOrUpdate
+```
+
   
