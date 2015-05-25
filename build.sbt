@@ -41,7 +41,9 @@ lazy val baseSettings = Seq(
   },
   credentials := {
     val ivyCredentials = (baseDirectory in LocalRootProject).value / ".credentials"
-    Credentials(ivyCredentials) :: Nil
+    val result = Credentials(ivyCredentials) :: Nil
+    println(Credentials.forHost(result, "oss.sonatype.org"))
+    result
   }
 )
 
@@ -98,6 +100,11 @@ lazy val cfn = (project in file("sbt-aws-cfn")).settings(pluginSettings: _*).set
     "org.sisioh" %% "aws4s-cfn" % aws4sVersion
   )
 ).dependsOn(s3)
+
+lazy val root = (project in file(".")).settings(baseSettings: _*).settings(
+  name := "sbt-aws"
+).aggregate(core, s3, eb, cfn)
+
 
 def projectId(state: State) = extracted(state).currentProject.id
 
