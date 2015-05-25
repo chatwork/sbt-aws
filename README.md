@@ -26,11 +26,11 @@ addSbtPlugin("com.chatwork" %% "sbt-aws" % "1.0.6)"
 ```scala
 resolvers += "Sonatype OSS Snapshot Repository" at "https://oss.sonatype.org/content/repositories/snapshots/"
 
-addSbtPlugin("com.chatwork" %% "sbt-aws" % "1.0.6-SNAPSHOT)"
+addSbtPlugin("com.chatwork" %% "sbt-aws" % "1.0.7-SNAPSHOT)"
 
-addSbtPlugin("com.chatwork" %% "sbt-aws" % "1.0.6-SNAPSHOT)"
+addSbtPlugin("com.chatwork" %% "sbt-aws" % "1.0.7-SNAPSHOT)"
 
-addSbtPlugin("com.chatwork" %% "sbt-aws" % "1.0.6-SNAPSHOT)"
+addSbtPlugin("com.chatwork" %% "sbt-aws" % "1.0.7-SNAPSHOT)"
 ```
 
 ## Usage
