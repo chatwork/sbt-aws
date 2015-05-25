@@ -35,7 +35,7 @@ addSbtPlugin("com.chatwork" % "sbt-aws-eb" % "1.0.0-SNAPSHOT")
 
 ## Usage
 
-### Configuration File Support by Typesafe Config
+#### Configuration File Support by Typesafe Config
 
 `env/dev.conf` is loaded, in defaults.
 
@@ -62,7 +62,7 @@ cfnStackParams in aws := Map(
 )
 ```
 
-### Profile Function
+#### Profile Function
 
 You can switch the configuration file by specifying the `-Daws.env`.
 
@@ -74,7 +74,7 @@ $ sbt -Daws.env=staging aws::CfnStackCreateOrUpdate
 ```
 
 
-### CloudFormation Functions
+#### sbt-aws-cfn for CloudFormation
 
 - Put the CloudFormation template files in the 'aws/cfn/templates' folder
 
@@ -89,15 +89,4 @@ aws/cfn/templates
 ```scala
 val root = (project in file(".").settings(
     region in aws := com.amazonaws.regions.Regions.AP_NORTHEAST_1,
-    cfnStackName in aws := "stackA",
-    cfnStackParams in aws := Map("key" -> "value")
-)
-
-```
-
-- Create the stack, or Update it
-
-```sh
-$ sbt aws::CfnStackCreateOrUpdate
-```
-
+  
