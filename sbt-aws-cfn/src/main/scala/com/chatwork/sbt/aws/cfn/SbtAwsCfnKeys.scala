@@ -20,7 +20,7 @@ trait SbtAwsCfnKeys {
   val cfnVersion = settingKey[String]("cfn-version")
   val cfnStackName = settingKey[Option[String]]("cfn-stack-name")
   val cfnS3BucketName = settingKey[String]("cfn-s3-bucket-name")
-  val cfnS3KeyFunctor = settingKey[String => String]("cfn-s3-key-functor")
+  val cfnS3KeyCreator = settingKey[String => String]("cfn-s3-key-functor")
   val cfnCapabilityIam = settingKey[Boolean]("cfn-capability-iam")
 
   val cfnUploadTemplate = taskKey[String]("cfn-upload-template")

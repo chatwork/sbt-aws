@@ -34,7 +34,7 @@ object SbtAwsCfnPlugin extends AutoPlugin {
     cfnS3BucketName in aws := {
       (awsConfig in aws).value.getStringValue(cfnS3BucketName.key.label).getOrElse("cfn-template")
     },
-    cfnS3KeyFunctor in aws := identity,
+    cfnS3KeyCreator in aws := identity,
     cfnStackParams in aws := {
       (awsConfig in aws).value.getConfiguration(cfnStackParams.key.label)
         .map(_.entrySet.map { case (k, v) => (k, v.unwrapped().toString) }.toMap).getOrElse(Map.empty)
