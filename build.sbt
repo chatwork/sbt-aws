@@ -38,10 +38,9 @@ lazy val baseSettings = Seq(
         </developer>
       </developers>
   },
-  credentials := {
+  credentials <<= Def.task {
     val ivyCredentials = (baseDirectory in LocalRootProject).value / ".credentials"
     val result = Credentials(ivyCredentials) :: Nil
-    println(Credentials.forHost(result, "oss.sonatype.org"))
     result
   }
 )
