@@ -17,7 +17,9 @@ import sbt._
 
 import scala.util.{ Success, Try }
 
-object SbtAwsEb extends SbtAwsS3 {
+object SbtAwsEb extends SbtAwsEb
+
+trait SbtAwsEb extends SbtAwsS3 {
 
   lazy val ebClient = Def.task {
     createClient(classOf[AWSElasticBeanstalkClient], Region.getRegion((region in aws).value), (credentialProfileName in aws).value)

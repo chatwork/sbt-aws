@@ -20,7 +20,9 @@ import sbt._
 import scala.collection.JavaConverters._
 import scala.util.{ Failure, Success, Try }
 
-object SbtAwsCfn extends SbtAwsS3 {
+object SbtAwsCfn extends SbtAwsCfn
+
+trait SbtAwsCfn extends SbtAwsS3 {
 
   val defaultTemplateDirectory = "aws/cfn/templates"
 

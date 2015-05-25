@@ -9,6 +9,8 @@ import com.amazonaws.regions.Region
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.io.FileUtils
 
+object SbtAwsCore extends SbtAwsCore
+
 trait SbtAwsCore {
 
   protected def newCredentialsProvider(profileName: Option[String]) = {
@@ -20,10 +22,11 @@ trait SbtAwsCore {
     )
   }
 
-  def createClient[A <: AmazonWebServiceClient](serviceClass: Class[A], region: Region, profileName: Option[String]): A = {
+  protected def createClient[A <: AmazonWebServiceClient](serviceClass: Class[A], region: Region, profileName: Option[String]): A = {
     region.createClient(serviceClass, newCredentialsProvider(profileName), null)
   }
 
-  def md5(file: File): String =
+  protected def md5(file: File): String =
     DigestUtils.md5Hex(FileUtils.readFileToByteArray(file))
+
 }
