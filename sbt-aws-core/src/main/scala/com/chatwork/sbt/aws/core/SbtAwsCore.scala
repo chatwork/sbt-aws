@@ -13,6 +13,8 @@ import sbt.SettingKey
 
 import scala.reflect.ClassTag
 
+import sbt._
+
 object SbtAwsCore extends SbtAwsCore
 
 trait SbtAwsCore {
@@ -30,8 +32,9 @@ trait SbtAwsCore {
     region.createClient(serviceClass, newCredentialsProvider(profileName), null)
   }
 
+
   protected def md5(file: File): String =
-    DigestUtils.md5Hex(FileUtils.readFileToByteArray(file))
+    DigestUtils.md5Hex(IO.readBytes(file))
 
   def getConfigValuesAsSeq[A: ClassTag](config: SisiohConfiguration, key: String, defaultValue: Seq[A]): Seq[A] = {
     implicitly[ClassTag[Seq[A]]].runtimeClass match {
