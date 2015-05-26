@@ -1,5 +1,5 @@
+import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 import sbtrelease._
-import ReleaseTransformations._
 
 val sonatypeURL = "https://oss.sonatype.org/service/local/repositories/"
 
@@ -7,16 +7,16 @@ val updateReadme = { state: State =>
   val extracted = Project.extract(state)
   val scalaV = extracted get scalaBinaryVersion
   val v = extracted get version
-  val org =  extracted get organization
+  val org = extracted get organization
   val n = extracted get name
-  val snapshotOrRelease = if(extracted get isSnapshot) "snapshots" else "releases"
+  val snapshotOrRelease = if (extracted get isSnapshot) "snapshots" else "releases"
   val readme = "README.md"
   val readmeFile = file(readme)
-  val newReadme = Predef.augmentString(IO.read(readmeFile)).lines.map{ line =>
+  val newReadme = Predef.augmentString(IO.read(readmeFile)).lines.map { line =>
     val matchReleaseOrSnapshot = line.contains("SNAPSHOT") == v.contains("SNAPSHOT")
-    if(line.startsWith("addSbtPlugin") && line.contains(s""""$n"""") && matchReleaseOrSnapshot){
-      s"""addSbtPlugin("${org}" %% "${n}" % "$v")"""
-    }else line
+    if (line.startsWith("addSbtPlugin") && line.contains( s""""$n"""") && matchReleaseOrSnapshot) {
+      line.replaceAll("\"\\d\\.\\d\\.\\d(-SNAPSHOT)?\"$", "\"" + v + "\"")
+    } else line
   }.mkString("", "\n", "\n")
   IO.write(readmeFile, newReadme)
   val git = new Git(extracted get baseDirectory)
