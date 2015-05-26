@@ -8,6 +8,7 @@ import com.chatwork.sbt.aws.core.SbtAwsCoreKeys._
 import com.chatwork.sbt.aws.s3.SbtAwsS3Keys._
 import org.sisioh.aws4s.s3.Implicits._
 import org.sisioh.aws4s.s3.model.PutObjectRequestFactory
+import sbt.Keys._
 import sbt._
 
 import scala.util.{ Failure, Success, Try }
@@ -63,13 +64,18 @@ trait SbtAwsS3 extends SbtAwsCore {
   }
 
   def s3UploadTask: Def.Initialize[Task[String]] = Def.task {
+    val logger = streams.value.log
     val client = s3Client.value
     val bucketName = (s3BucketName in aws).value
     val key = (s3Key in aws).value
     val file = (s3File in aws).value.get
     val overwrite = (s3OverwriteObject in aws).value
     val createBucket = (s3CreateBucket in aws).value
-    s3PutObject(client, bucketName, key, file, overwrite, createBucket).get
+
+    logger.info(s"put object request : bucketName = $bucketName, key = $key, file = $file, overwrite = $overwrite, createBucket = $createBucket")
+    val url = s3PutObject(client, bucketName, key, file, overwrite, createBucket).get
+    logger.info(s"put object requested : bucketName = $bucketName key = $key, url = $url")
+    url
   }
 
 }
