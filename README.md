@@ -58,6 +58,8 @@ ebS3BucketName in aws := "sbt-aws-eb"
 ebS3CreateBucket in aws := true // if necessary
 ```
 
+- Build application-bundle
+
 ```sh
 $ sbt aws::ebBuildBundle
 [info] Updating {file:/Users/j5ik2o/sbt-aws/sbt-aws-eb/src/sbt-test/sbt-aws-eb/build-bundle/}build-bundle...
@@ -68,6 +70,8 @@ $ sbt aws::ebBuildBundle
 [info] Done packaging.
 [info] created application-bundle: /Users/j5ik2o/sbt-aws/sbt-aws-eb/src/sbt-test/sbt-aws-eb/build-bundle/target/build-bundle-bundle.zip
 ```
+
+- Upload application-bundle
 
 ```sh
 $ sbt aws::ebUploadBundle
@@ -99,6 +103,8 @@ region in aws := com.amazonaws.regions.Regions.AP_NORTHEAST_1
 cfnStackName in aws := Some("example-stack")
 ```
 
+- Create or update stack.
+
 ```sh
 $ sbt aws::cfnStackCreateOrUpdateAndWait // wait to complete deploy
 [info] upload /Users/j5ik2o/sbt-aws/sbt-aws-cfn/src/sbt-test/sbt-aws-cfn/create-or-update-and-wait/aws/cfn/templates/S3.template to cfn-template/create-or-update-and-wait/create-or-update-and-wait-0.1-SNAPSHOT-20150525_185939.templete
@@ -113,6 +119,8 @@ $ sbt aws::cfnStackCreateOrUpdateAndWait // wait to complete deploy
 [info] status = CREATE_IN_PROGRESS
 [success] Total time: 25 s, completed 2015/05/25 19:00:04
 ```
+
+- Delete stack
 
 ```sh
 $ sbt aws::cfnStackDeleteAndWait
@@ -144,7 +152,7 @@ s3OverwriteObject in aws := true
 s3CreateBucket in aws := true
 ```
 
-- 
+- Upload file
 
 ```sh
 $ sbt aws::s3Upload
