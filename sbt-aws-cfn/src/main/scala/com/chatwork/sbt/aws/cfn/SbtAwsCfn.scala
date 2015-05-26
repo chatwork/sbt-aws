@@ -100,7 +100,7 @@ trait SbtAwsCfn extends SbtAwsS3 {
     val client = cfnClient.value
 
     stackName.map { sn =>
-      logger.info(s"describe stack: stackName = $stackName")
+      logger.info(s"describe stack request: stackName = $sn")
       describeStacks(client, sn).get
     }.map { stacks =>
       if (stacks.isEmpty) {
@@ -129,7 +129,7 @@ trait SbtAwsCfn extends SbtAwsS3 {
     val client = cfnClient.value
 
     stackName.flatMap { sn =>
-      logger.info(s"status: stackName = $stackName")
+      logger.info(s"status: stackName = $sn")
       getStackStatus(client, sn).map { statusOpt =>
         statusOpt.map { status =>
           logger.info(s"$stackName's status is $status")
@@ -201,7 +201,11 @@ trait SbtAwsCfn extends SbtAwsS3 {
     stackName.flatMap { sn =>
       describeStacks(client, sn).flatMap { stacks =>
         stacks.headOption.map { stack =>
-          logger.info(s"create stack: stackName = $stackName, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params, tags = $tags")
+          logger.info(s"create stack request : stackName = $sn")
+          logger.info(s" templateUrl = $templateUrl,")
+          logger.info(s" capabilities = $capabilities")
+          logger.info(s" stackParams = $params")
+          logger.info(s" tags = $tags")
           createStack(client, sn, templateUrl, capabilities, params, tags).map(Some(_))
         }.getOrElse {
           logger.info(s"does not exists $stackName")
@@ -209,7 +213,7 @@ trait SbtAwsCfn extends SbtAwsS3 {
         }
       }.map { resultOpt =>
         resultOpt.flatMap { result =>
-          logger.info(s"created stack $stackName / ${result.stackIdOpt.get}")
+          logger.info(s"create stack requested : $stackName / ${result.stackIdOpt.get}")
           result.stackIdOpt
         }
       }.get
@@ -246,7 +250,7 @@ trait SbtAwsCfn extends SbtAwsS3 {
     stackName.flatMap { sn =>
       describeStacks(client, sn).flatMap { stacks =>
         stacks.headOption.map { stack =>
-          logger.info(s"delete stack: stackName = $stackName")
+          logger.info(s"delete stack request : stackName = $sn")
           deleteStack(client, sn).map(_ => Some(sn))
         }.getOrElse {
           logger.info(s"does not exists $stackName")
@@ -254,7 +258,7 @@ trait SbtAwsCfn extends SbtAwsS3 {
         }
       }.map { resultOpt =>
         resultOpt.map { _ =>
-          logger.info(s"deleted stack $sn")
+          logger.info(s"delete stack requested : $sn")
           sn
         }
       }.get
@@ -305,7 +309,10 @@ trait SbtAwsCfn extends SbtAwsS3 {
     stackName.flatMap { sn =>
       describeStacks(client, sn).flatMap { stacks =>
         stacks.headOption.map { stack =>
-          logger.info(s"update stack: stackName = $stackName, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params")
+          logger.info(s"update stack request : stackName = $sn")
+          logger.info(s" templateUrl = $templateUrl,")
+          logger.info(s" capabilities = $capabilities")
+          logger.info(s" stackParams = $params")
           updateStack(client, sn, templateUrl, capabilities, params)
         }.getOrElse {
           logger.info("No updates are to be performed.")
@@ -313,7 +320,7 @@ trait SbtAwsCfn extends SbtAwsS3 {
         }
       }.map { resultOpt =>
         resultOpt.flatMap { result =>
-          logger.info(s"updated stack $stackName / ${result.stackIdOpt.get}")
+          logger.info(s"update stack requested : $stackName / ${result.stackIdOpt.get}")
           result.stackIdOpt
         }
       }.get
@@ -349,20 +356,27 @@ trait SbtAwsCfn extends SbtAwsS3 {
     stackName.flatMap { sn =>
       describeStacks(client, sn).flatMap { stacks =>
         stacks.headOption.map { stack =>
-          logger.info(s"update stack: stackName = $sn, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params")
+          logger.info(s"update stack request : stackName = $sn")
+          logger.info(s" templateUrl = $templateUrl,")
+          logger.info(s" capabilities = $capabilities")
+          logger.info(s" stackParams = $params")
           updateStack(client, sn, templateUrl, capabilities, params)
         }.getOrElse {
-          logger.info(s"create stack: stackName = $sn, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params, tags = $tags")
+          logger.info(s"create stack request : stackName = $sn")
+          logger.info(s" templateUrl = $templateUrl,")
+          logger.info(s" capabilities = $capabilities")
+          logger.info(s" stackParams = $params")
+          logger.info(s" tags = $tags")
           createStack(client, sn, templateUrl, capabilities, params, tags).map { result => println(result.toString); result }
         }
       }.map {
         case result: CreateStackResult =>
-          logger.info(s"created stack: $sn / ${result.stackIdOpt.get}")
+          logger.info(s"created stack requested : $sn / ${result.stackIdOpt.get}")
           result.stackIdOpt
         case resultOpt: Option[_] =>
           resultOpt.map {
             case result: UpdateStackResult =>
-              logger.info(s"updated stack $sn / ${result.stackIdOpt.get}")
+              logger.info(s"updated stack requested : $sn / ${result.stackIdOpt.get}")
               result.stackIdOpt
           }.getOrElse {
             logger.info("No updates are to be performed.")
