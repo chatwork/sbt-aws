@@ -66,7 +66,7 @@ object SbtAwsCfnPlugin extends AutoPlugin {
       templates.get
     },
     cfnArtifactId := {
-      getConfigValue[String]((awsConfig in aws).value, cfnArtifactId, (name in ThisProject).value)
+      getConfigValue((awsConfig in aws).value, cfnArtifactId, (name in ThisProject).value)
     },
     cfnVersion := {
       getConfigValue((awsConfig in aws).value, cfnVersion, (version in ThisProject).value)
@@ -74,7 +74,7 @@ object SbtAwsCfnPlugin extends AutoPlugin {
     cfnS3BucketName in aws := {
       getConfigValue((awsConfig in aws).value, cfnS3BucketName, "cfn-template")
     },
-    cfnS3KeyCreator in aws := identity,
+    cfnS3KeyMapper in aws := identity,
     cfnStackParams in aws := {
       (awsConfig in aws).value.getConfiguration(cfnStackParams.key.label)
         .map(_.entrySet.map { case (k, v) => (k, v.unwrapped().toString) }.toMap).getOrElse(Map.empty)

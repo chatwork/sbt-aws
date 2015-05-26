@@ -46,10 +46,10 @@ trait SbtAwsEb extends SbtAwsS3 {
     val timestamp = sdf.format(new Date())
 
     val bucketName = (ebS3BucketName in aws).value
-    val keyCreator = (ebS3KeyCreator in aws).value
+    val keyMapper = (ebS3KeyMapper in aws).value
 
     val baseKey = s"$projectName/$projectName-$projectVersion-$timestamp.zip"
-    val key = keyCreator(baseKey)
+    val key = keyMapper(baseKey)
 
     val overwrite = projectVersion.endsWith("-SNAPSHOT")
 

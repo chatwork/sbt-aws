@@ -47,8 +47,8 @@ trait SbtAwsCfn extends SbtAwsS3 {
     val artifactId = (cfnArtifactId in aws).value
     val version = (cfnVersion in aws).value
 
-    val keyCreator = (cfnS3KeyCreator in aws).value
-    val key = keyCreator(s"$artifactId-$version-$timestamp.templete")
+    val keyMapper = (cfnS3KeyMapper in aws).value
+    val key = keyMapper(s"$artifactId-$version-$timestamp.templete")
 
     logger.info(s"upload $file to $bucketName/$key")
     val result = s3PutObject(s3Client.value, bucketName, key, file, false, true)

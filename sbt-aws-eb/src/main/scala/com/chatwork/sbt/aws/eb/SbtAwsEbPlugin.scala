@@ -21,7 +21,7 @@ object SbtAwsEbPlugin extends AutoPlugin {
     ebBundleTargetFiles in aws := Seq.empty,
     ebBundleFileName in aws := (name in thisProjectRef).value + "-bundle.zip",
     ebS3BucketName in aws := "eb-bucket",
-    ebS3KeyCreator in aws := identity,
+    ebS3KeyMapper in aws := identity,
     ebApplicationName in aws := (name in thisProjectRef).value,
     ebApplicationDescription in aws := None,
     ebVersionLabel in aws := (version in thisProjectRef).value,

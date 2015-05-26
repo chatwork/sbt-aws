@@ -15,7 +15,7 @@ trait SbtAwsEbKeys {
 
   lazy val ebS3BucketName = settingKey[String]("eb-s3-bucket-name")
 
-  lazy val ebS3KeyCreator = taskKey[String => String]("eb-s3-key-creator")
+  lazy val ebS3KeyMapper = taskKey[String => String]("eb-s3-key-mapper")
 
   lazy val ebS3CreateBucket = settingKey[Boolean]("eb-s3-create-bucket")
 
