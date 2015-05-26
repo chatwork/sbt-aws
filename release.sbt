@@ -15,7 +15,7 @@ val updateReadme = { state: State =>
   val newReadme = Predef.augmentString(IO.read(readmeFile)).lines.map { line =>
     val matchReleaseOrSnapshot = line.contains("SNAPSHOT") == v.contains("SNAPSHOT")
     if (line.startsWith("addSbtPlugin") && matchReleaseOrSnapshot) {
-      line.replaceAll("\"\\d\\.\\d\\.\\d(-SNAPSHOT)?\"$", "\"" + v + "\"")
+      line.replaceAll("\"\\d\\.\\d\\.\\d(-SNAPSHOT)?\"\\)$", "\"" + v + "\")")
     } else line
   }.mkString("", "\n", "\n")
   IO.write(readmeFile, newReadme)
