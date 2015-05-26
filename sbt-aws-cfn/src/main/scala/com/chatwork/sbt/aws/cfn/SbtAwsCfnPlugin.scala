@@ -5,9 +5,6 @@ import com.chatwork.sbt.aws.core.SbtAwsCoreKeys
 import com.chatwork.sbt.aws.s3.SbtAwsS3Plugin
 import sbt.Keys._
 import sbt._
-import org.sisioh.config.{ Configuration => SisiohConfiguration }
-
-import scala.reflect.ClassTag
 
 object SbtAwsCfnPlugin extends AutoPlugin {
 
@@ -20,42 +17,6 @@ object SbtAwsCfnPlugin extends AutoPlugin {
   import SbtAwsCfnKeys._
   import SbtAwsCoreKeys._
 
-  def getConfigValues[A : ClassTag](config: SisiohConfiguration, settingKey: SettingKey[Seq[A]], defaultValue: Seq[A]): Seq[A] = {
-    implicitly[ClassTag[Seq[A]]].runtimeClass match {
-      case x if x == classOf[Seq[String]] =>
-        config.getStringValues(settingKey.key.label).getOrElse(defaultValue).asInstanceOf[Seq[A]]
-      case x if x == classOf[Seq[Int]] =>
-        config.getIntValues(settingKey.key.label).getOrElse(defaultValue).asInstanceOf[Seq[A]]
-      case x if x == classOf[Seq[Boolean]] =>
-        config.getBooleanValues(settingKey.key.label).getOrElse(defaultValue).asInstanceOf[Seq[A]]
-      case x if x == classOf[Seq[Byte]] =>
-        config.getByteValues(settingKey.key.label).getOrElse(defaultValue).asInstanceOf[Seq[A]]
-      case x if x == classOf[Seq[Long]] =>
-        config.getLongValues(settingKey.key.label).getOrElse(defaultValue).asInstanceOf[Seq[A]]
-      case x if x == classOf[Seq[Double]] =>
-        config.getDoubleValues(settingKey.key.label).getOrElse(defaultValue).asInstanceOf[Seq[A]]
-    }
-  }
-
-  def getConfigValueOpt[A : ClassTag](config: SisiohConfiguration, settingKey: SettingKey[_]): Option[A] = {
-    implicitly[ClassTag[A]].runtimeClass match {
-      case x if x == classOf[String] =>
-        config.getStringValue(settingKey.key.label).asInstanceOf[Option[A]]
-      case x if x == classOf[Int] =>
-        config.getIntValue(settingKey.key.label).asInstanceOf[Option[A]]
-      case x if x == classOf[Boolean] =>
-        config.getBooleanValue(settingKey.key.label).asInstanceOf[Option[A]]
-      case x if x == classOf[Byte] =>
-        config.getByteValue(settingKey.key.label).asInstanceOf[Option[A]]
-      case x if x == classOf[Long] =>
-        config.getLongValue(settingKey.key.label).asInstanceOf[Option[A]]
-      case x if x == classOf[Double] =>
-        config.getDoubleValue(settingKey.key.label).asInstanceOf[Option[A]]
-    }
-  }
-
-  def getConfigValue[A : ClassTag](config: SisiohConfiguration, settingKey: SettingKey[_], defaultValue: A) =
-    getConfigValueOpt(config, settingKey).getOrElse(defaultValue)
 
   override def projectSettings: Seq[Def.Setting[_]] = Seq(
     cfnTemplatesSourceFolder in aws <<= baseDirectory {
@@ -66,32 +27,30 @@ object SbtAwsCfnPlugin extends AutoPlugin {
       templates.get
     },
     cfnArtifactId := {
-      getConfigValue((awsConfig in aws).value, cfnArtifactId, (name in ThisProject).value)
+      getConfigValue((awsConfig in aws).value, cfnArtifactId.key.label, (name in ThisProject).value)
     },
     cfnVersion := {
-      getConfigValue((awsConfig in aws).value, cfnVersion, (version in ThisProject).value)
+      getConfigValue((awsConfig in aws).value, cfnVersion.key.label, (version in ThisProject).value)
     },
     cfnS3BucketName in aws := {
-      getConfigValue((awsConfig in aws).value, cfnS3BucketName, "cfn-template")
+      getConfigValue((awsConfig in aws).value, cfnS3BucketName.key.label, "cfn-template")
     },
     cfnS3KeyMapper in aws := identity,
     cfnStackParams in aws := {
-      (awsConfig in aws).value.getConfiguration(cfnStackParams.key.label)
-        .map(_.entrySet.map { case (k, v) => (k, v.unwrapped().toString) }.toMap).getOrElse(Map.empty)
+      getConfigValuesAsMap((awsConfig in aws).value, cfnStackParams.key.label)
     },
     cfnStackTags in aws := {
-      (awsConfig in aws).value.getConfiguration(cfnStackTags.key.label)
-        .map(_.entrySet.map { case (k, v) => (k, v.unwrapped().toString) }.toMap).getOrElse(Map.empty)
+      getConfigValuesAsMap((awsConfig in aws).value, cfnStackTags.key.label)
     },
     cfnStackCapabilities in aws := {
-      getConfigValues((awsConfig in aws).value, cfnStackCapabilities, Seq.empty)
+      getConfigValuesAsSeq((awsConfig in aws).value, cfnStackCapabilities.key.label, Seq.empty)
     },
     cfnStackRegion in aws := "",
     cfnStackName in aws := {
-      getConfigValueOpt[String]((awsConfig in aws).value, cfnStackName)
+      getConfigValueOpt[String]((awsConfig in aws).value, cfnStackName.key.label)
     },
     cfnCapabilityIam in aws := {
-      getConfigValue((awsConfig in aws).value, cfnCapabilityIam, false)
+      getConfigValue((awsConfig in aws).value, cfnCapabilityIam.key.label, false)
     },
     // ---
     cfnUploadTemplate in aws <<= uploadTemplateFileTask(),

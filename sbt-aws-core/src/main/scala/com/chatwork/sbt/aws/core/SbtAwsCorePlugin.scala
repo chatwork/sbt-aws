@@ -22,8 +22,7 @@ object SbtAwsCorePlugin extends AutoPlugin {
     configFileFolder in aws := file("env"),
     configFile in aws := {
       val parent = (configFileFolder in aws).value
-      val file = parent / ((environmentName in aws).value + ".conf")
-      file
+      parent / ((environmentName in aws).value + ".conf")
     },
     config in aws := {
       Option(SisiohConfiguration.parseFile((configFile in aws).value)).getOrElse(SisiohConfiguration.empty)
