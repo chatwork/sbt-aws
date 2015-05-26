@@ -128,6 +128,8 @@ $ sbt aws::cfnStackDeleteAndWait
 
 #### sbt-aws-s3 for S3
 
+- Set the value to the setting item into build.sbt.
+
 ```scala
 region in aws := com.amazonaws.regions.Regions.AP_NORTHEAST_1
 
@@ -141,6 +143,8 @@ s3OverwriteObject in aws := true
 
 s3CreateBucket in aws := true
 ```
+
+- 
 
 ```sh
 $ sbt aws::s3Upload
