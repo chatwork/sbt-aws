@@ -22,8 +22,8 @@ lazy val baseSettings = Seq(
     <url>https://github.com/chatwork/sbt-aws</url>
       <licenses>
         <license>
-          <name>Apache 2</name>
-          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+          <name>The MIT License</name>
+          <url>http://opensource.org/licenses/MIT</url>
         </license>
       </licenses>
       <scm>
@@ -102,7 +102,6 @@ lazy val cfn = (project in file("sbt-aws-cfn")).settings(pluginSettings: _*).set
 lazy val root = (project in file(".")).settings(baseSettings: _*).settings(
   name := "sbt-aws"
 ).aggregate(core, s3, eb, cfn)
-
 
 def projectId(state: State) = extracted(state).currentProject.id
 
