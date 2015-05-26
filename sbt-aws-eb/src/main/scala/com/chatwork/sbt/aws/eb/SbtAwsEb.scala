@@ -29,6 +29,7 @@ trait SbtAwsEb extends SbtAwsS3 {
     val logger = streams.value.log
     val files = (ebBundleTargetFiles in aws).value
     val path = baseDirectory.value / "target" / (ebBundleFileName in aws).value
+    logger.info(s"create application-bundle: $path")
     IO.zip(files, path)
     logger.info(s"created application-bundle: $path")
     path
@@ -53,9 +54,9 @@ trait SbtAwsEb extends SbtAwsS3 {
 
     val overwrite = projectVersion.endsWith("-SNAPSHOT")
 
-    logger.info(s"upload $path to $bucketName/$key")
+    logger.info(s"upload application-bundle : $path to $bucketName/$key")
     s3PutObject(s3Client.value, bucketName, key, path, overwrite, createBucket).get
-    logger.info(s"uploaded $bucketName/$key")
+    logger.info(s"uploaded application-bundle : $bucketName/$key")
   }
 
   def ebDeleteApplication(client: AWSElasticBeanstalkClient, applicationName: String): Try[Unit] = {
