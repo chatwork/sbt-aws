@@ -126,6 +126,30 @@ $ sbt aws::cfnStackDeleteAndWait
 [success] Total time: 25 s, completed 2015/05/25 20:00:04
 ```
 
+#### sbt-aws-s3 for S3
+
+```scala
+region in aws := com.amazonaws.regions.Regions.AP_NORTHEAST_1
+
+s3BucketName in aws := "sbt-aws-s3"
+
+s3Key in aws := "build.sbt"
+
+s3File in aws := Some(file("build.sbt"))
+
+s3OverwriteObject in aws := true
+
+s3CreateBucket in aws := true
+```
+
+```sh
+$ sbt aws::s3Upload
+[info] put object request : bucketName = sbt-aws-s3, key = build.sbt, file = build.sbt, overwrite = true, createBucket = true
+[info] put object requested : bucketName = sbt-aws-s3 key = build.sbt, url = https://sbt-aws-s3.s3-ap-northeast-1.amazonaws.com/build.sbt
+[success] Total time: 2 s, completed 2015/05/26 13:00:50
+```
+
+
 #### Configuration File Support by Typesafe Config
 
 `env/dev.conf` is loaded, in defaults.
