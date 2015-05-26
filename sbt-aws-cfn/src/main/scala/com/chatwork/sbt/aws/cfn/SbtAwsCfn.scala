@@ -99,6 +99,8 @@ trait SbtAwsCfn extends SbtAwsS3 {
     val stackName = (cfnStackName in aws).value
     val client = cfnClient.value
 
+    require(stackName.isDefined)
+
     stackName.map { sn =>
       logger.info(s"describe stack request: stackName = $sn")
       describeStacks(client, sn).get
@@ -198,6 +200,8 @@ trait SbtAwsCfn extends SbtAwsS3 {
     val tags = (cfnStackTags in aws).value
     val client = cfnClient.value
 
+    require(stackName.isDefined)
+
     stackName.flatMap { sn =>
       describeStacks(client, sn).flatMap { stacks =>
         stacks.headOption.map { stack =>
@@ -242,6 +246,8 @@ trait SbtAwsCfn extends SbtAwsS3 {
     val logger = streams.value.log
     val stackName = (cfnStackName in aws).value
     val client = cfnClient.value
+
+    require(stackName.isDefined)
 
     stackName.flatMap { sn =>
       describeStacks(client, sn).flatMap { stacks =>
@@ -302,6 +308,8 @@ trait SbtAwsCfn extends SbtAwsS3 {
     val params = (cfnStackParams in aws).value
     val client = cfnClient.value
 
+    require(stackName.isDefined)
+
     stackName.flatMap { sn =>
       describeStacks(client, sn).flatMap { stacks =>
         stacks.headOption.map { stack =>
@@ -345,6 +353,8 @@ trait SbtAwsCfn extends SbtAwsS3 {
     val params = (cfnStackParams in aws).value
     val client = cfnClient.value
     val tags = (cfnStackTags in aws).value
+
+    require(stackName.isDefined)
 
     stackName.flatMap { sn =>
       describeStacks(client, sn).flatMap { stacks =>
@@ -401,6 +411,8 @@ trait SbtAwsCfn extends SbtAwsS3 {
     val client = cfnClient.value
     val stackName = (cfnStackName in aws).value
     val interval = (poolingInterval in aws).value
+
+    require(stackName.isDefined)
 
     stackName.flatMap { sn =>
       val (progressStatuses, headOption) = waitStack(client, sn)
