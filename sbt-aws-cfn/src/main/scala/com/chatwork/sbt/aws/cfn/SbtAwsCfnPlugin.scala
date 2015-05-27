@@ -27,13 +27,13 @@ object SbtAwsCfnPlugin extends AutoPlugin {
       templates.get
     },
     cfnArtifactId := {
-      getConfigValue((awsConfig in aws).value, cfnArtifactId.key.label, (name in ThisProject).value)
+      getConfigValue(classOf[String], (awsConfig in aws).value, cfnArtifactId.key.label, (name in ThisProject).value)
     },
     cfnVersion := {
-      getConfigValue((awsConfig in aws).value, cfnVersion.key.label, (version in ThisProject).value)
+      getConfigValue(classOf[String], (awsConfig in aws).value, cfnVersion.key.label, (version in ThisProject).value)
     },
     cfnS3BucketName in aws := {
-      getConfigValue((awsConfig in aws).value, cfnS3BucketName.key.label, "cfn-template")
+      getConfigValueOpt(classOf[String], (awsConfig in aws).value, cfnS3BucketName.key.label)
     },
     cfnS3KeyMapper in aws := identity,
     cfnStackParams in aws := {
@@ -43,14 +43,14 @@ object SbtAwsCfnPlugin extends AutoPlugin {
       getConfigValuesAsMap((awsConfig in aws).value, cfnStackTags.key.label)
     },
     cfnStackCapabilities in aws := {
-      getConfigValuesAsSeq((awsConfig in aws).value, cfnStackCapabilities.key.label, Seq.empty)
+      getConfigValuesAsSeq(classOf[String], (awsConfig in aws).value, cfnStackCapabilities.key.label, Seq.empty)
     },
     cfnStackRegion in aws := "",
     cfnStackName in aws := {
-      getConfigValueOpt[String]((awsConfig in aws).value, cfnStackName.key.label)
+      getConfigValueOpt(classOf[String], (awsConfig in aws).value, cfnStackName.key.label)
     },
     cfnCapabilityIam in aws := {
-      getConfigValue((awsConfig in aws).value, cfnCapabilityIam.key.label, false)
+      getConfigValue(classOf[Boolean], (awsConfig in aws).value, cfnCapabilityIam.key.label, false)
     },
     // ---
     cfnUploadTemplate in aws <<= uploadTemplateFileTask(),

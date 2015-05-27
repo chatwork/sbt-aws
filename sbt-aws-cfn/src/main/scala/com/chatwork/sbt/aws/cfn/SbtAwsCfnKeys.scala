@@ -19,7 +19,7 @@ trait SbtAwsCfnKeys {
   val cfnArtifactId = settingKey[String]("cfn-artifacti-id")
   val cfnVersion = settingKey[String]("cfn-version")
   val cfnStackName = settingKey[Option[String]]("cfn-stack-name")
-  val cfnS3BucketName = settingKey[String]("cfn-s3-bucket-name")
+  val cfnS3BucketName = settingKey[Option[String]]("cfn-s3-bucket-name")
   val cfnS3KeyMapper = settingKey[String => String]("cfn-s3-key-functor")
   val cfnCapabilityIam = settingKey[Boolean]("cfn-capability-iam")
 

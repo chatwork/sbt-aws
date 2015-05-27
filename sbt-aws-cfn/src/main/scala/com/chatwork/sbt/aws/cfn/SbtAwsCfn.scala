@@ -37,10 +37,12 @@ trait SbtAwsCfn extends SbtAwsS3 {
     val logger = streams.value.log
     val files = (cfnTemplates in aws).value
     val file = files.headOption.getOrElse(throw new FileNotFoundException("*.template not found in this project"))
+    val bucketName = (cfnS3BucketName in aws).value
+
+    require(bucketName.isDefined)
 
     logger.debug(IO.read(file))
 
-    val bucketName = (cfnS3BucketName in aws).value
     val sdf = new SimpleDateFormat("yyyyMMdd'_'HHmmss")
     val timestamp = sdf.format(new Date())
 
@@ -51,7 +53,7 @@ trait SbtAwsCfn extends SbtAwsS3 {
     val key = keyMapper(s"$artifactId-$version-$timestamp.templete")
 
     logger.info(s"upload $file to $bucketName/$key")
-    val result = s3PutObject(s3Client.value, bucketName, key, file, false, true)
+    val result = s3PutObject(s3Client.value, bucketName.get, key, file, false, true)
     result.get
   }
 

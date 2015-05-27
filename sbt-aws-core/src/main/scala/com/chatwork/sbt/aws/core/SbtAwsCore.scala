@@ -7,12 +7,7 @@ import com.amazonaws.auth.profile.ProfileCredentialsProvider
 import com.amazonaws.auth.{ AWSCredentialsProviderChain, EnvironmentVariableCredentialsProvider, InstanceProfileCredentialsProvider, SystemPropertiesCredentialsProvider }
 import com.amazonaws.regions.Region
 import org.apache.commons.codec.digest.DigestUtils
-import org.apache.commons.io.FileUtils
 import org.sisioh.config.{ Configuration => SisiohConfiguration }
-import sbt.SettingKey
-
-import scala.reflect.ClassTag
-
 import sbt._
 
 object SbtAwsCore extends SbtAwsCore
@@ -32,29 +27,28 @@ trait SbtAwsCore {
     region.createClient(serviceClass, newCredentialsProvider(profileName), null)
   }
 
-
   protected def md5(file: File): String =
     DigestUtils.md5Hex(IO.readBytes(file))
 
-  def getConfigValuesAsSeq[A: ClassTag](config: SisiohConfiguration, key: String, defaultValue: Seq[A]): Seq[A] = {
-    implicitly[ClassTag[Seq[A]]].runtimeClass match {
-      case x if x == classOf[Seq[String]] =>
+  def getConfigValuesAsSeq[A](clazz: Class[A], config: SisiohConfiguration, key: String, defaultValue: Seq[A]): Seq[A] = {
+    clazz match {
+      case x if x == classOf[String] =>
         config.getStringValues(key).getOrElse(defaultValue).asInstanceOf[Seq[A]]
-      case x if x == classOf[Seq[Int]] =>
+      case x if x == classOf[Int] =>
         config.getIntValues(key).getOrElse(defaultValue).asInstanceOf[Seq[A]]
-      case x if x == classOf[Seq[Boolean]] =>
+      case x if x == classOf[Boolean] =>
         config.getBooleanValues(key).getOrElse(defaultValue).asInstanceOf[Seq[A]]
-      case x if x == classOf[Seq[Byte]] =>
+      case x if x == classOf[Byte] =>
         config.getByteValues(key).getOrElse(defaultValue).asInstanceOf[Seq[A]]
-      case x if x == classOf[Seq[Long]] =>
+      case x if x == classOf[Long] =>
         config.getLongValues(key).getOrElse(defaultValue).asInstanceOf[Seq[A]]
-      case x if x == classOf[Seq[Double]] =>
+      case x if x == classOf[Double] =>
         config.getDoubleValues(key).getOrElse(defaultValue).asInstanceOf[Seq[A]]
     }
   }
 
-  def getConfigValueOpt[A: ClassTag](config: SisiohConfiguration, key: String): Option[A] = {
-    implicitly[ClassTag[A]].runtimeClass match {
+  def getConfigValueOpt[A](clazz: Class[A], config: SisiohConfiguration, key: String): Option[A] = {
+    clazz match {
       case x if x == classOf[String] =>
         config.getStringValue(key).asInstanceOf[Option[A]]
       case x if x == classOf[Int] =>
@@ -70,8 +64,8 @@ trait SbtAwsCore {
     }
   }
 
-  def getConfigValue[A: ClassTag](config: SisiohConfiguration, key: String, defaultValue: A) =
-    getConfigValueOpt(config, key).getOrElse(defaultValue)
+  def getConfigValue[A](clazz: Class[A], config: SisiohConfiguration, key: String, defaultValue: A) =
+    getConfigValueOpt(clazz, config, key).getOrElse(defaultValue)
 
   def getConfigValuesAsMap(config: SisiohConfiguration, key: String): Map[String, String] = {
     config.getConfiguration(key)
