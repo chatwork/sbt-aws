@@ -39,15 +39,15 @@ trait SbtAwsEb extends SbtAwsS3 {
     val logger = streams.value.log
     val path = (ebBuildBundle in aws).value
     val createBucket = (ebS3CreateBucket in aws).value
-
     val projectName = (name in thisProjectRef).value
     val projectVersion = (version in thisProjectRef).value
+    val bucketName = (ebS3BucketName in aws).value
+    val keyMapper = (ebS3KeyMapper in aws).value
+
+    require(bucketName.isDefined)
 
     val sdf = new SimpleDateFormat("yyyyMMdd'_'HHmmss")
     val timestamp = sdf.format(new Date())
-
-    val bucketName = (ebS3BucketName in aws).value
-    val keyMapper = (ebS3KeyMapper in aws).value
 
     val baseKey = s"$projectName/$projectName-$projectVersion-$timestamp.zip"
     val key = keyMapper(baseKey)
@@ -55,7 +55,7 @@ trait SbtAwsEb extends SbtAwsS3 {
     val overwrite = projectVersion.endsWith("-SNAPSHOT")
 
     logger.info(s"upload application-bundle : $path to $bucketName/$key")
-    s3PutObject(s3Client.value, bucketName, key, path, overwrite, createBucket).get
+    s3PutObject(s3Client.value, bucketName.get, key, path, overwrite, createBucket).get
     logger.info(s"uploaded application-bundle : $bucketName/$key")
   }
 

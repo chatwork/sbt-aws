@@ -13,7 +13,7 @@ trait SbtAwsEbKeys {
 
   lazy val ebBundleFileName = settingKey[String]("zip-file")
 
-  lazy val ebS3BucketName = settingKey[String]("eb-s3-bucket-name")
+  lazy val ebS3BucketName = settingKey[Option[String]]("eb-s3-bucket-name")
 
   lazy val ebS3KeyMapper = taskKey[String => String]("eb-s3-key-mapper")
 
