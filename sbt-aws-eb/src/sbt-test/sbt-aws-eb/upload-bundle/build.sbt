@@ -9,6 +9,6 @@ ebBundleTargetFiles in aws <<= Def.task {
   )
 }
 
-ebS3BucketName in aws := "sbt-aws-eb"
+ebS3BucketName in aws := Some("sbt-aws-eb")
 
 ebS3CreateBucket in aws := true
