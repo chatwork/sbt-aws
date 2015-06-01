@@ -9,7 +9,7 @@ val sisiohConfigVersion = "0.0.7"
 lazy val baseSettings = Seq(
   scalaVersion := "2.10.5",
   sonatypeProfileName := "com.chatwork",
-  organization in ThisBuild := "com.chatwork",
+  organization := "com.chatwork",
   shellPrompt := {
     "sbt (%s)> " format projectId(_)
   },
