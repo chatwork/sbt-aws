@@ -137,10 +137,10 @@ trait SbtAwsCfn extends SbtAwsS3 {
       logger.info(s"status: stackName = $sn")
       getStackStatus(client, sn).map { statusOpt =>
         statusOpt.map { status =>
-          logger.info(s"$stackName's status is $status")
+          logger.info(s"${sn}'s status is $status")
           Some(status)
         }.getOrElse {
-          logger.info(s"$stackName does not exists.")
+          logger.info(s"$sn does not exists.")
           None
         }
       }.get
@@ -211,12 +211,12 @@ trait SbtAwsCfn extends SbtAwsS3 {
           logger.info(s"create stack request : stackName = $sn, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params, tags = $tags")
           createStack(client, sn, templateUrl, capabilities, params, tags).map(Some(_))
         }.getOrElse {
-          logger.info(s"does not exists $stackName")
+          logger.info(s"does not exists $sn")
           Success(None)
         }
       }.map { resultOpt =>
         resultOpt.flatMap { result =>
-          logger.info(s"create stack requested : $stackName / ${result.stackIdOpt.get}")
+          logger.info(s"create stack requested : $sn / ${result.stackIdOpt.get}")
           result.stackIdOpt
         }
       }.get
@@ -258,7 +258,7 @@ trait SbtAwsCfn extends SbtAwsS3 {
           logger.info(s"delete stack request : stackName = $sn")
           deleteStack(client, sn).map(_ => Some(sn))
         }.getOrElse {
-          logger.info(s"does not exists $stackName")
+          logger.info(s"does not exists $sn")
           Success(None)
         }
       }.map { resultOpt =>
@@ -324,7 +324,7 @@ trait SbtAwsCfn extends SbtAwsS3 {
         }
       }.map { resultOpt =>
         resultOpt.flatMap { result =>
-          logger.info(s"update stack requested : $stackName / ${result.stackIdOpt.get}")
+          logger.info(s"update stack requested : $sn / ${result.stackIdOpt.get}")
           result.stackIdOpt
         }
       }.get
