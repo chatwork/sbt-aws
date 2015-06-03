@@ -22,7 +22,11 @@ object SbtAwsEb extends SbtAwsEb
 trait SbtAwsEb extends SbtAwsS3 {
 
   lazy val ebClient = Def.task {
-    createClient(classOf[AWSElasticBeanstalkClient], Region.getRegion((region in aws).value), (credentialProfileName in aws).value)
+    val logger = streams.value.log
+    val r = (region in aws).value
+    val cpn = (credentialProfileName in aws).value
+    logger.info(s"region = $r, credentialProfileName = $cpn")
+    createClient(classOf[AWSElasticBeanstalkClient], Region.getRegion(r), cpn)
   }
 
   def ebBuildBundleTask(): Def.Initialize[Task[File]] = Def.task {

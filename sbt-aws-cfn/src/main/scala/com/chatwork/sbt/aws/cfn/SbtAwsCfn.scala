@@ -27,10 +27,14 @@ trait SbtAwsCfn extends SbtAwsS3 {
   val defaultTemplateDirectory = "aws/cfn/templates"
 
   lazy val cfnClient = Def.task {
+    val logger = streams.value.log
+    val r = (region in aws).value
+    val cpn = (credentialProfileName in aws).value
+    logger.info(s"region = $r, credentialProfileName = $cpn")
     createClient(
       classOf[AmazonCloudFormationClient],
-      Region.getRegion((region in aws).value),
-      (credentialProfileName in aws).value)
+      Region.getRegion(r),
+      cpn)
   }
 
   def uploadTemplateFileTask(): Def.Initialize[Task[String]] = Def.task {
