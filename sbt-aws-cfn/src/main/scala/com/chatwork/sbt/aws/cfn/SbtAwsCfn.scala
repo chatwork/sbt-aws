@@ -209,11 +209,11 @@ trait SbtAwsCfn extends SbtAwsS3 {
     stackName.flatMap { sn =>
       describeStacks(client, sn).flatMap { stacks =>
         stacks.headOption.map { stack =>
+          logger.info(s"stack is exists $sn")
+          Success(None)
+        }.getOrElse {
           logger.info(s"create stack request : stackName = $sn, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params, tags = $tags")
           createStack(client, sn, templateUrl, capabilities, params, tags).map(Some(_))
-        }.getOrElse {
-          logger.info(s"does not exists $sn")
-          Success(None)
         }
       }.map { resultOpt =>
         resultOpt.flatMap { result =>
