@@ -95,9 +95,6 @@ trait SbtAwsCfn extends SbtAwsS3 {
     val request = DescribeStacksRequestFactory.create().withStackName(stackName)
     client.describeStacksAsTry(request).map { result =>
       result.stacks
-    }.recoverWith {
-      case ex: AmazonServiceException if ex.getStatusCode == 400 =>
-        Success(Seq.empty)
     }
   }
 
