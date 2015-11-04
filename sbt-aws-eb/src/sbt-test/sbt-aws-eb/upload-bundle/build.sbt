@@ -1,3 +1,4 @@
+credentialProfileName in aws := Some("sbt-aws-scripted-test")
 
 ebBundleTargetFiles in aws <<= Def.task {
   val base = baseDirectory.value
@@ -9,6 +10,6 @@ ebBundleTargetFiles in aws <<= Def.task {
   )
 }
 
-ebS3BucketName in aws := Some("sbt-aws-eb")
+ebS3BucketName in aws := Some("sbt-aws-eb-test")
 
 ebS3CreateBucket in aws := true
