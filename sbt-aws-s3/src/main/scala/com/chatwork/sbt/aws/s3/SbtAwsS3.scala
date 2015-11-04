@@ -60,7 +60,7 @@ trait SbtAwsS3 extends SbtAwsCore {
       client.getResourceUrlAsTry(bucketName, key)
     }
 
-  def s3PutObject(client: AmazonS3Client, bucketName: String, key: String, file: File, overwrite: Boolean, createBucket: Boolean) = {
+  def s3PutObject(client: AmazonS3Client, bucketName: String, key: String, file: File, overwrite: Boolean, createBucket: Boolean): Try[String] = {
     for {
       metadataOpt <- s3GetS3ObjectMetadata(client, bucketName, key)
       url <- s3PutObjectAndGetUrl(client, bucketName, key, file, metadataOpt, overwrite, createBucket)

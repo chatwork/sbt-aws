@@ -23,10 +23,12 @@ trait SbtAwsCfnKeys {
   val cfnS3KeyMapper = settingKey[String => String]("cfn-s3-key-functor")
   val cfnCapabilityIam = settingKey[Boolean]("cfn-capability-iam")
 
-  val cfnUploadTemplate = taskKey[String]("cfn-upload-template")
+  val cfnUploadTemplate = taskKey[URL]("cfn-upload-template")
 
   // stack operations
-  val cfnStackValidate = taskKey[Seq[File]]("cfn-validate-templates")
+  val cfnStackValidateOnFile = taskKey[Seq[File]]("cfn-validate-templates-on-file")
+  val cfnStackValidateOnURL = taskKey[URL]("cfn-validate-templates-on-url")
+
   val cfnStackStatus = taskKey[Option[String]]("cfn-stack-status")
   val cfnStackWait = taskKey[Option[String]]("cfn-stack-wait")
 
