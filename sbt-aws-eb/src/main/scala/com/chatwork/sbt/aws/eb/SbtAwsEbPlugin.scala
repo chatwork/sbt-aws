@@ -26,9 +26,19 @@ object SbtAwsEbPlugin extends AutoPlugin {
     ebApplicationDescription in aws := None,
     ebVersionLabel in aws := (version in thisProjectRef).value,
     ebS3CreateBucket in aws := false,
+    // ---
     ebBuildBundle in aws <<= ebBuildBundleTask(),
     ebUploadBundle in aws <<= ebUploadBundleTask(),
-    ebCreateApplication in aws <<= ebCreateApplicationTask,
+    // ---
+    ebApplicationCreate in aws <<= ebCreateApplicationTask(),
+    ebApplicationCreateAndWait in aws <<= ebCreateApplicationAndWaitTask(),
+    ebApplicationUpdate in aws <<= ebUpdateApplicationTask(),
+    ebApplicationUpdateAndWait in aws <<= ebUpdateApplicationAndWaitTask(),
+    ebApplicationDelete in aws <<= ebDeleteApplicationTask(),
+    ebApplicationDeleteAndWait in aws <<= ebDeleteApplicationAndWaitTask(),
+    ebApplicationCreateOrUpdate in aws <<= ebCreateOrUpdateApplicationTask(),
+    ebApplicationCreateOrUpdateAndWait in aws <<= ebCreateOrUpdateApplicationTask(),
+    // ---
     ebCreateApplicationVersion in aws <<= ebCreateApplicationVersionTask
   )
 

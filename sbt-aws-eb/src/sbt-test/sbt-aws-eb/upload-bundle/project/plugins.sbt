@@ -1,3 +1,5 @@
+logLevel := Level.Warn
+
 resolvers ++= Seq(
   Classpaths.typesafeReleases,
   Classpaths.typesafeSnapshots,

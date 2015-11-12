@@ -29,9 +29,37 @@ trait SbtAwsEbKeys {
 
   lazy val ebTemplates = settingKey[Seq[EbConfigurationTemplate]]("eb-templates")
 
-  lazy val ebCreateApplication = taskKey[ApplicationDescription]("create-application")
+  // ---
+
+  lazy val ebApplicationCreate = taskKey[ApplicationDescription]("create-application")
+
+  lazy val ebApplicationCreateAndWait = taskKey[ApplicationDescription]("create-application-and-wait")
+
+  lazy val ebApplicationUpdate = taskKey[ApplicationDescription]("update-application")
+
+  lazy val ebApplicationUpdateAndWait = taskKey[ApplicationDescription]("update-application")
+
+  lazy val ebApplicationDelete = taskKey[Unit]("delete-application")
+
+  lazy val ebApplicationDeleteAndWait = taskKey[Unit]("delete-application")
+
+  lazy val ebApplicationCreateOrUpdate = taskKey[ApplicationDescription]("create-or-update-application")
+
+  lazy val ebApplicationCreateOrUpdateAndWait = taskKey[ApplicationDescription]("create-or-update-application")
+
+  // ---
 
   lazy val ebCreateApplicationVersion = taskKey[ApplicationVersionDescription]("create-application-version")
+
+  lazy val ebUpdateApplicationVersion = taskKey[ApplicationVersionDescription]("update-application-version")
+
+  lazy val ebDeleteApplicationVersion = taskKey[ApplicationVersionDescription]("delete-application-version")
+
+  lazy val ebCreateOrUpdateApplicationVersion = taskKey[ApplicationVersionDescription]("create-or-update-application-version")
+
+  // ---
+
+  lazy val ebCreateConfigurationTemplate = taskKey[ApplicationVersionDescription]("create-configuration-template")
 
 }
 
