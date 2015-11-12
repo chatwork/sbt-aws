@@ -1,13 +1,1 @@
-> aws::cfnStackDeleteAndWait
-
-> aws::cfnStackValidateOnFile
-
-> aws::cfnStackValidateOnURL
-
-> aws::cfnStackDeleteAndWait
-
-> aws::cfnStackCreateAndWait
-
-> aws::cfnStackDeleteAndWait
-
-> aws::cfnStackCreateOrUpdateAndWait
+> aws::cfnUploadTemplate
