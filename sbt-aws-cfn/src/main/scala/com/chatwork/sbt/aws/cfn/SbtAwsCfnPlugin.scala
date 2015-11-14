@@ -54,8 +54,8 @@ object SbtAwsCfnPlugin extends AutoPlugin {
     },
     // ---
     cfnUploadTemplate in aws <<= uploadTemplateFileTask(),
-    cfnStackValidateOnFile in aws <<= stackValidateOnFileTask(),
-    cfnStackValidateOnURL in aws <<= stackValidateOnURLTask(),
+    cfnValidateTemplateOnS3 in aws <<= stackValidateOnFileTask(),
+    cfnValidateTemplateOnURL in aws <<= stackValidateOnURLTask(),
     cfnStackDescribe in aws <<= describeStacksTask().map(s => s.headOption),
     cfnStackStatus in aws <<= statusStackTask(),
     cfnStackCreate in aws <<= createStackTask(),

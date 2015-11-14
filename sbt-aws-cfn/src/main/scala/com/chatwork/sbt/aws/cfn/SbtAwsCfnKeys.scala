@@ -26,8 +26,8 @@ trait SbtAwsCfnKeys {
   val cfnUploadTemplate = taskKey[URL]("cfn-upload-template")
 
   // stack operations
-  val cfnStackValidateOnFile = taskKey[Seq[File]]("cfn-validate-templates-on-file")
-  val cfnStackValidateOnURL = taskKey[URL]("cfn-validate-templates-on-url")
+  val cfnValidateTemplateOnS3 = taskKey[Seq[File]]("cfn-validate-templates-on-file")
+  val cfnValidateTemplateOnURL = taskKey[URL]("cfn-validate-templates-on-url")
 
   val cfnStackStatus = taskKey[Option[String]]("cfn-stack-status")
   val cfnStackWait = taskKey[Option[String]]("cfn-stack-wait")
