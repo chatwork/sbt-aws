@@ -1,0 +1,5 @@
+> aws::ebApplicationDeleteAndWait
+
+> aws::ebApplicationCreateAndWait
+
+> aws::ebApplicationVersionCreateAndWait

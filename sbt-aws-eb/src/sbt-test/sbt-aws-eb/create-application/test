@@ -1,3 +1,11 @@
 > aws::ebApplicationDeleteAndWait
 
 > aws::ebApplicationCreateAndWait
+
+$ copy-file opt.sbt.org opt.sbt
+
+> reload
+
+> aws::ebApplicationUpdateAndWait
+
+> aws::ebApplicationCreateOrUpdateAndWait

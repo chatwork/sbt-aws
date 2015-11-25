@@ -24,7 +24,8 @@ object SbtAwsEbPlugin extends AutoPlugin {
     ebS3KeyMapper in aws := identity,
     ebApplicationName in aws := (name in thisProjectRef).value,
     ebApplicationDescription in aws := None,
-    ebVersionLabel in aws := (version in thisProjectRef).value,
+    ebApplicationVersionLabel in aws := (version in thisProjectRef).value,
+    ebApplicationVersionDescription in aws := None,
     ebS3CreateBucket in aws := false,
     // ---
     ebBuildBundle in aws <<= ebBuildBundleTask(),
@@ -39,7 +40,37 @@ object SbtAwsEbPlugin extends AutoPlugin {
     ebApplicationCreateOrUpdate in aws <<= ebCreateOrUpdateApplicationTask(),
     ebApplicationCreateOrUpdateAndWait in aws <<= ebCreateOrUpdateApplicationTask(),
     // ---
-    ebCreateApplicationVersion in aws <<= ebCreateApplicationVersionTask
+    ebUseBundle in aws := true,
+    ebAutoCreateApplication in aws := None,
+    ebEnvironmentName in aws := (name in thisProjectRef).value + "-env",
+    ebApplicationVersionCreate in aws <<= ebCreateApplicationVersionTask,
+    ebApplicationVersionCreateAndWait in aws <<= ebCreateApplicationVersionAndWaitTask,
+    ebApplicationVersionUpdate in aws <<= ebUpdateApplicationVersionTask,
+    ebApplicationVersionUpdateAndWait in aws <<= ebUpdateApplicationVersionAndWaitTask,
+    ebApplicationVersionDelete in aws <<= ebDeleteApplicationVersionTask,
+    ebApplicationVersionDeleteAndWait in aws <<= ebDeleteApplicationVersionAndWaitTask,
+    // ---
+    ebEnvironmentCreate in aws <<= ebCreateEnvironmentTask,
+    ebEnvironmentCreateAndWait in aws <<= ebCreateEnvironmentAndWaitTask,
+    ebEnvironmentUpdate in aws <<= ebUpdateEnvironmentTask,
+    ebEnvironmentUpdateAndWait in aws <<= ebUpdateEnvironmentAndWaitTask,
+    ebEnvironmentCreateOrUpdate in aws <<= ebCreateOrUpdateEnvironmentTask,
+    ebEnvironmentCreateOrUpdateAndWait in aws <<= ebCreateOrUpdateEnvironmentAndWaitTask,
+    ebEnvironmentUseVersionLabel in aws := None,
+    ebEnvironmentDescription in aws := None,
+    ebSolutionStackName in aws := None,
+    ebEnvironmentTier in aws := None,
+    ebConfigurationTemplateName in aws := None,
+    ebConfigurationOptionSettings in aws := Seq.empty,
+    ebOptionSpecifications in aws := Seq.empty,
+    ebTags in aws := Seq.empty,
+    ebCNAMEPrefix in aws := None,
+    // ---
+    ebConfigurationTemplate in aws := None,
+    ebConfigurationTemplateCreate in aws <<= ebCreateConfigurationTemplateTask(),
+    ebConfigurationTemplateUpdate in aws <<= ebUpdateConfigurationTemplateTask(),
+    ebConfigurationTemplateDelete in aws <<= ebDeleteConfigurationTemplateTask()
+
   )
 
 }

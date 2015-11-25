@@ -1,0 +1,1 @@
+ebApplicationDescription in aws := Some(new java.util.Date().toString())

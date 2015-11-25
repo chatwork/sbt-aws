@@ -1,13 +1,14 @@
 package com.chatwork.sbt.aws.eb
 
-import com.amazonaws.services.elasticbeanstalk.model.{ ApplicationDescription, ApplicationVersionDescription }
+import com.amazonaws.services.elasticbeanstalk.model._
+import com.chatwork.sbt.aws.eb.model._
 import sbt._
 
 trait SbtAwsEbKeys {
 
   lazy val ebBuildBundle = taskKey[File]("build-bundle")
 
-  lazy val ebUploadBundle = taskKey[Unit]("upload-bundle")
+  lazy val ebUploadBundle = taskKey[(String, String)]("upload-bundle")
 
   lazy val ebBundleTargetFiles = taskKey[Seq[(File, String)]]("zip-target-file")
 
@@ -23,11 +24,12 @@ trait SbtAwsEbKeys {
 
   lazy val ebApplicationDescription = settingKey[Option[String]]("eb-application-desc")
 
-  lazy val ebVersionLabel = settingKey[String]("eb-version-label")
+  lazy val ebApplicationVersionLabel = settingKey[String]("eb-application-version-label")
+
+  lazy val ebApplicationVersionDescription = settingKey[Option[String]]("eb-application-version-desc")
 
   lazy val ebTemplateName = settingKey[String]("eb-template-name")
 
-  lazy val ebTemplates = settingKey[Seq[EbConfigurationTemplate]]("eb-templates")
 
   // ---
 
@@ -49,17 +51,77 @@ trait SbtAwsEbKeys {
 
   // ---
 
-  lazy val ebCreateApplicationVersion = taskKey[ApplicationVersionDescription]("create-application-version")
+  lazy val ebUseBundle = settingKey[Boolean]("use-bundle")
 
-  lazy val ebUpdateApplicationVersion = taskKey[ApplicationVersionDescription]("update-application-version")
+  lazy val ebAutoCreateApplication = settingKey[Option[Boolean]]("auto-create-application")
 
-  lazy val ebDeleteApplicationVersion = taskKey[ApplicationVersionDescription]("delete-application-version")
+  lazy val ebApplicationVersionCreate = taskKey[ApplicationVersionDescription]("create-application-version")
+
+  lazy val ebApplicationVersionCreateAndWait = taskKey[ApplicationVersionDescription]("create-application-version-and-wait")
+
+  lazy val ebApplicationVersionUpdate = taskKey[ApplicationVersionDescription]("update-application-version")
+
+  lazy val ebApplicationVersionUpdateAndWait = taskKey[ApplicationVersionDescription]("update-application-version-and-wait")
+
+  lazy val ebApplicationVersionDelete = taskKey[Unit]("delete-application-version")
+
+  lazy val ebApplicationVersionDeleteAndWait = taskKey[Unit]("delete-application-version")
 
   lazy val ebCreateOrUpdateApplicationVersion = taskKey[ApplicationVersionDescription]("create-or-update-application-version")
 
   // ---
 
   lazy val ebCreateConfigurationTemplate = taskKey[ApplicationVersionDescription]("create-configuration-template")
+
+  // ---
+
+  lazy val ebEnvironmentName = settingKey[String]("environment-name")
+
+  lazy val ebEnvironmentDescription = settingKey[Option[String]]("environment-description")
+
+  lazy val ebEnvironmentUseVersionLabel = settingKey[Option[String]]("environment-use-version-label")
+
+  lazy val ebSolutionStackName = settingKey[Option[String]]("soulution-stack-name")
+
+  lazy val ebTags = settingKey[Seq[EbTag]]("tags")
+
+  lazy val ebConfigurationTemplateName = settingKey[Option[String]]("configuration-template-name")
+
+  lazy val ebConfigurationOptionSettings = settingKey[Seq[EbConfigurationOptionSetting]]("configuration-option-settings")
+
+  lazy val ebOptionSpecifications = settingKey[Seq[EbOptionSpecification]]("option-specification")
+
+  lazy val ebEnvironmentTier = settingKey[Option[EbEnvironmentTier]]("environment-tier")
+
+  lazy val ebCNAMEPrefix = settingKey[Option[String]]("cname-prefix")
+
+  lazy val ebEnvironmentCreate = taskKey[String]("create-environment")
+
+  lazy val ebEnvironmentCreateAndWait = taskKey[EnvironmentDescription]("create-environment-and-wait")
+
+  lazy val ebEnvironmentUpdate = taskKey[String]("update-environment")
+
+  lazy val ebEnvironmentUpdateAndWait = taskKey[EnvironmentDescription]("update-environment-and-wait")
+
+  lazy val ebEnvironmentCreateOrUpdate = taskKey[String]("create-or-update-environment")
+
+  lazy val ebEnvironmentCreateOrUpdateAndWait = taskKey[EnvironmentDescription]("create-or-update-environment-and-wait")
+
+  // ---
+
+  lazy val ebConfigurationTemplate = settingKey[Option[EbConfigurationTemplate]]("eb-configuration-template")
+
+  lazy val ebConfigurationTemplateCreate = taskKey[CreateConfigurationTemplateResult]("create-configuration-template")
+
+  lazy val ebConfigurationTemplateCreateAndWait = taskKey[CreateConfigurationTemplateResult]("create-configuration-template-and-wait")
+
+  lazy val ebConfigurationTemplateUpdate = taskKey[UpdateConfigurationTemplateResult]("update-configuration-template")
+
+  lazy val ebConfigurationTemplateUpdateAndWait = taskKey[UpdateConfigurationTemplateResult]("update-configuration-template-and-wait")
+
+  lazy val ebConfigurationTemplateDelete = taskKey[Unit]("update-configuration-template")
+
+  lazy val ebConfigurationTemplateDeleteAndWait = taskKey[Unit]("update-configuration-template-and-wait")
 
 }
 
