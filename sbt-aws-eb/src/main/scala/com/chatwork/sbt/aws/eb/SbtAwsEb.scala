@@ -9,6 +9,8 @@ import com.amazonaws.services.elasticbeanstalk.AWSElasticBeanstalkClient
 import com.chatwork.sbt.aws.core.SbtAwsCoreKeys._
 import com.chatwork.sbt.aws.eb.SbtAwsEbKeys._
 import com.chatwork.sbt.aws.s3.SbtAwsS3
+import org.sisioh.aws4s.eb.Implicits._
+import org.sisioh.aws4s.eb.model.{ DescribeEventsRequestFactory, DescribeConfigurationSettingsRequestFactory }
 import sbt.Keys._
 import sbt._
 
@@ -21,7 +23,7 @@ trait SbtAwsEb
     with EnvironmentSupport
     with ConfigurationTemplateSupport {
 
-  private[eb] val WAITING_INTERNALVAL_IN_SEC = 1L
+  private[eb] val waitingIntervalInSec = 5L
 
   private[eb] def wait[T](client: AWSElasticBeanstalkClient)(call: => T)(break: (T) => Boolean)(implicit logger: Logger) = {
     def statuses: Stream[T] = Stream.cons(call, statuses)
@@ -72,6 +74,29 @@ trait SbtAwsEb
     s3PutObject(s3Client.value, bucketName.get, key, path, overwrite, createBucket).get
     logger.info(s"uploaded application-bundle : ${bucketName.get}/$key")
     (bucketName.get, key)
+  }
+
+  private[eb] def ebDescribeEvents(client: AWSElasticBeanstalkClient, applicationName: String, envrionmentName: Option[String], templateName: Option[String])(implicit logger: Logger) = {
+    logger.info(s"describe event start: $applicationName, $envrionmentName, $templateName")
+    val request = DescribeEventsRequestFactory
+      .create()
+      .withApplicationName(applicationName)
+      .withEnvironmentNameOpt(envrionmentName)
+      .withTemplateNameOpt(templateName)
+    val result = client.describeEventsAsTry(request)
+    logger.info(s"describe event finish: $applicationName, $envrionmentName, $templateName")
+    result
+  }
+
+  private[eb] def ebDescribeConfigurationSettings(client: AWSElasticBeanstalkClient, applicationName: String, envrionmentName: Option[String], templateName: Option[String])(implicit logger: Logger) = {
+    logger.info(s"describe configurationSettings start: $applicationName, $envrionmentName, $templateName")
+    val request = DescribeConfigurationSettingsRequestFactory
+      .create(applicationName)
+      .withEnvironmentNameOpt(envrionmentName)
+      .withTemplateNameOpt(templateName)
+    val result = client.describeConfigurationSettingsAsTry(request)
+    logger.info(s"describe configurationSettings finish: $applicationName, $envrionmentName, $templateName")
+    result
   }
 
 }

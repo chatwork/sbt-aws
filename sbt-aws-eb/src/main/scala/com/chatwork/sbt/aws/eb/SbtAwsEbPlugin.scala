@@ -12,7 +12,8 @@ object SbtAwsEbPlugin extends AutoPlugin {
 
   override def requires: Plugins = SbtAwsS3Plugin
 
-  object autoImport extends SbtAwsEbKeys
+  object autoImport extends SbtAwsEbKeys with Models {
+  }
 
   import SbtAwsCoreKeys._
   import SbtAwsEbKeys._

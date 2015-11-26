@@ -1,0 +1,10 @@
+> aws::ebApplicationDeleteAndWait
+
+> aws::ebApplicationCreateAndWait
+
+> aws::ebApplicationVersionCreateAndWait
+
+> aws::ebConfigurationTemplateCreate
+
+> aws::ebEnvironmentCreateOrUpdateAndWait
+

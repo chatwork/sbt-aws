@@ -1,10 +1,9 @@
 package com.chatwork.sbt.aws.eb
 
 import com.amazonaws.services.elasticbeanstalk.AWSElasticBeanstalkClient
-import com.amazonaws.services.elasticbeanstalk.model.{CreateConfigurationTemplateResult, UpdateConfigurationTemplateResult}
+import com.amazonaws.services.elasticbeanstalk.model.{ CreateConfigurationTemplateResult, UpdateConfigurationTemplateResult }
 import com.chatwork.sbt.aws.core.SbtAwsCoreKeys._
-import com.chatwork.sbt.aws.eb.SbtAwsEbKeys._
-import com.chatwork.sbt.aws.eb.model.EbConfigurationTemplate
+import com.chatwork.sbt.aws.eb.SbtAwsEbPlugin.autoImport
 import org.sisioh.aws4s.eb.Implicits._
 import org.sisioh.aws4s.eb.model._
 import sbt.Keys._
@@ -15,15 +14,18 @@ import scala.util.Try
 trait ConfigurationTemplateSupport {
   this: SbtAwsEb =>
 
+  import autoImport._
+
   private[eb] def ebCreateConfigurationTemplate(client: AWSElasticBeanstalkClient,
                                                 applicationName: String,
                                                 ebConfigurationTemplate: EbConfigurationTemplate)(implicit logger: Logger): Try[CreateConfigurationTemplateResult] = {
     logger.info(s"create configuration template start: $applicationName, $ebConfigurationTemplate")
     val request = CreateConfigurationTemplateRequestFactory
       .create()
-      .withApplicationName(applicationName)
       .withTemplateName(ebConfigurationTemplate.name)
-      .withDescription(ebConfigurationTemplate.description)
+      .withApplicationName(applicationName)
+      .withDescriptionOpt(ebConfigurationTemplate.description)
+      .withSolutionStackName(ebConfigurationTemplate.solutionStackName)
       .withOptionSettings(ebConfigurationTemplate.optionSettings)
     val result = client.createConfigurationTemplateAsTry(request)
     logger.info(s"create configuration template finish: $applicationName, $ebConfigurationTemplate")
@@ -45,9 +47,9 @@ trait ConfigurationTemplateSupport {
     logger.info(s"update configuration template start: $applicationName, $ebConfigurationTemplate")
     val request = UpdateConfigurationTemplateRequestFactory
       .create()
-      .withApplicationName(applicationName)
       .withTemplateName(ebConfigurationTemplate.name)
-      .withDescription(ebConfigurationTemplate.description)
+      .withApplicationName(applicationName)
+      .withDescriptionOpt(ebConfigurationTemplate.description)
       .withOptionSettings(ebConfigurationTemplate.optionSettings)
       .withOptionsToRemove(ebConfigurationTemplate.optionsToRemoves)
     val result = client.updateConfigurationTemplateAsTry(request)

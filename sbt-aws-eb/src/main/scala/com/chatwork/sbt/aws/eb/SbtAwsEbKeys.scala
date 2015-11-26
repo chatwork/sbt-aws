@@ -1,10 +1,12 @@
 package com.chatwork.sbt.aws.eb
 
 import com.amazonaws.services.elasticbeanstalk.model._
-import com.chatwork.sbt.aws.eb.model._
+import com.chatwork.sbt.aws.eb.SbtAwsEbPlugin.autoImport
 import sbt._
 
 trait SbtAwsEbKeys {
+
+  import autoImport._
 
   lazy val ebBuildBundle = taskKey[File]("build-bundle")
 
@@ -29,7 +31,6 @@ trait SbtAwsEbKeys {
   lazy val ebApplicationVersionDescription = settingKey[Option[String]]("eb-application-version-desc")
 
   lazy val ebTemplateName = settingKey[String]("eb-template-name")
-
 
   // ---
 
@@ -67,11 +68,9 @@ trait SbtAwsEbKeys {
 
   lazy val ebApplicationVersionDeleteAndWait = taskKey[Unit]("delete-application-version")
 
-  lazy val ebCreateOrUpdateApplicationVersion = taskKey[ApplicationVersionDescription]("create-or-update-application-version")
+  lazy val ebApplicationVersionCreateOrUpdate = taskKey[ApplicationVersionDescription]("create-or-update-application-version")
 
-  // ---
-
-  lazy val ebCreateConfigurationTemplate = taskKey[ApplicationVersionDescription]("create-configuration-template")
+  lazy val ebApplicationVersionCreateOrUpdateAndWait = taskKey[ApplicationVersionDescription]("create-or-update-application-version-and-wait")
 
   // ---
 
@@ -95,15 +94,15 @@ trait SbtAwsEbKeys {
 
   lazy val ebCNAMEPrefix = settingKey[Option[String]]("cname-prefix")
 
-  lazy val ebEnvironmentCreate = taskKey[String]("create-environment")
+  lazy val ebEnvironmentCreate = taskKey[CreateEnvironmentResult]("create-environment")
 
   lazy val ebEnvironmentCreateAndWait = taskKey[EnvironmentDescription]("create-environment-and-wait")
 
-  lazy val ebEnvironmentUpdate = taskKey[String]("update-environment")
+  lazy val ebEnvironmentUpdate = taskKey[UpdateEnvironmentResult]("update-environment")
 
   lazy val ebEnvironmentUpdateAndWait = taskKey[EnvironmentDescription]("update-environment-and-wait")
 
-  lazy val ebEnvironmentCreateOrUpdate = taskKey[String]("create-or-update-environment")
+  lazy val ebEnvironmentCreateOrUpdate = taskKey[EnvironmentDescription]("create-or-update-environment")
 
   lazy val ebEnvironmentCreateOrUpdateAndWait = taskKey[EnvironmentDescription]("create-or-update-environment-and-wait")
 
@@ -113,15 +112,9 @@ trait SbtAwsEbKeys {
 
   lazy val ebConfigurationTemplateCreate = taskKey[CreateConfigurationTemplateResult]("create-configuration-template")
 
-  lazy val ebConfigurationTemplateCreateAndWait = taskKey[CreateConfigurationTemplateResult]("create-configuration-template-and-wait")
-
   lazy val ebConfigurationTemplateUpdate = taskKey[UpdateConfigurationTemplateResult]("update-configuration-template")
 
-  lazy val ebConfigurationTemplateUpdateAndWait = taskKey[UpdateConfigurationTemplateResult]("update-configuration-template-and-wait")
-
   lazy val ebConfigurationTemplateDelete = taskKey[Unit]("update-configuration-template")
-
-  lazy val ebConfigurationTemplateDeleteAndWait = taskKey[Unit]("update-configuration-template-and-wait")
 
 }
 

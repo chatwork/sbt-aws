@@ -83,7 +83,7 @@ trait EnvironmentSupport {
           .withTags(tags: _*)
           .withCNAMEPrefixOpt(cnamePrefix)
         val result = client.createEnvironmentAsTry(request)
-        logger.info(s"create environment finisht: $applicationName, $environmentName, $description, $versionLabel, $tier, $solutionStackName, $configurationTemplateName")
+        logger.info(s"create environment finish: $applicationName, $environmentName, $description, $versionLabel, $tier, $solutionStackName, $configurationTemplateName")
         result
       } else {
         logger.warn(s"exists environment: $applicationName, $environmentName")
@@ -92,7 +92,7 @@ trait EnvironmentSupport {
     }
   }
 
-  def ebCreateEnvironmentTask: Def.Initialize[Task[String]] = Def.task {
+  def ebCreateEnvironmentTask: Def.Initialize[Task[CreateEnvironmentResult]] = Def.task {
     implicit val logger = streams.value.log
     ebCreateEnvironment(
       ebClient.value,
@@ -107,14 +107,14 @@ trait EnvironmentSupport {
       (ebOptionSpecifications in aws).value,
       (ebTags in aws).value,
       (ebCNAMEPrefix in aws).value
-    ).map(_.getEnvironmentId).get
+    ).get
   }
 
   def ebCreateEnvironmentAndWaitTask: Def.Initialize[Task[EnvironmentDescription]] = Def.task {
     implicit val logger = streams.value.log
-    val environmentId = (ebEnvironmentCreate in aws).value
+    val result = (ebEnvironmentCreate in aws).value
     val (progressStatuses, headOption) = wait(ebClient.value) {
-      ebDescribeEnvironment(ebClient.value, environmentId).get
+      ebDescribeEnvironment(ebClient.value, result.getEnvironmentId).get
     } {
       e =>
         e.exists { e =>
@@ -124,7 +124,7 @@ trait EnvironmentSupport {
     }
     progressStatuses.foreach { s =>
       logger.info(s"status = $s")
-      TimeUnit.SECONDS.sleep(WAITING_INTERNALVAL_IN_SEC)
+      TimeUnit.SECONDS.sleep(waitingIntervalInSec)
     }
     headOption().flatten.get
   }
@@ -162,7 +162,7 @@ trait EnvironmentSupport {
     }
   }
 
-  def ebUpdateEnvironmentTask: Def.Initialize[Task[String]] = Def.task {
+  def ebUpdateEnvironmentTask: Def.Initialize[Task[UpdateEnvironmentResult]] = Def.task {
     implicit val logger = streams.value.log
     ebUpdateEnvironment(
       ebClient.value,
@@ -175,29 +175,28 @@ trait EnvironmentSupport {
       (ebConfigurationTemplateName in aws).value,
       (ebConfigurationOptionSettings in aws).value,
       (ebOptionSpecifications in aws).value
-    ).map(_.getEnvironmentId).get
+    ).get
   }
 
   def ebUpdateEnvironmentAndWaitTask: Def.Initialize[Task[EnvironmentDescription]] = Def.task {
     implicit val logger = streams.value.log
-    val environmentId = (ebEnvironmentUpdate in aws).value
+    val result = (ebEnvironmentUpdate in aws).value
     val (progressStatuses, headOption) = wait(ebClient.value) {
-      ebDescribeEnvironment(ebClient.value, environmentId).get
+      ebDescribeEnvironment(ebClient.value, result.getEnvironmentId).get
     } {
-      e =>
-        e.exists { e =>
-          val status = EnvironmentStatus.fromValue(e.statusOpt.get)
-          status == EnvironmentStatus.Terminated || status == EnvironmentStatus.Ready
-        }
+      _.exists { e =>
+        val status = EnvironmentStatus.fromValue(e.statusOpt.get)
+        status == EnvironmentStatus.Terminated || status == EnvironmentStatus.Ready
+      }
     }
     progressStatuses.foreach { s =>
       logger.info(s"status = $s")
-      TimeUnit.SECONDS.sleep(WAITING_INTERNALVAL_IN_SEC)
+      TimeUnit.SECONDS.sleep(waitingIntervalInSec)
     }
     headOption().flatten.get
   }
 
-  def ebCreateOrUpdateEnvironmentTask: Def.Initialize[Task[String]] = Def.task {
+  def ebCreateOrUpdateEnvironmentTask: Def.Initialize[Task[EnvironmentDescription]] = Def.task {
     implicit val logger = streams.value.log
     ebUpdateEnvironment(
       ebClient.value,
@@ -210,7 +209,19 @@ trait EnvironmentSupport {
       (ebConfigurationTemplateName in aws).value,
       (ebConfigurationOptionSettings in aws).value,
       (ebOptionSpecifications in aws).value
-    ).map(_.getEnvironmentId).recoverWith {
+    ).map { e =>
+        EnvironmentDescriptionFactory
+          .create()
+          .withApplicationName(e.getApplicationName)
+          .withCNAME(e.getCNAME)
+          .withDateCreated(e.getDateCreated)
+          .withDateUpdated(e.getDateUpdated)
+          .withDescription(e.getDescription)
+          .withEndpointURL(e.getEndpointURL)
+          .withEnvironmentId(e.getEnvironmentId)
+          .withEnvironmentName(e.getEnvironmentName)
+          .withHealth(e.getHealth)
+      }.recoverWith {
         case ex: NotFoundException =>
           ebCreateEnvironment(
             ebClient.value,
@@ -225,25 +236,36 @@ trait EnvironmentSupport {
             (ebOptionSpecifications in aws).value,
             (ebTags in aws).value,
             (ebCNAMEPrefix in aws).value
-          ).map(e => e.getEnvironmentId)
+          ).map { e =>
+              EnvironmentDescriptionFactory
+                .create()
+                .withApplicationName(e.getApplicationName)
+                .withCNAME(e.getCNAME)
+                .withDateCreated(e.getDateCreated)
+                .withDateUpdated(e.getDateUpdated)
+                .withDescription(e.getDescription)
+                .withEndpointURL(e.getEndpointURL)
+                .withEnvironmentId(e.getEnvironmentId)
+                .withEnvironmentName(e.getEnvironmentName)
+                .withHealth(e.getHealth)
+            }
       }.get
   }
 
   def ebCreateOrUpdateEnvironmentAndWaitTask: Def.Initialize[Task[EnvironmentDescription]] = Def.task {
     implicit val logger = streams.value.log
-    val environmentId = (ebEnvironmentCreateOrUpdate in aws).value
+    val result = (ebEnvironmentCreateOrUpdate in aws).value
     val (progressStatuses, headOption) = wait(ebClient.value) {
-      ebDescribeEnvironment(ebClient.value, environmentId).get
+      ebDescribeEnvironment(ebClient.value, result.getEnvironmentId).get
     } {
-      e =>
-        e.exists { e =>
-          val status = EnvironmentStatus.fromValue(e.statusOpt.get)
-          status == EnvironmentStatus.Terminated || status == EnvironmentStatus.Ready
-        }
+      _.exists { e =>
+        val status = EnvironmentStatus.fromValue(e.statusOpt.get)
+        status == EnvironmentStatus.Terminated || status == EnvironmentStatus.Ready
+      }
     }
     progressStatuses.foreach { s =>
       logger.info(s"status = $s")
-      TimeUnit.SECONDS.sleep(WAITING_INTERNALVAL_IN_SEC)
+      TimeUnit.SECONDS.sleep(waitingIntervalInSec)
     }
     headOption().flatten.get
   }
