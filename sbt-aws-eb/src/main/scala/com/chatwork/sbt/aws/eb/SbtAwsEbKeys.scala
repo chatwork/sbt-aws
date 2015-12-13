@@ -94,11 +94,11 @@ trait SbtAwsEbKeys {
 
   lazy val ebCNAMEPrefix = settingKey[Option[String]]("cname-prefix")
 
-  lazy val ebEnvironmentCreate = taskKey[CreateEnvironmentResult]("create-environment")
+  lazy val ebEnvironmentCreate = taskKey[EnvironmentDescription]("create-environment")
 
   lazy val ebEnvironmentCreateAndWait = taskKey[EnvironmentDescription]("create-environment-and-wait")
 
-  lazy val ebEnvironmentUpdate = taskKey[UpdateEnvironmentResult]("update-environment")
+  lazy val ebEnvironmentUpdate = taskKey[EnvironmentDescription]("update-environment")
 
   lazy val ebEnvironmentUpdateAndWait = taskKey[EnvironmentDescription]("update-environment-and-wait")
 

@@ -65,7 +65,7 @@ trait EnvironmentSupport {
                                       configurationOptionSettings: Seq[ConfigurationOptionSetting],
                                       optionSpecifications: Seq[OptionSpecification],
                                       tags: Seq[Tag],
-                                      cnamePrefix: Option[String])(implicit logger: Logger): Try[CreateEnvironmentResult] = {
+                                      cnamePrefix: Option[String])(implicit logger: Logger): Try[EnvironmentDescription] = {
     ebDescribeEnvironment(client, applicationName, environmentName, versionLabel).flatMap { environment =>
       if (environment.isEmpty) {
         logger.info(s"create environment start: $applicationName, $environmentName, $description, $versionLabel, $tier, $solutionStackName, $configurationTemplateName")
@@ -84,7 +84,25 @@ trait EnvironmentSupport {
           .withCNAMEPrefixOpt(cnamePrefix)
         val result = client.createEnvironmentAsTry(request)
         logger.info(s"create environment finish: $applicationName, $environmentName, $description, $versionLabel, $tier, $solutionStackName, $configurationTemplateName")
-        result
+        result.map { r =>
+          EnvironmentDescriptionFactory
+            .create()
+            .withApplicationName(r.getApplicationName)
+            .withCNAME(r.getCNAME)
+            .withDateCreated(r.getDateCreated)
+            .withDateUpdated(r.getDateUpdated)
+            .withDescription(r.getDescription)
+            .withEndpointURL(r.getEndpointURL)
+            .withEnvironmentId(r.getEnvironmentId)
+            .withEnvironmentName(r.getEnvironmentName)
+            .withHealth(r.getHealth)
+            .withResources(r.getResources)
+            .withSolutionStackName(r.getSolutionStackName)
+            .withStatus(r.getStatus)
+            .withTemplateName(r.getTemplateName)
+            .withTier(r.getTier)
+            .withVersionLabel(r.getVersionLabel)
+        }
       } else {
         logger.warn(s"exists environment: $applicationName, $environmentName")
         throw AlreadyException(s"already environment: $applicationName, $environmentName")
@@ -92,7 +110,7 @@ trait EnvironmentSupport {
     }
   }
 
-  def ebCreateEnvironmentTask: Def.Initialize[Task[CreateEnvironmentResult]] = Def.task {
+  def ebCreateEnvironmentTask: Def.Initialize[Task[EnvironmentDescription]] = Def.task {
     implicit val logger = streams.value.log
     ebCreateEnvironment(
       ebClient.value,
@@ -138,7 +156,7 @@ trait EnvironmentSupport {
                                       solutionStackName: Option[String],
                                       configurationTemplateName: Option[String],
                                       configurationOptionSettings: Seq[ConfigurationOptionSetting],
-                                      optionSpecifications: Seq[OptionSpecification])(implicit logger: Logger): Try[UpdateEnvironmentResult] = {
+                                      optionSpecifications: Seq[OptionSpecification])(implicit logger: Logger): Try[EnvironmentDescription] = {
     logger.info(s"update environment start: $applicationName, $environmentName, $description, $versionLabel, $tier, $solutionStackName, $configurationTemplateName")
     ebDescribeEnvironment(client, applicationName, environmentName, versionLabel).flatMap { environment =>
       if (environment.isDefined) {
@@ -154,7 +172,25 @@ trait EnvironmentSupport {
           .withOptionsToRemove(optionSpecifications: _*)
         val result = client.updateEnvironmentAsTry(request)
         logger.info(s"update environment finish: $applicationName, $environmentName, $description, $versionLabel, $tier, $solutionStackName, $configurationTemplateName")
-        result
+        result.map { r =>
+          EnvironmentDescriptionFactory
+            .create()
+            .withApplicationName(r.getApplicationName)
+            .withCNAME(r.getCNAME)
+            .withDateCreated(r.getDateCreated)
+            .withDateUpdated(r.getDateUpdated)
+            .withDescription(r.getDescription)
+            .withEndpointURL(r.getEndpointURL)
+            .withEnvironmentId(r.getEnvironmentId)
+            .withEnvironmentName(r.getEnvironmentName)
+            .withHealth(r.getHealth)
+            .withResources(r.getResources)
+            .withSolutionStackName(r.getSolutionStackName)
+            .withStatus(r.getStatus)
+            .withTemplateName(r.getTemplateName)
+            .withTier(r.getTier)
+            .withVersionLabel(r.getVersionLabel)
+        }
       } else {
         logger.warn(s"not found environment: $applicationName, $environmentName")
         throw NotFoundException(s"The environment is not found: $applicationName, $environmentName")
@@ -162,7 +198,7 @@ trait EnvironmentSupport {
     }
   }
 
-  def ebUpdateEnvironmentTask: Def.Initialize[Task[UpdateEnvironmentResult]] = Def.task {
+  def ebUpdateEnvironmentTask: Def.Initialize[Task[EnvironmentDescription]] = Def.task {
     implicit val logger = streams.value.log
     ebUpdateEnvironment(
       ebClient.value,
@@ -209,18 +245,24 @@ trait EnvironmentSupport {
       (ebConfigurationTemplateName in aws).value,
       (ebConfigurationOptionSettings in aws).value,
       (ebOptionSpecifications in aws).value
-    ).map { e =>
+    ).map { r =>
         EnvironmentDescriptionFactory
           .create()
-          .withApplicationName(e.getApplicationName)
-          .withCNAME(e.getCNAME)
-          .withDateCreated(e.getDateCreated)
-          .withDateUpdated(e.getDateUpdated)
-          .withDescription(e.getDescription)
-          .withEndpointURL(e.getEndpointURL)
-          .withEnvironmentId(e.getEnvironmentId)
-          .withEnvironmentName(e.getEnvironmentName)
-          .withHealth(e.getHealth)
+          .withApplicationName(r.getApplicationName)
+          .withCNAME(r.getCNAME)
+          .withDateCreated(r.getDateCreated)
+          .withDateUpdated(r.getDateUpdated)
+          .withDescription(r.getDescription)
+          .withEndpointURL(r.getEndpointURL)
+          .withEnvironmentId(r.getEnvironmentId)
+          .withEnvironmentName(r.getEnvironmentName)
+          .withHealth(r.getHealth)
+          .withResources(r.getResources)
+          .withSolutionStackName(r.getSolutionStackName)
+          .withStatus(r.getStatus)
+          .withTemplateName(r.getTemplateName)
+          .withTier(r.getTier)
+          .withVersionLabel(r.getVersionLabel)
       }.recoverWith {
         case ex: NotFoundException =>
           ebCreateEnvironment(
@@ -236,18 +278,24 @@ trait EnvironmentSupport {
             (ebOptionSpecifications in aws).value,
             (ebTags in aws).value,
             (ebCNAMEPrefix in aws).value
-          ).map { e =>
+          ).map { r =>
               EnvironmentDescriptionFactory
                 .create()
-                .withApplicationName(e.getApplicationName)
-                .withCNAME(e.getCNAME)
-                .withDateCreated(e.getDateCreated)
-                .withDateUpdated(e.getDateUpdated)
-                .withDescription(e.getDescription)
-                .withEndpointURL(e.getEndpointURL)
-                .withEnvironmentId(e.getEnvironmentId)
-                .withEnvironmentName(e.getEnvironmentName)
-                .withHealth(e.getHealth)
+                .withApplicationName(r.getApplicationName)
+                .withCNAME(r.getCNAME)
+                .withDateCreated(r.getDateCreated)
+                .withDateUpdated(r.getDateUpdated)
+                .withDescription(r.getDescription)
+                .withEndpointURL(r.getEndpointURL)
+                .withEnvironmentId(r.getEnvironmentId)
+                .withEnvironmentName(r.getEnvironmentName)
+                .withHealth(r.getHealth)
+                .withResources(r.getResources)
+                .withSolutionStackName(r.getSolutionStackName)
+                .withStatus(r.getStatus)
+                .withTemplateName(r.getTemplateName)
+                .withTier(r.getTier)
+                .withVersionLabel(r.getVersionLabel)
             }
       }.get
   }
