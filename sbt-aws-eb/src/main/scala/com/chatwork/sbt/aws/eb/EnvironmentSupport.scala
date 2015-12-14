@@ -18,8 +18,7 @@ trait EnvironmentSupport {
 
   private[eb] def ebDescribeEnvironment(client: AWSElasticBeanstalkClient,
                                         applicationName: String,
-                                        environmentName: String,
-                                        versionLabel: Option[String])(implicit logger: Logger): Try[Option[EnvironmentDescription]] = {
+                                        environmentName: String)(implicit logger: Logger): Try[Option[EnvironmentDescription]] = {
     logger.info(s"describe environment start: $applicationName, $environmentName")
     val request = DescribeEnvironmentsRequestFactory
       .create()
@@ -32,8 +31,7 @@ trait EnvironmentSupport {
       _.environments.find {
         e =>
           e.applicationNameOpt.get == applicationName &&
-            e.environmentNameOpt.get == environmentName &&
-            e.versionLabelOpt == versionLabel
+            e.environmentNameOpt.get == environmentName
       }
     }
   }
@@ -66,7 +64,7 @@ trait EnvironmentSupport {
                                       optionSpecifications: Seq[OptionSpecification],
                                       tags: Seq[Tag],
                                       cnamePrefix: Option[String])(implicit logger: Logger): Try[CreateEnvironmentResult] = {
-    ebDescribeEnvironment(client, applicationName, environmentName, versionLabel).flatMap { environment =>
+    ebDescribeEnvironment(client, applicationName, environmentName).flatMap { environment =>
       if (environment.isEmpty) {
         logger.info(s"create environment start: $applicationName, $environmentName, $description, $versionLabel, $tier, $solutionStackName, $configurationTemplateName")
         val request = CreateEnvironmentRequestFactory
@@ -140,7 +138,17 @@ trait EnvironmentSupport {
                                       configurationOptionSettings: Seq[ConfigurationOptionSetting],
                                       optionSpecifications: Seq[OptionSpecification])(implicit logger: Logger): Try[UpdateEnvironmentResult] = {
     logger.info(s"update environment start: $applicationName, $environmentName, $description, $versionLabel, $tier, $solutionStackName, $configurationTemplateName")
-    ebDescribeEnvironment(client, applicationName, environmentName, versionLabel).flatMap { environment =>
+
+    //If we specified a version to update to, the version has to exist in the application.
+    versionLabel foreach { version =>
+      val applicationVersion = describeApplicationVersion(client, applicationName, version)
+      if (applicationVersion.isFailure || applicationVersion.get.isEmpty) {
+        logger.warn(s"not found version: $applicationName, $environmentName, ${versionLabel.get}")
+        throw NotFoundException(s"The specified application version is not found: $applicationName, $environmentName, ${versionLabel.get}")
+      }
+    }
+
+    ebDescribeEnvironment(client, applicationName, environmentName).flatMap { environment =>
       if (environment.isDefined) {
         val request = UpdateEnvironmentRequestFactory
           .create()

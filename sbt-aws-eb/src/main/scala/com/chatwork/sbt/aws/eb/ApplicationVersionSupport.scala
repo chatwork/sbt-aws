@@ -45,7 +45,7 @@ trait ApplicationVersionSupport {
         logger.info(s"create applicationVersion finish: $applicationName, $versionLabel, $versionDescription, $s3Location, $autoCreateApplication")
         result.map(_.getApplicationVersion)
       } else {
-        logger.warn(s"The applicationVersion is not found.: $applicationName, $versionLabel")
+        logger.warn(s"The applicationVersion already exists.: $applicationName, $versionLabel")
         throw new Exception
       }
     }
