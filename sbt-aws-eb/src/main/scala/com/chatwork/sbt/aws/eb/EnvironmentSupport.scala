@@ -24,7 +24,7 @@ trait EnvironmentSupport {
     val request = DescribeEnvironmentsRequestFactory
       .create()
       .withApplicationName(applicationName)
-      .withEnvironmentIds(environmentName)
+      .withEnvironmentNames(environmentName)
     val result = client.describeEnvironmentsAsTry(request)
     logger.info(result.toString)
     logger.info(s"describe environment start: $applicationName, $environmentName")
