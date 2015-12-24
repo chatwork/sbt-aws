@@ -6,11 +6,12 @@ import java.util.Date
 
 import com.amazonaws.regions.Region
 import com.amazonaws.services.elasticbeanstalk.AWSElasticBeanstalkClient
+import com.amazonaws.services.elasticbeanstalk.model.S3Location
 import com.chatwork.sbt.aws.core.SbtAwsCoreKeys._
 import com.chatwork.sbt.aws.eb.SbtAwsEbKeys._
 import com.chatwork.sbt.aws.s3.SbtAwsS3
 import org.sisioh.aws4s.eb.Implicits._
-import org.sisioh.aws4s.eb.model.{ DescribeEventsRequestFactory, DescribeConfigurationSettingsRequestFactory }
+import org.sisioh.aws4s.eb.model.{ S3LocationFactory, DescribeEventsRequestFactory, DescribeConfigurationSettingsRequestFactory }
 import sbt.Keys._
 import sbt._
 
@@ -51,7 +52,7 @@ trait SbtAwsEb
     path
   }
 
-  def ebUploadBundleTask(): Def.Initialize[Task[(String, String)]] = Def.task {
+  def ebUploadBundleTask(): Def.Initialize[Task[S3Location]] = Def.task {
     val logger = streams.value.log
     val path = (ebBuildBundle in aws).value
     val createBucket = (ebS3CreateBucket in aws).value
@@ -73,7 +74,8 @@ trait SbtAwsEb
     logger.info(s"upload application-bundle : $path to ${bucketName.get}/$key")
     s3PutObject(s3Client.value, bucketName.get, key, path, overwrite, createBucket).get
     logger.info(s"uploaded application-bundle : ${bucketName.get}/$key")
-    (bucketName.get, key)
+
+    S3LocationFactory.create().withS3Bucket(bucketName.get).withS3Key(key)
   }
 
   private[eb] def ebDescribeEvents(client: AWSElasticBeanstalkClient, applicationName: String, envrionmentName: Option[String], templateName: Option[String])(implicit logger: Logger) = {

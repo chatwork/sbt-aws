@@ -18,8 +18,12 @@ ebS3BucketName in aws := Some("sbt-aws-eb-test")
 
 ebS3CreateBucket in aws := true
 
-ebAutoCreateApplication in aws := Some(true)
-
-ebEnvironmentUseVersionLabel in aws := Some((ebApplicationVersionLabel in aws).value)
-
 ebSolutionStackName in aws := Some("64bit Amazon Linux 2015.09 v2.0.4 running Docker 1.7.1")
+
+ebApplicationVersionCreateOrUpdateAndWait in aws <<= (ebApplicationVersionCreateOrUpdateAndWait in aws) dependsOn (ebApplicationCreateOrUpdateAndWait in aws)
+
+ebEnvironmentCreateOrUpdateAndWait in aws <<= (ebEnvironmentCreateOrUpdateAndWait in aws) dependsOn (ebApplicationVersionCreateOrUpdateAndWait in aws)
+
+val deploy = taskKey[Unit]("deploy")
+
+deploy := (ebEnvironmentCreateOrUpdateAndWait in aws).value

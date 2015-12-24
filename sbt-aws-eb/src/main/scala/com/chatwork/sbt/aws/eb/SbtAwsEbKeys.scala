@@ -10,7 +10,7 @@ trait SbtAwsEbKeys {
 
   lazy val ebBuildBundle = taskKey[File]("build-bundle")
 
-  lazy val ebUploadBundle = taskKey[(String, String)]("upload-bundle")
+  lazy val ebUploadBundle = taskKey[S3Location]("upload-bundle")
 
   lazy val ebBundleTargetFiles = taskKey[Seq[(File, String)]]("zip-target-file")
 

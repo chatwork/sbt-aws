@@ -1,5 +1,6 @@
 package com.chatwork.sbt.aws.eb
 
+import com.amazonaws.AmazonServiceException
 import com.amazonaws.services.elasticbeanstalk.AWSElasticBeanstalkClient
 import com.amazonaws.services.elasticbeanstalk.model.{ CreateConfigurationTemplateResult, UpdateConfigurationTemplateResult }
 import com.chatwork.sbt.aws.core.SbtAwsCoreKeys._
@@ -52,8 +53,14 @@ trait ConfigurationTemplateSupport {
       .withDescriptionOpt(ebConfigurationTemplate.description)
       .withOptionSettings(ebConfigurationTemplate.optionSettings)
       .withOptionsToRemove(ebConfigurationTemplate.optionsToRemoves)
-    val result = client.updateConfigurationTemplateAsTry(request)
-    logger.info(s"update configuration template finish: $applicationName, $ebConfigurationTemplate")
+    val result = client.updateConfigurationTemplateAsTry(request).map { result =>
+      logger.info(s"update configuration template finish: $applicationName, $ebConfigurationTemplate")
+      result
+    }.recoverWith {
+      case ex: AmazonServiceException if ex.getStatusCode == 404 =>
+        logger.warn(s"The configuration template is not found.: $applicationName, ${ebConfigurationTemplate.name}")
+        throw NotFoundException(s"The configuration template is not found.: $applicationName, ${ebConfigurationTemplate.name}")
+    }
     result
   }
 
@@ -74,8 +81,13 @@ trait ConfigurationTemplateSupport {
       .create()
       .withApplicationName(applicationName)
       .withTemplateName(ebConfigurationTemplate.name)
-    val result = client.deleteConfigurationTemplateAsTry(request)
-    logger.info(s"delete configuration template finish: $applicationName, $ebConfigurationTemplate")
+    val result = client.deleteConfigurationTemplateAsTry(request).map { _ =>
+      logger.info(s"delete configuration template finish: $applicationName, $ebConfigurationTemplate")
+    }.recoverWith {
+      case ex: AmazonServiceException if ex.getStatusCode == 404 =>
+        logger.warn(s"The configuration template is not found.: $applicationName, ${ebConfigurationTemplate.name}")
+        throw NotFoundException(s"The configuration template is not found.: $applicationName, ${ebConfigurationTemplate.name}")
+    }
     result
   }
 
@@ -85,7 +97,10 @@ trait ConfigurationTemplateSupport {
       ebClient.value,
       (ebApplicationName in aws).value,
       (ebConfigurationTemplate in aws).value.get
-    ).get
+    ).recover {
+        case ex: NotFoundException =>
+          ()
+      }.get
   }
 
 }

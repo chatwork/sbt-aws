@@ -55,8 +55,7 @@ trait ApplicationVersionSupport {
   def ebCreateApplicationVersionTask(): Def.Initialize[Task[ApplicationVersionDescription]] = Def.task {
     implicit val logger = streams.value.log
     val s3Location = if ((ebUseBundle in aws).value) {
-      val (bucketName, key) = (ebUploadBundle in aws).value
-      Some(S3LocationFactory.create().withS3Bucket(bucketName).withS3Key(key))
+      Some((ebUploadBundle in aws).value)
     } else None
     ebCreateApplicationVersion(
       ebClient.value,
@@ -113,7 +112,7 @@ trait ApplicationVersionSupport {
           }
         } else {
           logger.warn(s"The applicationVersion is not found.: $applicationName, $versionLabel")
-          throw new Exception
+          throw NotFoundException(s"The applicationVersion is not found.: $applicationName, $versionLabel")
         }
       }
   }
@@ -165,7 +164,7 @@ trait ApplicationVersionSupport {
           result
         } else {
           logger.warn(s"The applicationVersion is not found.: $applicationName, $versionLabel")
-          Success(())
+          throw NotFoundException(s"The applicationVersion is not found.: $applicationName, $versionLabel")
         }
       }
   }
@@ -176,7 +175,10 @@ trait ApplicationVersionSupport {
       ebClient.value,
       (ebApplicationName in aws).value,
       (ebApplicationVersionLabel in aws).value
-    ).get
+    ).recover {
+        case ex: NotFoundException =>
+          ()
+      }.get
   }
 
   def ebDeleteApplicationVersionAndWaitTask(): Def.Initialize[Task[Unit]] = Def.task {
@@ -202,8 +204,7 @@ trait ApplicationVersionSupport {
     ).recoverWith {
         case ex: NotFoundException =>
           val s3Location = if ((ebUseBundle in aws).value) {
-            val (bucketName, key) = (ebUploadBundle in aws).value
-            Some(S3LocationFactory.create().withS3Bucket(bucketName).withS3Key(key))
+            Some((ebUploadBundle in aws).value)
           } else None
           ebCreateApplicationVersion(
             ebClient.value,

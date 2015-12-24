@@ -125,7 +125,7 @@ trait ApplicationSupport {
         result
       } else {
         logger.warn(s"The application is not found.: $applicationName")
-        Success(())
+        throw NotFoundException(s"The application is not found.: $applicationName")
       }
     }
   }
@@ -135,7 +135,10 @@ trait ApplicationSupport {
     ebDeleteApplication(
       ebClient.value,
       (ebApplicationName in aws).value
-    ).get
+    ).recover {
+        case ex: NotFoundException =>
+          ()
+      }.get
   }
 
   def ebDeleteApplicationAndWaitTask(): Def.Initialize[Task[Unit]] = Def.task {
