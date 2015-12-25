@@ -11,7 +11,7 @@ import com.chatwork.sbt.aws.core.SbtAwsCoreKeys._
 import com.chatwork.sbt.aws.eb.SbtAwsEbKeys._
 import com.chatwork.sbt.aws.s3.SbtAwsS3
 import org.sisioh.aws4s.eb.Implicits._
-import org.sisioh.aws4s.eb.model.{ S3LocationFactory, DescribeEventsRequestFactory, DescribeConfigurationSettingsRequestFactory }
+import org.sisioh.aws4s.eb.model.{ DescribeConfigurationSettingsRequestFactory, DescribeEventsRequestFactory, S3LocationFactory }
 import sbt.Keys._
 import sbt._
 
@@ -38,7 +38,7 @@ trait SbtAwsEb
     val logger = streams.value.log
     val r = (region in aws).value
     val cpn = (credentialProfileName in aws).value
-    logger.info(s"region = $r, credentialProfileName = $cpn")
+    logger.debug(s"region = $r, credentialProfileName = $cpn")
     createClient(classOf[AWSElasticBeanstalkClient], Region.getRegion(r), cpn)
   }
 
@@ -52,6 +52,11 @@ trait SbtAwsEb
     path
   }
 
+  def timestamp: String = {
+    val sdf = new SimpleDateFormat("yyyyMMdd'_'HHmmss")
+    sdf.format(new Date())
+  }
+
   def ebUploadBundleTask(): Def.Initialize[Task[S3Location]] = Def.task {
     val logger = streams.value.log
     val path = (ebBuildBundle in aws).value
@@ -60,13 +65,11 @@ trait SbtAwsEb
     val projectVersion = (version in thisProjectRef).value
     val bucketName = (ebS3BucketName in aws).value
     val keyMapper = (ebS3KeyMapper in aws).value
+    val versionLabel = (ebApplicationVersionLabel in aws).value
 
     require(bucketName.isDefined)
 
-    val sdf = new SimpleDateFormat("yyyyMMdd'_'HHmmss")
-    val timestamp = sdf.format(new Date())
-
-    val baseKey = s"$projectName/$projectName-$projectVersion-$timestamp.zip"
+    val baseKey = s"$projectName/$projectName-$versionLabel.zip"
     val key = keyMapper(baseKey)
 
     val overwrite = projectVersion.endsWith("-SNAPSHOT")

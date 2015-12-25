@@ -1,5 +1,8 @@
 package com.chatwork.sbt.aws.eb
 
+import java.text.SimpleDateFormat
+import java.util.Date
+
 import com.chatwork.sbt.aws.core.SbtAwsCoreKeys
 import com.chatwork.sbt.aws.eb.SbtAwsEb._
 import com.chatwork.sbt.aws.s3.SbtAwsS3Plugin
@@ -42,7 +45,7 @@ object SbtAwsEbPlugin extends AutoPlugin {
     ebUseBundle in aws := true,
     ebAutoCreateApplication in aws := None,
     ebEnvironmentName in aws := (name in thisProjectRef).value + "-env",
-    ebApplicationVersionLabel in aws := (version in thisProjectRef).value,
+    ebApplicationVersionLabel in aws := (version in thisProjectRef).value + "_" + timestamp,
     ebApplicationVersionDescription in aws := None,
     ebApplicationVersionCreate in aws <<= ebCreateApplicationVersionTask,
     ebApplicationVersionCreateAndWait in aws <<= ebCreateApplicationVersionAndWaitTask,

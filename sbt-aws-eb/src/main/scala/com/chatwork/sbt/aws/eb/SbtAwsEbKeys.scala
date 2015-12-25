@@ -26,7 +26,7 @@ trait SbtAwsEbKeys {
 
   lazy val ebApplicationDescription = settingKey[Option[String]]("eb-application-desc")
 
-  lazy val ebApplicationVersionLabel = settingKey[String]("eb-application-version-label")
+  lazy val ebApplicationVersionLabel = taskKey[String]("eb-application-version-label")
 
   lazy val ebApplicationVersionDescription = settingKey[Option[String]]("eb-application-version-desc")
 
@@ -78,7 +78,7 @@ trait SbtAwsEbKeys {
 
   lazy val ebEnvironmentDescription = settingKey[Option[String]]("environment-description")
 
-  lazy val ebEnvironmentUseVersionLabel = settingKey[Option[String]]("environment-use-version-label")
+  lazy val ebEnvironmentUseVersionLabel = taskKey[Option[String]]("environment-use-version-label")
 
   lazy val ebSolutionStackName = settingKey[Option[String]]("soulution-stack-name")
 
@@ -94,17 +94,17 @@ trait SbtAwsEbKeys {
 
   lazy val ebCNAMEPrefix = settingKey[Option[String]]("cname-prefix")
 
-  lazy val ebEnvironmentCreate = taskKey[EnvironmentDescription]("create-environment")
+  lazy val ebEnvironmentCreate = inputKey[EnvironmentDescription]("create-environment")
 
-  lazy val ebEnvironmentCreateAndWait = taskKey[EnvironmentDescription]("create-environment-and-wait")
+  lazy val ebEnvironmentCreateAndWait = inputKey[EnvironmentDescription]("create-environment-and-wait")
 
-  lazy val ebEnvironmentUpdate = taskKey[EnvironmentDescription]("update-environment")
+  lazy val ebEnvironmentUpdate = inputKey[EnvironmentDescription]("update-environment")
 
-  lazy val ebEnvironmentUpdateAndWait = taskKey[EnvironmentDescription]("update-environment-and-wait")
+  lazy val ebEnvironmentUpdateAndWait = inputKey[EnvironmentDescription]("update-environment-and-wait")
 
-  lazy val ebEnvironmentCreateOrUpdate = taskKey[EnvironmentDescription]("create-or-update-environment")
+  lazy val ebEnvironmentCreateOrUpdate = inputKey[EnvironmentDescription]("create-or-update-environment")
 
-  lazy val ebEnvironmentCreateOrUpdateAndWait = taskKey[EnvironmentDescription]("create-or-update-environment-and-wait")
+  lazy val ebEnvironmentCreateOrUpdateAndWait = inputKey[EnvironmentDescription]("create-or-update-environment-and-wait")
 
   // ---
 

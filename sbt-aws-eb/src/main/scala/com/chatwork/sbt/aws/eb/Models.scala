@@ -26,7 +26,7 @@ trait Models {
                                      optionsToRemoves: Seq[EbOptionSpecification],
                                      recreate: Boolean)
 
-  case class EbEnvironmentTier(name: String, typeName: String, version: Option[String])
+  sealed case class EbEnvironmentTier(name: String, typeName: String, version: Option[String])
       extends EnvironmentTier {
     setName(name)
     setType(typeName)
@@ -37,7 +37,7 @@ trait Models {
 
     object WebServer extends EbEnvironmentTier("WebServer", "Standard", Some("1.0"))
 
-    object Worker extends EbEnvironmentTier("Worker", "Standard", Some("1.0"))
+    object Worker extends EbEnvironmentTier("Worker", "SQS/HTTP", Some("1.0"))
 
   }
 
