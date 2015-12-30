@@ -80,6 +80,7 @@ object SbtAwsEbPlugin extends AutoPlugin {
     ebConfigurationTemplate in aws := None,
     ebConfigurationTemplateCreate in aws <<= ebCreateConfigurationTemplateTask(),
     ebConfigurationTemplateUpdate in aws <<= ebUpdateConfigurationTemplateTask(),
+    ebConfigurationTemplateCreateOrUpdate in aws <<= ebCreateOrUpdateConfigurationTemplateTask(),
     ebConfigurationTemplateDelete in aws <<= ebDeleteConfigurationTemplateTask(),
     // ---
     ebListAvailableSolutionStacks in aws <<= ebListAvailableSolutionStacksTask(),

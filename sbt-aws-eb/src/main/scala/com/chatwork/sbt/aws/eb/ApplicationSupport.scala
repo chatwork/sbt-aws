@@ -80,7 +80,7 @@ trait ApplicationSupport {
           ).map(_.getApplication).recoverWith {
               case ex: AmazonServiceException if ex.getStatusCode == 404 =>
                 logger.warn(s"The application is not found.: $applicationName")
-                throw NotFoundException(s"The application is not found.: $applicationName")
+                throw ApplicationNotFoundException(s"The application is not found.: $applicationName")
             }
           logger.info(s"update application finish: $applicationName, $description")
           result
@@ -90,7 +90,7 @@ trait ApplicationSupport {
         }
       }.getOrElse {
         logger.warn(s"The application is not found.: $applicationName")
-        throw NotFoundException(s"The application is not found.: $applicationName")
+        throw ApplicationNotFoundException(s"The application is not found.: $applicationName")
       }
     }
   }
@@ -130,7 +130,7 @@ trait ApplicationSupport {
         result
       }.getOrElse {
         logger.warn(s"The application is not found.: $applicationName")
-        throw NotFoundException(s"The application is not found.: $applicationName")
+        throw ApplicationNotFoundException(s"The application is not found.: $applicationName")
       }
     }
   }
@@ -141,7 +141,7 @@ trait ApplicationSupport {
       ebClient.value,
       (ebApplicationName in aws).value
     ).recover {
-        case ex: NotFoundException =>
+        case ex: ApplicationNotFoundException =>
           ()
       }.get
   }
@@ -167,7 +167,7 @@ trait ApplicationSupport {
       (ebApplicationName in aws).value,
       (ebApplicationDescription in aws).value
     ).recoverWith {
-        case ex: NotFoundException =>
+        case ex: ApplicationNotFoundException =>
           ebCreateApplication(
             ebClient.value,
             (ebApplicationName in aws).value,

@@ -199,6 +199,15 @@ trait EnvironmentSupport {
                                       configurationTemplateName: Option[String],
                                       configurationOptionSettings: Seq[ConfigurationOptionSetting],
                                       optionSpecifications: Seq[OptionSpecification])(implicit logger: Logger): Try[EnvironmentDescription] = {
+    //If we specified a version to update to, the version has to exist in the application.
+    versionLabel foreach { version =>
+      val applicationVersion = describeApplicationVersion(client, applicationName, version)
+      if (applicationVersion.isFailure || applicationVersion.get.isEmpty) {
+        logger.warn(s"not found version: $applicationName, $environmentName, ${versionLabel.get}")
+        throw ApplicationVersionNotFoundException(s"The specified application version is not found: $applicationName, $environmentName, ${versionLabel.get}")
+      }
+    }
+
     ebDescribeEnvironment(client, applicationName, environmentName).flatMap {
       _.map {
         environment =>
@@ -235,7 +244,7 @@ trait EnvironmentSupport {
             }.recoverWith {
               case ex: AmazonServiceException if ex.getStatusCode == 404 =>
                 logger.warn(s"not found environment: $applicationName, $environmentName")
-                throw NotFoundException(s"The environment is not found: $applicationName, $environmentName")
+                throw EnvironmentNotFoundException(s"The environment is not found: $applicationName, $environmentName")
             }
             logger.info(s"update environment finish: $applicationName, $environmentName, $description, $versionLabel, $tier, $solutionStackName, $configurationTemplateName, $configurationOptionSettings, $optionSpecifications")
             result
@@ -245,7 +254,7 @@ trait EnvironmentSupport {
           }
       }.getOrElse {
         logger.warn(s"not found environment: $applicationName, $environmentName")
-        throw NotFoundException(s"The environment is not found: $applicationName, $environmentName")
+        throw EnvironmentNotFoundException(s"The environment is not found: $applicationName, $environmentName")
       }
     }
   }
@@ -340,7 +349,7 @@ trait EnvironmentSupport {
           .withTier(r.getTier)
           .withVersionLabel(r.getVersionLabel)
       }.recoverWith {
-        case ex: NotFoundException =>
+        case ex: EnvironmentNotFoundException =>
           ebCreateEnvironment(
             ebClient.value,
             (ebApplicationName in aws).value,

@@ -10,9 +10,9 @@ ebBundleTargetFiles in aws <<= Def.task {
   )
 }
 
-ebApplicationName in aws := (name in thisProjectRef).value + "-" + new java.util.Date().getTime.toString
-
-ebEnvironmentName in aws := new java.util.Date().getTime.toString + "-env"
+//ebApplicationName in aws := (name in thisProjectRef).value + "-" + new java.util.Date().getTime.toString
+//
+//ebEnvironmentName in aws := new java.util.Date().getTime.toString + "-env"
 
 ebS3BucketName in aws := Some("sbt-aws-eb-test")
 

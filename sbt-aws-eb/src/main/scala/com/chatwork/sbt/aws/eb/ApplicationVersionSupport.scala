@@ -107,7 +107,7 @@ trait ApplicationVersionSupport {
           ).map(_.getApplicationVersion).recoverWith {
               case ex: AmazonServiceException if ex.getStatusCode == 404 =>
                 logger.warn(s"The applicationVersion is not found.: $applicationName, $version")
-                throw NotFoundException(s"The applicationVersion is not found.: $applicationName, $versionLabel")
+                throw ApplicationVersionNotFoundException(s"The applicationVersion is not found.: $applicationName, $versionLabel")
             }
         } else {
           logger.warn(s"The Updating is nothing. $applicationName, $versionLabel")
@@ -117,7 +117,7 @@ trait ApplicationVersionSupport {
         result
       }.getOrElse {
         logger.warn(s"The applicationVersion is not found.: $applicationName, $versionLabel")
-        throw NotFoundException(s"The applicationVersion is not found.: $applicationName, $versionLabel")
+        throw ApplicationVersionNotFoundException(s"The applicationVersion is not found.: $applicationName, $versionLabel")
       }
     }
   }
@@ -166,7 +166,7 @@ trait ApplicationVersionSupport {
         result
       }.getOrElse {
         logger.warn(s"The applicationVersion is not found.: $applicationName, $versionLabel")
-        throw NotFoundException(s"The applicationVersion is not found.: $applicationName, $versionLabel")
+        throw ApplicationVersionNotFoundException(s"The applicationVersion is not found.: $applicationName, $versionLabel")
       }
     }
   }
@@ -178,7 +178,7 @@ trait ApplicationVersionSupport {
       (ebApplicationName in aws).value,
       (ebApplicationVersionLabel in aws).value
     ).recover {
-        case ex: NotFoundException =>
+        case ex: ApplicationVersionNotFoundException =>
           ()
       }.get
   }
@@ -205,7 +205,7 @@ trait ApplicationVersionSupport {
       (ebApplicationVersionLabel in aws).value,
       (ebApplicationVersionDescription in aws).value
     ).recoverWith {
-        case ex: NotFoundException =>
+        case ex: ApplicationVersionNotFoundException =>
           val s3Location = if ((ebUseBundle in aws).value) {
             Some((ebUploadBundle in aws).value)
           } else None
