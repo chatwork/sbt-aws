@@ -56,7 +56,7 @@ def assemblyJarFile = Def.task {
   (jarFile, jarPath)
 }
 
-ebBuildBundle in aws <<= (ebBuildBundle in aws) dependsOn(generateFiles, assemblyJarFile)
+ebBuildBundle in aws <<= (ebBuildBundle in aws) dependsOn(assemblyJarFile)
 
 ebS3BucketName in aws := Some("sbt-aws-eb-test")
 
@@ -90,6 +90,10 @@ ebConfigurationOptionSettings in aws := {
   ).map(e => EbConfigurationOptionSetting(e._1, e._2, e._3))
 }
 
+ebTargetTemplates in aws := Map(
+  ("boot.sh.ftl", (ebBundleDirectory in aws).value / "boot.sh")
+)
+
 ebApplicationVersionCreateOrUpdateAndWait in aws <<= (ebApplicationVersionCreateOrUpdateAndWait in aws) dependsOn (ebApplicationCreateOrUpdateAndWait in aws)
 
 ebEnvironmentCreateOrUpdateAndWait in aws <<= (ebEnvironmentCreateOrUpdateAndWait in aws) dependsOn (ebApplicationVersionCreateOrUpdateAndWait in aws)
@@ -97,31 +101,4 @@ ebEnvironmentCreateOrUpdateAndWait in aws <<= (ebEnvironmentCreateOrUpdateAndWai
 val deploy = inputKey[Unit]("deploy")
 
 deploy := (ebEnvironmentCreateOrUpdateAndWait in aws).evaluated
-
-def generateFiles = Def.task {
-  val src = baseDirectory.value / "ebBundle"
-  val cfg = new freemarker.template.Configuration
-  cfg.setDirectoryForTemplateLoading(src)
-
-  val context = Map(
-    "name" -> (name in thisProjectRef).value,
-    "version" -> (version in thisProjectRef).value
-  ).asJava
-
-  val templates = Seq(
-    ("boot.sh.ftl", src / "boot.sh")
-  )
-
-  templates.foreach { case (templatePath, outputFile) =>
-    var writer: FileWriter = null
-    try {
-      val template = cfg.getTemplate(templatePath)
-      writer = new FileWriter(outputFile)
-      template.process(context, writer)
-    } finally {
-      if (writer != null)
-        writer.close()
-    }
-  }
-}
 

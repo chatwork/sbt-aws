@@ -8,6 +8,14 @@ trait SbtAwsEbKeys {
 
   import autoImport._
 
+  lazy val ebBundleDirectory = settingKey[File]("bundle-directory")
+
+  lazy val ebBundleContext = settingKey[Map[String, Any]]("bundle-context")
+
+  lazy val ebTargetTemplates = settingKey[Map[String, File]]("target-templates")
+
+  lazy val ebGenerateFilesInBundle = taskKey[Seq[File]]("generate-bundle-files")
+
   lazy val ebBuildBundle = taskKey[File]("build-bundle")
 
   lazy val ebUploadBundle = taskKey[S3Location]("upload-bundle")
@@ -26,7 +34,7 @@ trait SbtAwsEbKeys {
 
   lazy val ebApplicationDescription = settingKey[Option[String]]("eb-application-desc")
 
-  lazy val ebApplicationVersionLabel = taskKey[String]("eb-application-version-label")
+  lazy val ebApplicationVersionLabel = settingKey[String]("eb-application-version-label")
 
   lazy val ebApplicationVersionDescription = settingKey[Option[String]]("eb-application-version-desc")
 
@@ -78,7 +86,7 @@ trait SbtAwsEbKeys {
 
   lazy val ebEnvironmentDescription = settingKey[Option[String]]("environment-description")
 
-  lazy val ebEnvironmentUseVersionLabel = taskKey[Option[String]]("environment-use-version-label")
+  lazy val ebEnvironmentUseVersionLabel = settingKey[Option[String]]("environment-use-version-label")
 
   lazy val ebSolutionStackName = settingKey[Option[String]]("soulution-stack-name")
 
@@ -106,6 +114,8 @@ trait SbtAwsEbKeys {
 
   lazy val ebEnvironmentCreateOrUpdateAndWait = inputKey[EnvironmentDescription]("create-or-update-environment-and-wait")
 
+  lazy val ebRestartAppServer = inputKey[EnvironmentDescription]("restart-app-server")
+
   // ---
 
   lazy val ebConfigurationTemplate = settingKey[Option[EbConfigurationTemplate]]("eb-configuration-template")
@@ -116,6 +126,9 @@ trait SbtAwsEbKeys {
 
   lazy val ebConfigurationTemplateDelete = taskKey[Unit]("update-configuration-template")
 
+  // ---
+
+  lazy val ebListAvailableSolutionStacks = taskKey[Seq[SolutionStackDescription]]("list-available-solution-stacks")
 }
 
 object SbtAwsEbKeys extends SbtAwsEbKeys

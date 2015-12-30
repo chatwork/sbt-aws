@@ -1,8 +1,5 @@
 package com.chatwork.sbt.aws.eb
 
-import java.text.SimpleDateFormat
-import java.util.Date
-
 import com.chatwork.sbt.aws.core.SbtAwsCoreKeys
 import com.chatwork.sbt.aws.eb.SbtAwsEb._
 import com.chatwork.sbt.aws.s3.SbtAwsS3Plugin
@@ -23,11 +20,18 @@ object SbtAwsEbPlugin extends AutoPlugin {
 
   override def projectSettings: Seq[Def.Setting[_]] = Seq(
     // ---
+    ebBundleDirectory in aws := file("ebBundle"),
+    ebBundleContext in aws := Map(
+      "name" -> (name in thisProjectRef).value,
+      "version" -> (version in thisProjectRef).value
+    ),
+    ebTargetTemplates in aws := Map.empty,
     ebBundleTargetFiles in aws := Seq.empty,
     ebBundleFileName in aws := (name in thisProjectRef).value + "-bundle.zip",
     ebS3CreateBucket in aws := false,
     ebS3BucketName in aws := None,
     ebS3KeyMapper in aws := identity,
+    ebGenerateFilesInBundle in aws <<= ebGenerateFilesInBundleTask(),
     ebBuildBundle in aws <<= ebBuildBundleTask(),
     ebUploadBundle in aws <<= ebUploadBundleTask(),
     // ---
@@ -47,14 +51,14 @@ object SbtAwsEbPlugin extends AutoPlugin {
     ebEnvironmentName in aws := (name in thisProjectRef).value + "-env",
     ebApplicationVersionLabel in aws := (version in thisProjectRef).value + "_" + timestamp,
     ebApplicationVersionDescription in aws := None,
-    ebApplicationVersionCreate in aws <<= ebCreateApplicationVersionTask,
-    ebApplicationVersionCreateAndWait in aws <<= ebCreateApplicationVersionAndWaitTask,
-    ebApplicationVersionUpdate in aws <<= ebUpdateApplicationVersionTask,
-    ebApplicationVersionUpdateAndWait in aws <<= ebUpdateApplicationVersionAndWaitTask,
-    ebApplicationVersionDelete in aws <<= ebDeleteApplicationVersionTask,
-    ebApplicationVersionDeleteAndWait in aws <<= ebDeleteApplicationVersionAndWaitTask,
-    ebApplicationVersionCreateOrUpdate in aws <<= ebCreateOrUpdateApplicationVersionTask,
-    ebApplicationVersionCreateOrUpdateAndWait in aws <<= ebCreateOrUpdateApplicationVersionAndWaitTask,
+    ebApplicationVersionCreate in aws <<= ebCreateApplicationVersionTask(),
+    ebApplicationVersionCreateAndWait in aws <<= ebCreateApplicationVersionAndWaitTask(),
+    ebApplicationVersionUpdate in aws <<= ebUpdateApplicationVersionTask(),
+    ebApplicationVersionUpdateAndWait in aws <<= ebUpdateApplicationVersionAndWaitTask(),
+    ebApplicationVersionDelete in aws <<= ebDeleteApplicationVersionTask(),
+    ebApplicationVersionDeleteAndWait in aws <<= ebDeleteApplicationVersionAndWaitTask(),
+    ebApplicationVersionCreateOrUpdate in aws <<= ebCreateOrUpdateApplicationVersionTask(),
+    ebApplicationVersionCreateOrUpdateAndWait in aws <<= ebCreateOrUpdateApplicationVersionAndWaitTask(),
     // ---
     ebEnvironmentUseVersionLabel in aws := Some((ebApplicationVersionLabel in aws).value),
     ebEnvironmentDescription in aws := None,
@@ -65,18 +69,21 @@ object SbtAwsEbPlugin extends AutoPlugin {
     ebOptionSpecifications in aws := Seq.empty,
     ebTags in aws := Seq.empty,
     ebCNAMEPrefix in aws := None,
-    ebEnvironmentCreate in aws <<= ebCreateEnvironmentTask,
-    ebEnvironmentCreateAndWait in aws <<= ebCreateEnvironmentAndWaitTask,
-    ebEnvironmentUpdate in aws <<= ebUpdateEnvironmentTask,
-    ebEnvironmentUpdateAndWait in aws <<= ebUpdateEnvironmentAndWaitTask,
-    ebEnvironmentCreateOrUpdate in aws <<= ebCreateOrUpdateEnvironmentTask,
-    ebEnvironmentCreateOrUpdateAndWait in aws <<= ebCreateOrUpdateEnvironmentAndWaitTask,
+    ebEnvironmentCreate in aws <<= ebCreateEnvironmentTask(),
+    ebEnvironmentCreateAndWait in aws <<= ebCreateEnvironmentAndWaitTask(),
+    ebEnvironmentUpdate in aws <<= ebUpdateEnvironmentTask(),
+    ebEnvironmentUpdateAndWait in aws <<= ebUpdateEnvironmentAndWaitTask(),
+    ebEnvironmentCreateOrUpdate in aws <<= ebCreateOrUpdateEnvironmentTask(),
+    ebEnvironmentCreateOrUpdateAndWait in aws <<= ebCreateOrUpdateEnvironmentAndWaitTask(),
+    ebRestartAppServer in aws <<= ebRestartAppServerTask(),
     // ---
     ebConfigurationTemplate in aws := None,
     ebConfigurationTemplateCreate in aws <<= ebCreateConfigurationTemplateTask(),
     ebConfigurationTemplateUpdate in aws <<= ebUpdateConfigurationTemplateTask(),
-    ebConfigurationTemplateDelete in aws <<= ebDeleteConfigurationTemplateTask()
-
+    ebConfigurationTemplateDelete in aws <<= ebDeleteConfigurationTemplateTask(),
+    // ---
+    ebListAvailableSolutionStacks in aws <<= ebListAvailableSolutionStacksTask(),
+    ebBuildBundle in aws <<= (ebBuildBundle in aws) dependsOn(ebGenerateFilesInBundle in aws)
   )
 
 }

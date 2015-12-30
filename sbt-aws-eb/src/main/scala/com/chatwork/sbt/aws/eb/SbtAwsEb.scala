@@ -1,19 +1,21 @@
 package com.chatwork.sbt.aws.eb
 
-import java.io.File
+import java.io.{ File, FileWriter }
 import java.text.SimpleDateFormat
 import java.util.Date
 
 import com.amazonaws.regions.Region
 import com.amazonaws.services.elasticbeanstalk.AWSElasticBeanstalkClient
-import com.amazonaws.services.elasticbeanstalk.model.S3Location
+import com.amazonaws.services.elasticbeanstalk.model.{ RestartAppServerRequest, ConfigurationOptionSetting, S3Location, SolutionStackDescription }
 import com.chatwork.sbt.aws.core.SbtAwsCoreKeys._
 import com.chatwork.sbt.aws.eb.SbtAwsEbKeys._
 import com.chatwork.sbt.aws.s3.SbtAwsS3
 import org.sisioh.aws4s.eb.Implicits._
-import org.sisioh.aws4s.eb.model.{ DescribeConfigurationSettingsRequestFactory, DescribeEventsRequestFactory, S3LocationFactory }
+import org.sisioh.aws4s.eb.model.{ DescribeConfigurationSettingsRequestFactory, DescribeEventsRequestFactory, S3LocationFactory, ValidateConfigurationSettingsRequestFactory }
 import sbt.Keys._
 import sbt._
+
+import scala.collection.JavaConverters._
 
 object SbtAwsEb extends SbtAwsEb
 
@@ -81,27 +83,77 @@ trait SbtAwsEb
     S3LocationFactory.create().withS3Bucket(bucketName.get).withS3Key(key)
   }
 
+  def ebGenerateFilesInBundleTask(): Def.Initialize[Task[Seq[File]]] = Def.task {
+    val logger = streams.value.log
+    val src = (ebBundleDirectory in aws).value
+    if (src.exists()) {
+      val cfg = new freemarker.template.Configuration(freemarker.template.Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS)
+      cfg.setDirectoryForTemplateLoading(src)
+
+      val context = (ebBundleContext in aws).value.asJava
+
+      val templates = (ebTargetTemplates in aws).value
+
+      templates.map {
+        case (templatePath, outputFile) =>
+          var writer: FileWriter = null
+          try {
+            val template = cfg.getTemplate(templatePath)
+            writer = new FileWriter(outputFile)
+            template.process(context, writer)
+            outputFile
+          } finally {
+            if (writer != null)
+              writer.close()
+          }
+      }.toSeq
+    } else {
+      logger.warn(s"$src is not found.")
+      Seq.empty
+    }
+  }
+
+  private[eb] def validateConfigurationSettings(client: AWSElasticBeanstalkClient, applicationName: String, configurationOptionSettings: Seq[ConfigurationOptionSetting]) = {
+    val request = ValidateConfigurationSettingsRequestFactory
+      .create()
+      .withApplicationName(applicationName)
+      .withOptionSettings(configurationOptionSettings)
+    client.validateConfigurationSettingsAsTry(request)
+  }
+
   private[eb] def ebDescribeEvents(client: AWSElasticBeanstalkClient, applicationName: String, envrionmentName: Option[String], templateName: Option[String])(implicit logger: Logger) = {
-    logger.info(s"describe event start: $applicationName, $envrionmentName, $templateName")
     val request = DescribeEventsRequestFactory
       .create()
       .withApplicationName(applicationName)
       .withEnvironmentNameOpt(envrionmentName)
       .withTemplateNameOpt(templateName)
     val result = client.describeEventsAsTry(request)
-    logger.info(s"describe event finish: $applicationName, $envrionmentName, $templateName")
     result
   }
 
-  private[eb] def ebDescribeConfigurationSettings(client: AWSElasticBeanstalkClient, applicationName: String, envrionmentName: Option[String], templateName: Option[String])(implicit logger: Logger) = {
-    logger.info(s"describe configurationSettings start: $applicationName, $envrionmentName, $templateName")
+  private[eb] def ebDescribeConfigurationSettings(client: AWSElasticBeanstalkClient, applicationName: String, environmentName: Option[String], templateName: Option[String])(implicit logger: Logger) = {
+    logger.debug(s"describe configurationSettings start: $applicationName, $environmentName, $templateName")
     val request = DescribeConfigurationSettingsRequestFactory
       .create(applicationName)
-      .withEnvironmentNameOpt(envrionmentName)
+      .withEnvironmentNameOpt(environmentName)
       .withTemplateNameOpt(templateName)
     val result = client.describeConfigurationSettingsAsTry(request)
-    logger.info(s"describe configurationSettings finish: $applicationName, $envrionmentName, $templateName")
+    logger.debug(s"describe configurationSettings finish: $applicationName, $environmentName, $templateName")
     result
+  }
+
+  private[eb] def ebListAvailableSolutionStacks(client: AWSElasticBeanstalkClient)(implicit logger: Logger) = {
+    client.listAvailableSolutionStacksAsTry().map { result =>
+      result.getSolutionStackDetails.asScala.map { detail =>
+        logger.info(s"${detail.getSolutionStackName}, ${detail.getPermittedFileTypes.asScala.mkString("{ ", ", ", " }")}")
+        detail
+      }
+    }
+  }
+
+  def ebListAvailableSolutionStacksTask(): Def.Initialize[Task[Seq[SolutionStackDescription]]] = Def.task {
+    implicit val logger = streams.value.log
+    ebListAvailableSolutionStacks(ebClient.value).get
   }
 
 }

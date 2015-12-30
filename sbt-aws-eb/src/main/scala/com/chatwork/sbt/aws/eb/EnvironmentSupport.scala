@@ -21,6 +21,34 @@ trait EnvironmentSupport {
 
   private[eb] val oneStringParser = token(opt(Space) ~> (opt("env=" ~> StringBasic) || opt("suffix=" ~> StringBasic)), "environemnt name")
 
+  private[eb] def ebRestartAppServer(client: AWSElasticBeanstalkClient, applicationName: String, environmentName: String)(implicit logger: Logger): Try[EnvironmentDescription] = {
+    ebDescribeEnvironment(client, applicationName, environmentName).flatMap {
+      _.map { result =>
+        val request = new RestartAppServerRequest().withEnvironmentId(result.getEnvironmentId)
+        client.restartAppServerAsTry(request).map { _ =>
+          result
+        }
+      }.get
+    }
+  }
+
+  def ebRestartAppServerTask(): Def.Initialize[InputTask[EnvironmentDescription]] = Def.inputTask {
+    val environmentNameEither = oneStringParser.parsed
+    implicit val logger = streams.value.log
+    ebRestartAppServer(
+      ebClient.value,
+      (ebApplicationName in aws).value,
+      environmentNameEither.fold(
+        { envName =>
+          envName.getOrElse((ebEnvironmentName in aws).value)
+        }, {
+          suffix =>
+            suffix.map(e => (ebApplicationName in aws).value + "-" + e).getOrElse((ebEnvironmentName in aws).value)
+        }
+      )
+    ).get
+  }
+
   private[eb] def ebDescribeEnvironment(client: AWSElasticBeanstalkClient,
                                         applicationName: String,
                                         environmentName: String)(implicit logger: Logger): Try[Option[EnvironmentDescription]] = {
@@ -108,7 +136,7 @@ trait EnvironmentSupport {
     }
   }
 
-  def ebCreateEnvironmentTask: Def.Initialize[InputTask[EnvironmentDescription]] = Def.inputTask {
+  def ebCreateEnvironmentTask(): Def.Initialize[InputTask[EnvironmentDescription]] = Def.inputTask {
     val environmentNameEither = oneStringParser.parsed
     implicit val logger = streams.value.log
     ebCreateEnvironment(
@@ -134,7 +162,7 @@ trait EnvironmentSupport {
     ).get
   }
 
-  def ebCreateEnvironmentAndWaitTask: Def.Initialize[InputTask[EnvironmentDescription]] = Def.inputTask {
+  def ebCreateEnvironmentAndWaitTask(): Def.Initialize[InputTask[EnvironmentDescription]] = Def.inputTask {
     implicit val logger = streams.value.log
     val result = (ebEnvironmentCreate in aws).evaluated
     val (progressStatuses, headOption) = wait(ebClient.value) {
@@ -222,7 +250,7 @@ trait EnvironmentSupport {
     }
   }
 
-  def ebUpdateEnvironmentTask: Def.Initialize[InputTask[EnvironmentDescription]] = Def.inputTask {
+  def ebUpdateEnvironmentTask(): Def.Initialize[InputTask[EnvironmentDescription]] = Def.inputTask {
     val environmentNameEither = oneStringParser.parsed
     implicit val logger = streams.value.log
     ebUpdateEnvironment(
@@ -246,7 +274,7 @@ trait EnvironmentSupport {
     ).get
   }
 
-  def ebUpdateEnvironmentAndWaitTask: Def.Initialize[InputTask[EnvironmentDescription]] = Def.inputTask {
+  def ebUpdateEnvironmentAndWaitTask(): Def.Initialize[InputTask[EnvironmentDescription]] = Def.inputTask {
     implicit val logger = streams.value.log
     val result = (ebEnvironmentUpdate in aws).evaluated
     val (progressStatuses, headOption) = wait(ebClient.value) {
@@ -272,7 +300,7 @@ trait EnvironmentSupport {
     headOption().flatten.get
   }
 
-  def ebCreateOrUpdateEnvironmentTask: Def.Initialize[InputTask[EnvironmentDescription]] = Def.inputTask {
+  def ebCreateOrUpdateEnvironmentTask(): Def.Initialize[InputTask[EnvironmentDescription]] = Def.inputTask {
     val environmentNameEither = oneStringParser.parsed
     implicit val logger = streams.value.log
     ebUpdateEnvironment(
@@ -355,7 +383,7 @@ trait EnvironmentSupport {
       }.get
   }
 
-  def ebCreateOrUpdateEnvironmentAndWaitTask: Def.Initialize[InputTask[EnvironmentDescription]] = Def.inputTask {
+  def ebCreateOrUpdateEnvironmentAndWaitTask(): Def.Initialize[InputTask[EnvironmentDescription]] = Def.inputTask {
     implicit val logger = streams.value.log
     val result = (ebEnvironmentCreateOrUpdate in aws).evaluated
     val (progressStatuses, headOption) = wait(ebClient.value) {
