@@ -120,11 +120,11 @@ trait SbtAwsEbKeys {
 
   lazy val ebConfigurationTemplate = settingKey[Option[EbConfigurationTemplate]]("eb-configuration-template")
 
-  lazy val ebConfigurationTemplateCreate = taskKey[EbConfigurationTemplateDescription]("create-configuration-template")
+  lazy val ebConfigurationTemplateCreate = taskKey[Option[EbConfigurationTemplateDescription]]("create-configuration-template")
 
-  lazy val ebConfigurationTemplateUpdate = taskKey[EbConfigurationTemplateDescription]("update-configuration-template")
+  lazy val ebConfigurationTemplateUpdate = taskKey[Option[EbConfigurationTemplateDescription]]("update-configuration-template")
 
-  lazy val ebConfigurationTemplateCreateOrUpdate = taskKey[EbConfigurationTemplateDescription]("create-or-update-configuration-template")
+  lazy val ebConfigurationTemplateCreateOrUpdate = taskKey[Option[EbConfigurationTemplateDescription]]("create-or-update-configuration-template")
 
   lazy val ebConfigurationTemplateDelete = taskKey[Unit]("update-configuration-template")
 

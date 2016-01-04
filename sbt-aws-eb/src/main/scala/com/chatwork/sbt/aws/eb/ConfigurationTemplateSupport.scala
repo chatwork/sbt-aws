@@ -2,7 +2,6 @@ package com.chatwork.sbt.aws.eb
 
 import com.amazonaws.AmazonServiceException
 import com.amazonaws.services.elasticbeanstalk.AWSElasticBeanstalkClient
-import com.amazonaws.services.elasticbeanstalk.model.UpdateConfigurationTemplateResult
 import com.chatwork.sbt.aws.core.SbtAwsCoreKeys._
 import com.chatwork.sbt.aws.eb.SbtAwsEbPlugin.autoImport
 import org.sisioh.aws4s.eb.Implicits._
@@ -48,13 +47,15 @@ trait ConfigurationTemplateSupport {
     result
   }
 
-  def ebCreateConfigurationTemplateTask(): Def.Initialize[Task[EbConfigurationTemplateDescription]] = Def.task {
+  def ebCreateConfigurationTemplateTask(): Def.Initialize[Task[Option[EbConfigurationTemplateDescription]]] = Def.task {
     implicit val logger = streams.value.log
-    ebCreateConfigurationTemplate(
-      ebClient.value,
-      (ebApplicationName in aws).value,
-      (ebConfigurationTemplate in aws).value.get
-    ).get
+    (ebConfigurationTemplate in aws).value.map { v =>
+      ebCreateConfigurationTemplate(
+        ebClient.value,
+        (ebApplicationName in aws).value,
+        v
+      ).get
+    }
   }
 
   private val pattern = "No Configuration Template named"
@@ -98,29 +99,33 @@ trait ConfigurationTemplateSupport {
     result
   }
 
-  def ebUpdateConfigurationTemplateTask(): Def.Initialize[Task[EbConfigurationTemplateDescription]] = Def.task {
+  def ebUpdateConfigurationTemplateTask(): Def.Initialize[Task[Option[EbConfigurationTemplateDescription]]] = Def.task {
     implicit val logger = streams.value.log
-    ebUpdateConfigurationTemplate(
-      ebClient.value,
-      (ebApplicationName in aws).value,
-      (ebConfigurationTemplate in aws).value.get
-    ).get
+    (ebConfigurationTemplate in aws).value.map { v =>
+      ebUpdateConfigurationTemplate(
+        ebClient.value,
+        (ebApplicationName in aws).value,
+        v
+      ).get
+    }
   }
 
-  def ebCreateOrUpdateConfigurationTemplateTask(): Def.Initialize[Task[EbConfigurationTemplateDescription]] = Def.task {
+  def ebCreateOrUpdateConfigurationTemplateTask(): Def.Initialize[Task[Option[EbConfigurationTemplateDescription]]] = Def.task {
     implicit val logger = streams.value.log
-    ebUpdateConfigurationTemplate(
-      ebClient.value,
-      (ebApplicationName in aws).value,
-      (ebConfigurationTemplate in aws).value.get
-    ).recoverWith {
+    (ebConfigurationTemplate in aws).value.map { v =>
+      ebUpdateConfigurationTemplate(
+        ebClient.value,
+        (ebApplicationName in aws).value,
+        v
+      ).recoverWith {
         case ex: ConfigurationTemplateNotFoundException =>
           ebCreateConfigurationTemplate(
             ebClient.value,
             (ebApplicationName in aws).value,
-            (ebConfigurationTemplate in aws).value.get
+            v
           )
       }.get
+    }
   }
 
   private[eb] def ebDeleteConfigurationTemplate(client: AWSElasticBeanstalkClient,
@@ -148,9 +153,9 @@ trait ConfigurationTemplateSupport {
       (ebApplicationName in aws).value,
       (ebConfigurationTemplate in aws).value.get
     ).recover {
-        case ex: ConfigurationTemplateNotFoundException =>
-          ()
-      }.get
+      case ex: ConfigurationTemplateNotFoundException =>
+        ()
+    }.get
   }
 
 }
