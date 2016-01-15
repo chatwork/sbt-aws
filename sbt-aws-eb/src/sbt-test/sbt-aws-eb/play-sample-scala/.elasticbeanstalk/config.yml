@@ -1,0 +1,10 @@
+branch-defaults:
+  default:
+    environment: play-sample-scala-env
+global:
+  application_name: play-sample-scala
+  default_ec2_keyname: aws-eb
+  default_platform: Java 8
+  default_region: ap-northeast-1
+  profile: sbt-aws-scripted-test
+  sc: null

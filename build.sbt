@@ -88,7 +88,8 @@ lazy val s3 = (project in file("sbt-aws-s3")).settings(pluginSettings: _*).setti
 lazy val eb = (project in file("sbt-aws-eb")).settings(pluginSettings: _*).settings(
   name := "sbt-aws-eb",
   libraryDependencies ++= Seq(
-    "org.sisioh" %% "aws4s-eb" % aws4sVersion
+    "org.sisioh" %% "aws4s-eb" % aws4sVersion,
+    "org.freemarker" % "freemarker" % "2.3.23"
   )
 ).dependsOn(s3)
 

@@ -1,5 +1,7 @@
 package com.chatwork.sbt.aws.eb
 
+import java.util.Date
+
 import com.amazonaws.services.elasticbeanstalk.model.{ ConfigurationOptionSetting, EnvironmentTier, OptionSpecification, Tag }
 
 trait Models {
@@ -26,7 +28,17 @@ trait Models {
                                      optionsToRemoves: Seq[EbOptionSpecification],
                                      recreate: Boolean)
 
-  case class EbEnvironmentTier(name: String, typeName: String, version: Option[String])
+  case class EbConfigurationTemplateDescription(name: String,
+                                                description: Option[String],
+                                                deploymentStatus: String,
+                                                applicationName: String,
+                                                environmentName: String,
+                                                solutionStackName: String,
+                                                optionSettings: Seq[EbConfigurationOptionSetting],
+                                                createAt: Date,
+                                                updateAt: Date)
+
+  sealed case class EbEnvironmentTier(name: String, typeName: String, version: Option[String])
       extends EnvironmentTier {
     setName(name)
     setType(typeName)
@@ -37,7 +49,7 @@ trait Models {
 
     object WebServer extends EbEnvironmentTier("WebServer", "Standard", Some("1.0"))
 
-    object Worker extends EbEnvironmentTier("Worker", "Standard", Some("1.0"))
+    object Worker extends EbEnvironmentTier("Worker", "SQS/HTTP", Some("1.0"))
 
   }
 

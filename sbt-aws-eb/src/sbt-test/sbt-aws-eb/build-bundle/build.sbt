@@ -1,3 +1,4 @@
+credentialProfileName in aws := Some("sbt-aws-scripted-test")
 
 ebBundleTargetFiles in aws <<= Def.task {
   val base = baseDirectory.value

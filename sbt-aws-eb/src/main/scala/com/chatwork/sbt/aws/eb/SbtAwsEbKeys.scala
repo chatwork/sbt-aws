@@ -8,9 +8,17 @@ trait SbtAwsEbKeys {
 
   import autoImport._
 
+  lazy val ebBundleDirectory = settingKey[File]("bundle-directory")
+
+  lazy val ebBundleContext = settingKey[Map[String, Any]]("bundle-context")
+
+  lazy val ebTargetTemplates = settingKey[Map[String, File]]("target-templates")
+
+  lazy val ebGenerateFilesInBundle = taskKey[Seq[File]]("generate-bundle-files")
+
   lazy val ebBuildBundle = taskKey[File]("build-bundle")
 
-  lazy val ebUploadBundle = taskKey[(String, String)]("upload-bundle")
+  lazy val ebUploadBundle = taskKey[S3Location]("upload-bundle")
 
   lazy val ebBundleTargetFiles = taskKey[Seq[(File, String)]]("zip-target-file")
 
@@ -94,28 +102,35 @@ trait SbtAwsEbKeys {
 
   lazy val ebCNAMEPrefix = settingKey[Option[String]]("cname-prefix")
 
-  lazy val ebEnvironmentCreate = taskKey[CreateEnvironmentResult]("create-environment")
+  lazy val ebEnvironmentCreate = inputKey[EnvironmentDescription]("create-environment")
 
-  lazy val ebEnvironmentCreateAndWait = taskKey[EnvironmentDescription]("create-environment-and-wait")
+  lazy val ebEnvironmentCreateAndWait = inputKey[EnvironmentDescription]("create-environment-and-wait")
 
-  lazy val ebEnvironmentUpdate = taskKey[UpdateEnvironmentResult]("update-environment")
+  lazy val ebEnvironmentUpdate = inputKey[EnvironmentDescription]("update-environment")
 
-  lazy val ebEnvironmentUpdateAndWait = taskKey[EnvironmentDescription]("update-environment-and-wait")
+  lazy val ebEnvironmentUpdateAndWait = inputKey[EnvironmentDescription]("update-environment-and-wait")
 
-  lazy val ebEnvironmentCreateOrUpdate = taskKey[EnvironmentDescription]("create-or-update-environment")
+  lazy val ebEnvironmentCreateOrUpdate = inputKey[EnvironmentDescription]("create-or-update-environment")
 
-  lazy val ebEnvironmentCreateOrUpdateAndWait = taskKey[EnvironmentDescription]("create-or-update-environment-and-wait")
+  lazy val ebEnvironmentCreateOrUpdateAndWait = inputKey[EnvironmentDescription]("create-or-update-environment-and-wait")
+
+  lazy val ebRestartAppServer = inputKey[EnvironmentDescription]("restart-app-server")
 
   // ---
 
   lazy val ebConfigurationTemplate = settingKey[Option[EbConfigurationTemplate]]("eb-configuration-template")
 
-  lazy val ebConfigurationTemplateCreate = taskKey[CreateConfigurationTemplateResult]("create-configuration-template")
+  lazy val ebConfigurationTemplateCreate = taskKey[EbConfigurationTemplateDescription]("create-configuration-template")
 
-  lazy val ebConfigurationTemplateUpdate = taskKey[UpdateConfigurationTemplateResult]("update-configuration-template")
+  lazy val ebConfigurationTemplateUpdate = taskKey[EbConfigurationTemplateDescription]("update-configuration-template")
+
+  lazy val ebConfigurationTemplateCreateOrUpdate = taskKey[EbConfigurationTemplateDescription]("create-or-update-configuration-template")
 
   lazy val ebConfigurationTemplateDelete = taskKey[Unit]("update-configuration-template")
 
+  // ---
+
+  lazy val ebListAvailableSolutionStacks = taskKey[Seq[SolutionStackDescription]]("list-available-solution-stacks")
 }
 
 object SbtAwsEbKeys extends SbtAwsEbKeys
