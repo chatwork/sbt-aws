@@ -1,3 +1,5 @@
+name := "sbt-aws-s3"
+
 s3BucketName in aws := "sbt-aws-s3-test"
 
 s3Key in aws := "build.sbt"
