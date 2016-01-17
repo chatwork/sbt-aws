@@ -101,6 +101,7 @@ trait SbtAwsEb
             val template = cfg.getTemplate(templatePath)
             writer = new FileWriter(outputFile)
             template.process(context, writer)
+            logger.info("generated files in the bundle.")
             outputFile
           } finally {
             if (writer != null)
@@ -108,7 +109,7 @@ trait SbtAwsEb
           }
       }.toSeq
     } else {
-      logger.warn(s"$src is not found.")
+      logger.warn(s"${src.getAbsolutePath} is not found.")
       Seq.empty
     }
   }

@@ -27,7 +27,7 @@ object SbtAwsEbPlugin extends AutoPlugin {
 
   override def projectSettings: Seq[Def.Setting[_]] = Seq(
     // ---
-    ebBundleDirectory in aws := file("ebBundle"),
+    ebBundleDirectory in aws := (baseDirectory in thisProjectRef).value / "ebBundle",
     ebBundleContext in aws := Map(
       "name" -> (name in thisProjectRef).value,
       "version" -> (version in thisProjectRef).value
