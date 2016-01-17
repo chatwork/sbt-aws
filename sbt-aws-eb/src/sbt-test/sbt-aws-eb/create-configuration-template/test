@@ -2,7 +2,7 @@
 
 > aws::ebApplicationCreateOrUpdateAndWait
 
-> aws::ebConfigurationTemplateCreateOrUpdate
+> aws::ebConfigurationTemplateCreate
 
 > aws::ebApplicationVersionCreateOrUpdateAndWait
 

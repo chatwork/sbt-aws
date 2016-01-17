@@ -130,6 +130,10 @@ trait SbtAwsEbKeys {
 
   // ---
 
+  lazy val ebDeploy = inputKey[Unit]("deploy")
+
+  // ---
+
   lazy val ebListAvailableSolutionStacks = taskKey[Seq[SolutionStackDescription]]("list-available-solution-stacks")
 }
 

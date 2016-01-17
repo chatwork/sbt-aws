@@ -118,13 +118,13 @@ trait ConfigurationTemplateSupport {
         (ebApplicationName in aws).value,
         v
       ).recoverWith {
-        case ex: ConfigurationTemplateNotFoundException =>
-          ebCreateConfigurationTemplate(
-            ebClient.value,
-            (ebApplicationName in aws).value,
-            v
-          )
-      }.get
+          case ex: ConfigurationTemplateNotFoundException =>
+            ebCreateConfigurationTemplate(
+              ebClient.value,
+              (ebApplicationName in aws).value,
+              v
+            )
+        }.get
     }
   }
 
@@ -153,9 +153,9 @@ trait ConfigurationTemplateSupport {
       (ebApplicationName in aws).value,
       (ebConfigurationTemplate in aws).value.get
     ).recover {
-      case ex: ConfigurationTemplateNotFoundException =>
-        ()
-    }.get
+        case ex: ConfigurationTemplateNotFoundException =>
+          ()
+      }.get
   }
 
 }

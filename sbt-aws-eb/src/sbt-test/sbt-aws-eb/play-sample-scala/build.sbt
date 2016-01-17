@@ -94,11 +94,5 @@ ebTargetTemplates in aws := Map(
   ("boot.sh.ftl", (ebBundleDirectory in aws).value / "boot.sh")
 )
 
-ebApplicationVersionCreateOrUpdateAndWait in aws <<= (ebApplicationVersionCreateOrUpdateAndWait in aws) dependsOn (ebApplicationCreateOrUpdateAndWait in aws)
-
-ebEnvironmentCreateOrUpdateAndWait in aws <<= (ebEnvironmentCreateOrUpdateAndWait in aws) dependsOn (ebApplicationVersionCreateOrUpdateAndWait in aws)
-
-val deploy = inputKey[Unit]("deploy")
-
-deploy := (ebEnvironmentCreateOrUpdateAndWait in aws).evaluated
+ebDeploySettings
 

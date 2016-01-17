@@ -12,11 +12,18 @@ object SbtAwsEbPlugin extends AutoPlugin {
 
   override def requires: Plugins = SbtAwsS3Plugin
 
-  object autoImport extends SbtAwsEbKeys with Models {
-  }
-
   import SbtAwsCoreKeys._
   import SbtAwsEbKeys._
+
+  object autoImport extends SbtAwsEbKeys with Models {
+    lazy val ebDeploySettings: Seq[Def.Setting[_]] = Seq(
+      // ---
+      ebConfigurationTemplateCreateOrUpdate in aws <<= (ebConfigurationTemplateCreateOrUpdate in aws) dependsOn(ebApplicationCreateOrUpdateAndWait in aws),
+      ebApplicationVersionCreateOrUpdateAndWait in aws <<= (ebApplicationVersionCreateOrUpdateAndWait in aws) dependsOn (ebConfigurationTemplateCreateOrUpdate in aws),
+      ebEnvironmentCreateOrUpdateAndWait in aws <<= (ebEnvironmentCreateOrUpdateAndWait in aws) dependsOn (ebApplicationVersionCreateOrUpdateAndWait in aws),
+      ebDeploy in aws := (ebEnvironmentCreateOrUpdateAndWait in aws).evaluated
+    )
+  }
 
   override def projectSettings: Seq[Def.Setting[_]] = Seq(
     // ---
