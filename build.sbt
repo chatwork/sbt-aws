@@ -85,6 +85,13 @@ lazy val s3 = (project in file("sbt-aws-s3")).settings(pluginSettings: _*).setti
   )
 ).dependsOn(core)
 
+lazy val s3Resolver = (project in file("sbt-aws-s3-resolver")).settings(pluginSettings: _*).settings(
+  name := "sbt-aws-s3-resolver",
+  libraryDependencies ++= Seq(
+    "org.apache.ivy" % "ivy" % "2.4.0"
+  )
+).dependsOn(s3)
+
 lazy val eb = (project in file("sbt-aws-eb")).settings(pluginSettings: _*).settings(
   name := "sbt-aws-eb",
   libraryDependencies ++= Seq(
@@ -102,7 +109,7 @@ lazy val cfn = (project in file("sbt-aws-cfn")).settings(pluginSettings: _*).set
 
 lazy val root = (project in file(".")).settings(baseSettings: _*).settings(
   name := "sbt-aws"
-).aggregate(core, s3, eb, cfn)
+).aggregate(core, s3, eb, cfn, s3Resolver)
 
 def projectId(state: State) = extracted(state).currentProject.id
 

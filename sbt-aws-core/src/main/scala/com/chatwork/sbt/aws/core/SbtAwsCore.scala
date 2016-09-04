@@ -2,7 +2,7 @@ package com.chatwork.sbt.aws.core
 
 import java.io.File
 
-import com.amazonaws.AmazonWebServiceClient
+import com.amazonaws.{ AmazonWebServiceClient, ClientConfiguration }
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
 import com.amazonaws.auth.{ AWSCredentialsProviderChain, EnvironmentVariableCredentialsProvider, InstanceProfileCredentialsProvider, SystemPropertiesCredentialsProvider }
 import com.amazonaws.regions.Region
@@ -23,8 +23,8 @@ trait SbtAwsCore {
     )
   }
 
-  protected def createClient[A <: AmazonWebServiceClient](serviceClass: Class[A], region: Region, profileName: Option[String]): A = {
-    region.createClient(serviceClass, newCredentialsProvider(profileName), null)
+  protected def createClient[A <: AmazonWebServiceClient](serviceClass: Class[A], region: Region, profileName: Option[String], config: Option[ClientConfiguration] = None): A = {
+    region.createClient(serviceClass, newCredentialsProvider(profileName), config.orNull)
   }
 
   protected def md5(file: File): String =

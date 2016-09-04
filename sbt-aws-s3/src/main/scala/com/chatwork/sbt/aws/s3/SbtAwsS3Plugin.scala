@@ -28,4 +28,5 @@ object SbtAwsS3Plugin extends AutoPlugin {
     s3BucketName := "",
     s3Upload in aws <<= s3UploadTask
   )
+
 }

@@ -1,5 +1,6 @@
 package com.chatwork.sbt.aws.s3
 
+import com.amazonaws.ClientConfiguration
 import com.amazonaws.regions.Region
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.{ AmazonS3Exception, ObjectMetadata }
@@ -17,7 +18,19 @@ object SbtAwsS3 extends SbtAwsS3
 
 trait SbtAwsS3 extends SbtAwsCore {
 
-  lazy val s3Client = Def.task {
+  private def getProxyConfiguration: ClientConfiguration = {
+    val configuration = new ClientConfiguration()
+    for {
+      proxyHost <- Option(System.getProperty("https.proxyHost"))
+      proxyPort <- Option(System.getProperty("https.proxyPort").toInt)
+    } {
+      configuration.setProxyHost(proxyHost)
+      configuration.setProxyPort(proxyPort)
+    }
+    configuration
+  }
+
+  lazy val s3Client: Def.Initialize[Task[AmazonS3Client]] = Def.task {
     val logger = streams.value.log
     val r = (region in aws).value
     val cpn = (credentialProfileName in aws).value
@@ -31,14 +44,14 @@ trait SbtAwsS3 extends SbtAwsCore {
 
   def s3GetS3ObjectMetadata(client: AmazonS3Client, bucketName: String, key: String): Try[Option[ObjectMetadata]] = {
     client.getObjectMetadataAsTry(bucketName, key).map(Some(_)).recoverWith {
-      case ex: AmazonS3Exception if ex.getStatusCode() == 404 =>
+      case ex: AmazonS3Exception if ex.getStatusCode == 404 =>
         Success(None)
       case ex =>
         Failure(ex)
     }
   }
 
-  def isCond(file: File, metadataOpt: Option[ObjectMetadata], overwrite: Boolean) =
+  def isCond(file: File, metadataOpt: Option[ObjectMetadata], overwrite: Boolean): Boolean =
     metadataOpt.isEmpty || (overwrite && metadataOpt.get.getETag != md5(file))
 
   def s3PutObjectAndGetUrl(client: AmazonS3Client,
@@ -46,7 +59,7 @@ trait SbtAwsS3 extends SbtAwsCore {
                            key: String,
                            file: File,
                            metadataOpt: Option[ObjectMetadata],
-                           overwrite: Boolean, createBucket: Boolean) =
+                           overwrite: Boolean, createBucket: Boolean): Try[String] =
     if (isCond(file, metadataOpt, overwrite)) {
       for {
         exist <- client.doesBucketExistAsTry(bucketName)
