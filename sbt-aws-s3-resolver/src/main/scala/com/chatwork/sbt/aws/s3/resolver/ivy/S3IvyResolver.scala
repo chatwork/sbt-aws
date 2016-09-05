@@ -16,14 +16,14 @@ case class S3IvyResolver(s3Client: AmazonS3Client,
                          serverSideEncryption: Boolean = false,
                          overwrite: Boolean = false,
                          m2compatible: Boolean = true) extends IBiblioResolver {
-  //logger.info("s:params = " + (name, location, acl, serverSideEncryption, overwrite, m2compatible))
   setName(name)
   setRoot(location)
   setM2compatible(m2compatible)
   setArtifactPatterns(patterns.asJava)
   setIvyPatterns(patterns.asJava)
   setRepository(S3Repository(s3Client, region, acl, serverSideEncryption, overwrite))
-  //logger.info("e:params = " + (name, location, acl, serverSideEncryption, overwrite, m2compatible))
+
+  withMavenPatterns
 
   def withPatterns(patterns: Patterns): S3IvyResolver = {
     if (patterns.isMavenCompatible) this.setM2compatible(true)
