@@ -39,9 +39,9 @@ trait SbtAwsEb
   lazy val ebClient = Def.task {
     val logger = streams.value.log
     val r = (region in aws).value
-    val cpn = (credentialProfileName in aws).value
-    logger.debug(s"region = $r, credentialProfileName = $cpn")
-    createClient(classOf[AWSElasticBeanstalkClient], Region.getRegion(r), cpn)
+    val cpc = (credentialsProviderChain in aws).value
+    logger.debug(s"region = $r")
+    createClient(cpc, classOf[AWSElasticBeanstalkClient], Region.getRegion(r))
   }
 
   def ebBuildBundleTask(): Def.Initialize[Task[File]] = Def.task {

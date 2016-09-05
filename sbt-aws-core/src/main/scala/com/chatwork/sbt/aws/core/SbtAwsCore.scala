@@ -14,17 +14,8 @@ object SbtAwsCore extends SbtAwsCore
 
 trait SbtAwsCore {
 
-  protected def newCredentialsProvider(profileName: Option[String]) = {
-    new AWSCredentialsProviderChain(
-      new EnvironmentVariableCredentialsProvider(),
-      new SystemPropertiesCredentialsProvider(),
-      new ProfileCredentialsProvider(profileName.orNull),
-      new InstanceProfileCredentialsProvider()
-    )
-  }
-
-  protected def createClient[A <: AmazonWebServiceClient](serviceClass: Class[A], region: Region, profileName: Option[String], config: Option[ClientConfiguration] = None): A = {
-    region.createClient(serviceClass, newCredentialsProvider(profileName), config.orNull)
+  protected def createClient[A <: AmazonWebServiceClient](awsCredentialsProviderChain: AWSCredentialsProviderChain, serviceClass: Class[A], region: Region, config: Option[ClientConfiguration] = None): A = {
+    region.createClient(serviceClass, awsCredentialsProviderChain, config.orNull)
   }
 
   protected def md5(file: File): String =

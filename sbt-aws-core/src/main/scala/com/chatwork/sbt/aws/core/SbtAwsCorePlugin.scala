@@ -1,5 +1,7 @@
 package com.chatwork.sbt.aws.core
 
+import com.amazonaws.auth.profile.ProfileCredentialsProvider
+import com.amazonaws.auth.{ AWSCredentialsProviderChain, EnvironmentVariableCredentialsProvider, InstanceProfileCredentialsProvider, SystemPropertiesCredentialsProvider }
 import com.amazonaws.regions.Regions
 import sbt._
 import org.sisioh.config.{ Configuration => SisiohConfiguration }
@@ -17,6 +19,12 @@ object SbtAwsCorePlugin extends AutoPlugin {
 
   override def projectSettings: Seq[Def.Setting[_]] = Seq(
     credentialProfileName in aws := None,
+    credentialsProviderChain in aws := new AWSCredentialsProviderChain(
+      new EnvironmentVariableCredentialsProvider(),
+      new SystemPropertiesCredentialsProvider(),
+      new ProfileCredentialsProvider((credentialProfileName in aws).value.orNull),
+      new InstanceProfileCredentialsProvider()
+    ),
     region in aws := Regions.AP_NORTHEAST_1,
     environmentName in aws := System.getProperty("aws.env", "dev"),
     configFileFolder in aws := file("env"),
