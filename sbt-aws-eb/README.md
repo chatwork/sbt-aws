@@ -38,25 +38,58 @@ ebS3CreateBucket in aws := true // if necessary
 
 ```sh
 $ sbt aws::ebBuildBundle
-[info] Updating {file:/Users/j5ik2o/sbt-aws/sbt-aws-eb/src/sbt-test/sbt-aws-eb/build-bundle/}build-bundle...
-[info] Resolving org.fusesource.jansi#jansi;1.4 ...
-[info] Done updating.
-[info] Compiling 1 Scala source to /Users/j5ik2o/sbt-aws/sbt-aws-eb/src/sbt-test/sbt-aws-eb/build-bundle/target/scala-2.10/classes...
-[info] Packaging /Users/j5ik2o/sbt-aws/sbt-aws-eb/src/sbt-test/sbt-aws-eb/build-bundle/target/scala-2.10/build-bundle_2.10-0.1-SNAPSHOT.jar ...
-[info] Done packaging.
-[info] created application-bundle: /Users/j5ik2o/sbt-aws/sbt-aws-eb/src/sbt-test/sbt-aws-eb/build-bundle/target/build-bundle-bundle.zip
 ```
 
 - Upload application-bundle
 
 ```sh
 $ sbt aws::ebUploadBundle
-[info] Updating {file:/Users/j5ik2o/sbt-aws/sbt-aws-eb/src/sbt-test/sbt-aws-eb/upload-bundle/}upload-bundle...
-[info] Resolving org.fusesource.jansi#jansi;1.4 ...
-[info] Done updating.
-[info] Compiling 1 Scala source to /Users/j5ik2o/sbt-aws/sbt-aws-eb/src/sbt-test/sbt-aws-eb/upload-bundle/target/scala-2.10/classes...
-[info] Packaging /Users/j5ik2o/sbt-aws/sbt-aws-eb/src/sbt-test/sbt-aws-eb/upload-bundle/target/scala-2.10/upload-bundle_2.10-0.1-SNAPSHOT.jar ...
-[info] Done packaging.
-[info] created application-bundle: /Users/j5ik2o/sbt-aws/sbt-aws-eb/src/sbt-test/sbt-aws-eb/upload-bundle/target/upload-bundle-bundle.zip
-[info] upload /Users/j5ik2o/sbt-aws/sbt-aws-eb/src/sbt-test/sbt-aws-eb/upload-bundle/target/upload-bundle-bundle.zip to sbt-aws-eb/upload-bundle/upload-bundle-0.1-SNAPSHOT-20150525_172404.zip
 ```
+
+- Create Application
+
+```sh
+$ sbt aws::ebApplicationCreateOrUpdateAndWait
+```
+
+- Create Configuration Template
+
+```sh
+$ sbt aws::ebConfigurationTemplateCreateOrUpdate
+```
+
+- Create Application Version 
+
+```sh
+$ sbt aws::ebApplicationVersionCreateOrUpdateAndWait
+```
+
+- Create Environment(env parameter is Environment Name, It's a dynamic option that does not use the value(ebEnvironmentName) of the on build.sbt.)
+
+```sh
+$ sbt aws::ebEnvironmentCreateOrUpdateAndWait [env=staging]
+```
+
+
+## Auto Deploying
+
+Add this to your build.sbt file.
+
+```scala
+ebDeploySettings
+```
+
+Execute auto deploying command.
+
+```scala
+$ sbt aws::ebDeploy
+```
+
+Following is aws::ebDeploy's automatic task process.
+
+```
+aws::ebEnvironmentCreateOrUpdateAndWait -> aws::ebApplicationVersionCreateOrUpdateAndWait -> aws::ebConfigurationTemplateCreateOrUpdate -> aws::ebApplicationCreateOrUpdateAndWait
+```
+
+      
+
