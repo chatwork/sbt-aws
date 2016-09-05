@@ -1,5 +1,6 @@
 package com.chatwork.sbt.aws.core
 
+import com.amazonaws.auth.AWSCredentialsProviderChain
 import com.amazonaws.regions.Regions
 import sbt._
 import org.sisioh.config.{ Configuration => SisiohConfiguration }
@@ -10,6 +11,8 @@ trait SbtAwsCoreKeys {
   lazy val region = settingKey[Regions]("region")
 
   lazy val credentialProfileName = settingKey[Option[String]]("credential-profile-name")
+
+  lazy val credentialsProviderChain = settingKey[AWSCredentialsProviderChain]("credentials-provider-chain")
 
   lazy val environmentName = settingKey[String]("env")
 

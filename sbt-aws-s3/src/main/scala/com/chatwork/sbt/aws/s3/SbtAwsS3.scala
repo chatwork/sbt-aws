@@ -33,9 +33,9 @@ trait SbtAwsS3 extends SbtAwsCore {
   lazy val s3Client: Def.Initialize[Task[AmazonS3Client]] = Def.task {
     val logger = streams.value.log
     val r = (region in aws).value
-    val cpn = (credentialProfileName in aws).value
-    logger.info(s"region = $r, credentialProfileName = $cpn")
-    createClient(classOf[AmazonS3Client], Region.getRegion(r), cpn)
+    val cpc = (credentialsProviderChain in aws).value
+    logger.info(s"region = $r")
+    createClient(cpc, classOf[AmazonS3Client], Region.getRegion(r))
   }
 
   def s3ExistsS3Object(client: AmazonS3Client, bucketName: String, key: String): Try[Boolean] = {
