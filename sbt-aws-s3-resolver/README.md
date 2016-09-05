@@ -7,10 +7,12 @@ This SBT plugin adds support for using Amazon S3 for resolving and publishing us
 Add this to your project/plugins.sbt file:
 
 ```scala
+resolvers += "Sonatype OSS Release Repository" at "https://oss.sonatype.org/content/repositories/releases/"
+
 addSbtPlugin("com.chatwork" % "sbt-aws-s3-resolver" % "0.0.24-SNAPSHOT")
 ```
 
-## Setup
+## Usage
 
 ### Resolving Dependencies via S3
 
