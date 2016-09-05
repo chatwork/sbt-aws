@@ -70,6 +70,11 @@ $ sbt aws::ebApplicationVersionCreateOrUpdateAndWait
 $ sbt aws::ebEnvironmentCreateOrUpdateAndWait [env=staging]
 ```
 
+- List Available Solution Stacks
+
+```scala
+aws::ebListAvailableSolutionStacks
+```
 
 ## Auto Deploying
 
@@ -91,5 +96,7 @@ Following is aws::ebDeploy's automatic task process.
 aws::ebEnvironmentCreateOrUpdateAndWait -> aws::ebApplicationVersionCreateOrUpdateAndWait -> aws::ebConfigurationTemplateCreateOrUpdate -> aws::ebApplicationCreateOrUpdateAndWait
 ```
 
+## Appendix
       
+[Play2 Application Integration by sbt-assembly](src/sbt-test/sbt-aws-eb/play-sample-scala-sbt-assembly)
 
