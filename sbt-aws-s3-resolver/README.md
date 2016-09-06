@@ -19,7 +19,7 @@ addSbtPlugin("com.chatwork" % "sbt-aws-s3-resolver" % "1.0.24")
 
 ## Usage
 
-### Common Configurations
+### Base Configurations
 
 ```scala
 // Default S3 Region is Tokyo, Please set your region for S3.
@@ -47,11 +47,11 @@ publishMavenStyle := true
 publishTo := {
   if (isSnapshot.value)
     Some(
-      (s3Resolver in aws).value("your Maven Snapshot Repository", "s3://backet-name/snapshots")
+      (s3Resolver in aws).value("your Maven Snapshot Repository", "s3://bucket-name/snapshots")
     )
   else
     Some(
-      (s3Resolver in aws).value("your Maven Release Repository", "s3://backet-name/releases")
+      (s3Resolver in aws).value("your Maven Release Repository", "s3://bucket-name/releases")
     )
 }
 ```
@@ -60,8 +60,8 @@ publishTo := {
 
 ```scala
 resolvers ++= Seq[Resolver](
-  (s3Resolver in aws).value("your Maven Snapshot Repository", "s3://backet-name/snapshots"),
-  (s3Resolver in aws).value("your Maven Release Repository", "s3://backet-name/releases")
+  (s3Resolver in aws).value("your Maven Snapshot Repository", "s3://bucket-name/snapshots"),
+  (s3Resolver in aws).value("your Maven Release Repository", "s3://bucket-name/releases")
 )
 ```
 
@@ -81,12 +81,12 @@ Read/Write Policy (for publishing)
     {
       "Effect": "Allow",
       "Action": ["s3:ListBucket"],
-      "Resource": ["arn:aws:s3:::maven.frugalmechanic.com"]
+      "Resource": ["arn:aws:s3:::bucket-name"]
     },
     {
       "Effect": "Allow",
       "Action": ["s3:DeleteObject","s3:GetObject","s3:PutObject"],
-      "Resource": ["arn:aws:s3:::maven.frugalmechanic.com/*"]
+      "Resource": ["arn:aws:s3:::backet-name/*"]
     }
   ]
 }
@@ -106,12 +106,12 @@ Read-Only Policy
     {
       "Effect": "Allow",
       "Action": ["s3:ListBucket"],
-      "Resource": ["arn:aws:s3:::maven.frugalmechanic.com"]
+      "Resource": ["arn:aws:s3:::bucket-name"]
     },
     {
       "Effect": "Allow",
       "Action": ["s3:GetObject"],
-      "Resource": ["arn:aws:s3:::maven.frugalmechanic.com/*"]
+      "Resource": ["arn:aws:s3:::bucket-name/*"]
     }
   ]
 }
