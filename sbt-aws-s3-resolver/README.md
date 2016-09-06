@@ -2,6 +2,11 @@
 
 This SBT plugin adds support for using Amazon S3 for resolving and publishing using s3:// urls.
 
+| _Ivy artifacts_ | publish | resolve | • | _Maven artifacts_ | publish | resolve |
+|:---------------:|:-------:|:-------:|:-:|:-----------------:|:-------:|:-------:|
+|   **public**    |    ✓    |    ✓    |   |    **public**     |    ✓    |    ✓    |
+|   **private**   |    ✓    |    ✓    |   |    **private**    |    ✓    |    ✓    |
+
 ## Installation
 
 Add this to your project/plugins.sbt file:
@@ -58,6 +63,58 @@ resolvers ++= Seq[Resolver](
   (s3Resolver in aws).value("your Maven Snapshot Repository", "s3://backet-name/snapshots"),
   (s3Resolver in aws).value("your Maven Release Repository", "s3://backet-name/releases")
 )
+```
+
+### IAM Policy Examples
+
+Read/Write Policy (for publishing)
+
+```javascript
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:GetBucketLocation"],
+      "Resource": "arn:aws:s3:::*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket"],
+      "Resource": ["arn:aws:s3:::maven.frugalmechanic.com"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["s3:DeleteObject","s3:GetObject","s3:PutObject"],
+      "Resource": ["arn:aws:s3:::maven.frugalmechanic.com/*"]
+    }
+  ]
+}
+```
+
+Read-Only Policy
+
+```javascript
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:GetBucketLocation"],
+      "Resource": "arn:aws:s3:::*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket"],
+      "Resource": ["arn:aws:s3:::maven.frugalmechanic.com"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["s3:GetObject"],
+      "Resource": ["arn:aws:s3:::maven.frugalmechanic.com/*"]
+    }
+  ]
+}
 ```
 
 
