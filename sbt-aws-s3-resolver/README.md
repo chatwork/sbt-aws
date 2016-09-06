@@ -14,6 +14,20 @@ addSbtPlugin("com.chatwork" % "sbt-aws-s3-resolver" % "1.0.24")
 
 ## Usage
 
+### Common Configurations
+
+```scala
+s3Region in aws := com.amazonaws.services.s3.model.Region.AP_Tokyo
+
+s3DeployStyle in aws := DeployStyle.Maven
+
+s3ServerSideEncryption in aws := false
+
+s3Acl in aws := com.amazonaws.services.s3.model.CannedAccessControlList.PublicRead
+
+s3OverwriteObject in aws := isSnapshot.value
+```
+
 ### Resolving Dependencies via S3
 
 ```scala
