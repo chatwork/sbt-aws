@@ -17,14 +17,19 @@ addSbtPlugin("com.chatwork" % "sbt-aws-s3-resolver" % "1.0.24")
 ### Common Configurations
 
 ```scala
+// Default S3 Region is Tokyo, Please set your region for S3.
 s3Region in aws := com.amazonaws.services.s3.model.Region.AP_Tokyo
 
+// Default Deploy Style is Maven, other is Ivy Style.
 s3DeployStyle in aws := DeployStyle.Maven
 
+// Default Server Side Encryption is false.
 s3ServerSideEncryption in aws := false
 
+// Default ACL is PublicRead, if you want to use the private repository, please set `CannedAccessControlList.Private` to `s3Acl in aws`
 s3Acl in aws := com.amazonaws.services.s3.model.CannedAccessControlList.PublicRead
 
+// Default overwrite option is isSnaphost.value(if it's `-SNAPSHOT.jar`, overwrite option is true)
 s3OverwriteObject in aws := isSnapshot.value
 ```
 
