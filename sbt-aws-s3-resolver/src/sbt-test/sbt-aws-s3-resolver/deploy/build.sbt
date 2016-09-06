@@ -10,7 +10,9 @@ credentialProfileName in aws := Some("maven-test")
 
 s3OverwriteObject in aws := isSnapshot.value
 
-publishMavenStyle := true
+publishMavenStyle := false
+
+s3DeployStyle in aws := DeployStyle.Ivy2
 
 publishArtifact in Test := false
 

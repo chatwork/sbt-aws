@@ -18,14 +18,7 @@ object SbtAwsS3ResolverPlugin extends AutoPlugin with SbtAwsS3Resolver {
   object autoImport extends SbtAwsS3ResolverKeys {
 
     object DeployStyle extends Enumeration {
-      val Maven, Ivy = Value
-    }
-
-    implicit def toSbtResolver(s3r: S3IvyResolver): Resolver = {
-      if (s3r.getIvyPatterns.isEmpty || s3r.getArtifactPatterns.isEmpty) {
-        s3r withPatterns Resolver.defaultPatterns
-      }
-      new sbt.RawRepository(s3r)
+      val Maven, Ivy2 = Value
     }
 
   }
@@ -50,8 +43,8 @@ object SbtAwsS3ResolverPlugin extends AutoPlugin with SbtAwsS3Resolver {
       val overwrite = (s3OverwriteObject in aws).value
       val deployStyle = (s3DeployStyle in aws).value
       val s3Client = createClient(cpc, classOf[AmazonS3Client], com.amazonaws.regions.Region.getRegion(regions))
-      s3Client.setEndpoint(s"https://s3-${s3Region.toString}.amazonaws.com")
-      S3ResolverCreator.create(
+      s3Client.setEndpoint(s"https://s3-${_s3Region.toString}.amazonaws.com")
+      ResolverCreator.create(
         s3Client,
         _s3Region,
         name,
@@ -59,7 +52,7 @@ object SbtAwsS3ResolverPlugin extends AutoPlugin with SbtAwsS3Resolver {
         acl,
         sse,
         overwrite,
-        m2compatible = if (deployStyle == DeployStyle.Maven) true else false
+        isMavenStyle = if (deployStyle == DeployStyle.Maven) true else false
       )
     }
   )
