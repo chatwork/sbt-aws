@@ -29,13 +29,16 @@ s3ServerSideEncryption in aws := false
 // Default ACL is PublicRead, if you want to use the private repository, please set `CannedAccessControlList.Private` to `s3Acl in aws`
 s3Acl in aws := com.amazonaws.services.s3.model.CannedAccessControlList.PublicRead
 
-// Default overwrite option is isSnaphost.value(if it's `-SNAPSHOT.jar`, overwrite option is true)
+// Default overwrite option is isSnaphost.value(if your jar is `-SNAPSHOT.jar`, overwrite option is true)
 s3OverwriteObject in aws := isSnapshot.value
 ```
 
 ### Resolving Dependencies via S3
 
 ```scala
+// If maven style, publishMavenStyle is true.
+publishMavenStyle := true
+
 publishTo := {
   if (isSnapshot.value)
     Some(
@@ -56,3 +59,6 @@ resolvers ++= Seq[Resolver](
   (s3Resolver in aws).value("your Maven Release Repository", "s3://backet-name/releases")
 )
 ```
+
+
+
