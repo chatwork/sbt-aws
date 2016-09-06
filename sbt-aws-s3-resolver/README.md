@@ -34,11 +34,11 @@ s3OverwriteObject in aws := isSnapshot.value
 publishTo := {
   if (isSnapshot.value)
     Some(
-      (s3Resolver in aws).value("yours Maven Snapshot Repository", "s3://backet-name/snapshots")
+      (s3Resolver in aws).value("your Maven Snapshot Repository", "s3://backet-name/snapshots")
     )
   else
     Some(
-      (s3Resolver in aws).value("yours Maven Release Repository", "s3://backet-name/releases")
+      (s3Resolver in aws).value("your Maven Release Repository", "s3://backet-name/releases")
     )
 }
 ```
@@ -47,7 +47,7 @@ publishTo := {
 
 ```scala
 resolvers ++= Seq[Resolver](
-  (s3Resolver in aws).value("yours Maven Snapshot Repository", "s3://backet-name/snapshots"),
-  (s3Resolver in aws).value("yours Maven Release Repository", "s3://backet-name/releases")
+  (s3Resolver in aws).value("your Maven Snapshot Repository", "s3://backet-name/snapshots"),
+  (s3Resolver in aws).value("your Maven Release Repository", "s3://backet-name/releases")
 )
 ```
