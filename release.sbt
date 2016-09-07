@@ -8,12 +8,10 @@ def updateReadmeFile(version: String, readme: String): Unit = {
   val readmeFile = file(readme)
   val newReadme = Predef.augmentString(IO.read(readmeFile)).lines.map { line =>
     val matchReleaseOrSnapshot = line.contains("SNAPSHOT") == version.contains("SNAPSHOT")
-    if (line.startsWith("addSbtPlugin")) {
+    if (line.startsWith("addSbtPlugin") && matchReleaseOrSnapshot) {
       println(s"matchReleaseOrSnapshot = $matchReleaseOrSnapshot")
       val regex = """\d{1,2}\.\d{1,2}\.\d{1,2}""".r
-      val result = regex.replaceFirstIn(line, version)
-      println(s"result = $result")
-      result
+      regex.replaceFirstIn(line, version)
     } else line
   }.mkString("", "\n", "\n")
   IO.write(readmeFile, newReadme)
