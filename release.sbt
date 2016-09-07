@@ -24,7 +24,6 @@ val updateReadme = { state: State =>
   val snapshotOrRelease = if (extracted get isSnapshot) "snapshots" else "releases"
   val readmeFiles = Seq(
     "README.md",
-    "sbt-aws-core/README.md",
     "sbt-aws-cfn/README.md",
     "sbt-aws-eb/README.md",
     "sbt-aws-s3/README.md",
