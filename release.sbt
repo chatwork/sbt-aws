@@ -4,12 +4,14 @@ import sbtrelease._
 val sonatypeURL = "https://oss.sonatype.org/service/local/repositories/"
 
 def updateReadmeFile(version: String, readme: String): Unit = {
+  println(s"version = $version")
   val readmeFile = file(readme)
   val newReadme = Predef.augmentString(IO.read(readmeFile)).lines.map { line =>
     val matchReleaseOrSnapshot = line.contains("SNAPSHOT") == version.contains("SNAPSHOT")
     if (line.startsWith("addSbtPlugin")) {
       println(s"matchReleaseOrSnapshot = $matchReleaseOrSnapshot")
-      val result = line.replaceAll("\"\\d\\.\\d\\.\\d(-SNAPSHOT)?\"\\)$", "\"" + version + "$1\")")
+      val regex = """\d{1,2}\.\d{1,2}\.\d{1,2}""".r
+      val result = regex.replaceFirstIn(line, version)
       println(s"result = $result")
       result
     } else line
@@ -34,8 +36,8 @@ val updateReadme = { state: State =>
   )
   readmeFiles.foreach(readme => updateReadmeFile(v, readme))
   val git = new Git(extracted get baseDirectory)
-  readmeFiles.foreach{ readme => 
-    git.add(readme) ! state.log 
+  readmeFiles.foreach { readme =>
+    git.add(readme) ! state.log
     git.commit("update " + readme) ! state.log
   }
   "git diff HEAD^" ! state.log
