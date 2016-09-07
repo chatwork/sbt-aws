@@ -9,7 +9,9 @@ def updateReadmeFile(version: String, readme: String): Unit = {
     val matchReleaseOrSnapshot = line.contains("SNAPSHOT") == version.contains("SNAPSHOT")
     if (line.startsWith("addSbtPlugin")) {
       println(s"matchReleaseOrSnapshot = $matchReleaseOrSnapshot")
-      line.replaceAll("\"\\d\\.\\d\\.\\d(-SNAPSHOT)?\"\\)$", "\"" + version + "$1\")")
+      val result = line.replaceAll("\"\\d\\.\\d\\.\\d(-SNAPSHOT)?\"\\)$", "\"" + version + "$1\")")
+      println(s"result = $result")
+      result
     } else line
   }.mkString("", "\n", "\n")
   IO.write(readmeFile, newReadme)
