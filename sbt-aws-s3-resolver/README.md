@@ -1,8 +1,8 @@
 # sbt-aws-s3-resolver
 
 We imported good-parts of following sbt plugins, so we respect those.
-[sbt-s3-resolver](https://github.com/ohnosequences/sbt-s3-resolver)
-[fm-sbt-s3-resolver](https://github.com/frugalmechanic/fm-sbt-s3-resolver)
+- [sbt-s3-resolver](https://github.com/ohnosequences/sbt-s3-resolver)
+- [fm-sbt-s3-resolver](https://github.com/frugalmechanic/fm-sbt-s3-resolver)
 
 This SBT plugin adds support for using Amazon S3 for resolving and publishing using s3:// urls.
 
