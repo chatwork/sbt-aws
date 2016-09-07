@@ -3,6 +3,18 @@ import sbtrelease._
 
 val sonatypeURL = "https://oss.sonatype.org/service/local/repositories/"
 
+def updateReadmeFile(version: String, readme: String): Unit = {
+  val readmeFile = file(readme)
+  val newReadme = Predef.augmentString(IO.read(readmeFile)).lines.map { line =>
+    val matchReleaseOrSnapshot = line.contains("SNAPSHOT") == version.contains("SNAPSHOT")
+    if (line.startsWith("addSbtPlugin") && matchReleaseOrSnapshot) {
+      line.replaceAll("\"\\d\\.\\d\\.\\d(-SNAPSHOT)?\"\\)$", "\"" + version + "\")")
+    } else line
+  }.mkString("", "\n", "\n")
+  IO.write(readmeFile, newReadme)
+}
+
+
 val updateReadme = { state: State =>
   val extracted = Project.extract(state)
   val scalaV = extracted get scalaBinaryVersion
@@ -10,18 +22,20 @@ val updateReadme = { state: State =>
   val org = extracted get organization
   val n = extracted get name
   val snapshotOrRelease = if (extracted get isSnapshot) "snapshots" else "releases"
-  val readme = "README.md"
-  val readmeFile = file(readme)
-  val newReadme = Predef.augmentString(IO.read(readmeFile)).lines.map { line =>
-    val matchReleaseOrSnapshot = line.contains("SNAPSHOT") == v.contains("SNAPSHOT")
-    if (line.startsWith("addSbtPlugin") && matchReleaseOrSnapshot) {
-      line.replaceAll("\"\\d\\.\\d\\.\\d(-SNAPSHOT)?\"\\)$", "\"" + v + "\")")
-    } else line
-  }.mkString("", "\n", "\n")
-  IO.write(readmeFile, newReadme)
+  val readmeFiles = Seq(
+    "README.md",
+    "sbt-aws-core/README.md",
+    "sbt-aws-cfn/README.md",
+    "sbt-aws-eb/README.md",
+    "sbt-aws-s3/README.md",
+    "sbt-aws-s3-resolver/README.md"
+  )
+  readmeFiles.foreach(readme => updateReadmeFile(v, readme))
   val git = new Git(extracted get baseDirectory)
-  git.add(readme) ! state.log
-  git.commit("update " + readme) ! state.log
+  readmeFiles.foreach{ readme => 
+    git.add(readme) ! state.log 
+    git.commit("update " + readme) ! state.log
+  }
   "git diff HEAD^" ! state.log
   state
 }
