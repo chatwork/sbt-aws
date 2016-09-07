@@ -1,5 +1,7 @@
 package com.chatwork.sbt.aws.s3.resolver.ivy
 
+// FYI, https://github.com/ohnosequences/ivy-s3-resolver
+
 import java.io.{ File, FileOutputStream, IOException }
 import java.util
 
