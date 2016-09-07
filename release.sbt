@@ -20,11 +20,11 @@ def updateReadmeFile(version: String, readme: String): Unit = {
 
 val updateReadme = { state: State =>
   val extracted = Project.extract(state)
+  val git = new Git(extracted get baseDirectory)
   val scalaV = extracted get scalaBinaryVersion
   val v = extracted get version
   val org = extracted get organization
   val n = extracted get name
-  val snapshotOrRelease = if (extracted get isSnapshot) "snapshots" else "releases"
   val readmeFiles = Seq(
     "README.md",
     "sbt-aws-cfn/README.md",
@@ -33,7 +33,6 @@ val updateReadme = { state: State =>
     "sbt-aws-s3-resolver/README.md"
   )
   readmeFiles.foreach(readme => updateReadmeFile(v, readme))
-  val git = new Git(extracted get baseDirectory)
   readmeFiles.foreach { readme =>
     git.add(readme) ! state.log
     git.commit("update " + readme) ! state.log
@@ -66,7 +65,6 @@ releaseProcess := Seq[ReleaseStep](
   ),
   setNextVersion,
   commitNextVersion,
-  updateReadmeProcess,
   ReleaseStep(action = Command.process("sonatypeReleaseAll", _)),
   pushChanges
 )
