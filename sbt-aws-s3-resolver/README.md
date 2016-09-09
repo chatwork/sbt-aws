@@ -63,7 +63,7 @@ publishTo := {
 ### Publishing to S3
 
 ```scala
-resolvers ++= Seq[Resolver](
+resolvers ++= Seq(
   (s3Resolver in aws).value("your Maven Snapshot Repository", "s3://bucket-name/snapshots"),
   (s3Resolver in aws).value("your Maven Release Repository", "s3://bucket-name/releases")
 )
