@@ -2,7 +2,7 @@ package com.chatwork.sbt.aws.s3.resolver
 
 import java.net.{ URI, URISyntaxException }
 
-object S3Utils {
+object S3Utility {
 
   def getBucket(uri: String): String = {
     getUri(uri).getHost

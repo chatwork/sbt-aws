@@ -2,7 +2,7 @@ organization := "com.chatwork"
 
 name := "sbt-aws-s3-resolver-deploy-test"
 
-version := "0.0.1-SNAPSHOT"
+version := "0.0.3-SNAPSHOT"
 
 s3Acl in aws := com.amazonaws.services.s3.model.CannedAccessControlList.Private
 
@@ -10,9 +10,9 @@ credentialProfileName in aws := Some("maven-test")
 
 s3OverwriteObject in aws := isSnapshot.value
 
-publishMavenStyle := false
+publishMavenStyle := true
 
-s3DeployStyle in aws := DeployStyle.Ivy2
+s3DeployStyle in aws := DeployStyle.Maven
 
 publishArtifact in Test := false
 

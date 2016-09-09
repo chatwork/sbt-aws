@@ -1,19 +1,17 @@
 package com.chatwork.sbt.aws.s3.resolver.ivy
 
-// FYI, https://github.com/ohnosequences/ivy-s3-resolver
-
 import java.io.InputStream
 
 import com.amazonaws.AmazonServiceException
 import com.amazonaws.services.s3.AmazonS3Client
-import com.chatwork.sbt.aws.s3.resolver.S3Utils
+import com.chatwork.sbt.aws.s3.resolver.S3Utility
 import org.apache.ivy.plugins.repository.Resource
 
 case class S3Resource(s3Client: AmazonS3Client, uri: String) extends Resource {
 
-  val bucket = S3Utils.getBucket(uri)
+  val bucket = S3Utility.getBucket(uri)
 
-  val key = S3Utils.getKey(uri)
+  val key = S3Utility.getKey(uri)
 
   private var _exists: Boolean = false
   private var contentLength: Long = 0L
