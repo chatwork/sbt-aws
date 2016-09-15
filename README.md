@@ -67,7 +67,7 @@ awsConfig in aws := {
 }
 ```
 
-If your want to use this functions on your build.sbt, Please try as follows. 
+If you want to use this functions on your build.sbt, Please try as follows. 
 
 - build.sbt
 
