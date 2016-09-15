@@ -1,5 +1,6 @@
 package com.chatwork.sbt.aws.core
 
+import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.AWSCredentialsProviderChain
 import com.amazonaws.regions.Regions
 import sbt._
@@ -25,6 +26,8 @@ trait SbtAwsCoreKeys {
   lazy val awsConfig = settingKey[SisiohConfiguration]("aws-config")
 
   lazy val poolingInterval = settingKey[Int]("pooling-interval")
+
+  lazy val clientConfiguration = settingKey[Option[ClientConfiguration]]("client-configuration")
 }
 
 object SbtAwsCoreKeys extends SbtAwsCoreKeys

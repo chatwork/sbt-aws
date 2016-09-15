@@ -36,13 +36,14 @@ object SbtAwsS3ResolverPlugin extends AutoPlugin with SbtAwsS3Resolver {
     s3OverwriteObject in aws := isSnapshot.value,
     s3Resolver in aws := { (name: String, location: String) =>
       val cpc = (credentialsProviderChain in aws).value
+      val cc = (clientConfiguration in aws).value
       val regions = (region in aws).value
       val _s3Region = (s3Region in aws).value
       val acl = (s3Acl in aws).value
       val sse = (s3ServerSideEncryption in aws).value
       val overwrite = (s3OverwriteObject in aws).value
       val deployStyle = (s3DeployStyle in aws).value
-      val s3Client = createClient(cpc, classOf[AmazonS3Client], com.amazonaws.regions.Region.getRegion(regions))
+      val s3Client = createClient(cpc, classOf[AmazonS3Client], com.amazonaws.regions.Region.getRegion(regions), cc)
       s3Client.setEndpoint(s"https://s3-${_s3Region.toString}.amazonaws.com")
       ResolverCreator.create(
         s3Client,

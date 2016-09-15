@@ -1,5 +1,6 @@
 package com.chatwork.sbt.aws.core
 
+import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
 import com.amazonaws.auth.{ AWSCredentialsProviderChain, EnvironmentVariableCredentialsProvider, InstanceProfileCredentialsProvider, SystemPropertiesCredentialsProvider }
 import com.amazonaws.regions.Regions
@@ -38,7 +39,12 @@ object SbtAwsCorePlugin extends AutoPlugin {
     awsConfig in aws := {
       (config in aws).value.getConfiguration(aws.key.label).getOrElse(SisiohConfiguration.empty)
     },
-    poolingInterval in aws := 1000
+    poolingInterval in aws := 1000,
+    clientConfiguration in aws := {
+      val clientConfiguration = new ClientConfiguration()
+      clientConfiguration.setConnectionTimeout(15 * 1000)
+      Some(clientConfiguration)
+    }
   )
 
 }

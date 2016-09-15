@@ -34,8 +34,9 @@ trait SbtAwsS3 extends SbtAwsCore {
     val logger = streams.value.log
     val r = (region in aws).value
     val cpc = (credentialsProviderChain in aws).value
+    val cc = (clientConfiguration in aws).value
     logger.info(s"region = $r")
-    createClient(cpc, classOf[AmazonS3Client], Region.getRegion(r))
+    createClient(cpc, classOf[AmazonS3Client], Region.getRegion(r), cc)
   }
 
   def s3ExistsS3Object(client: AmazonS3Client, bucketName: String, key: String): Try[Boolean] = {
