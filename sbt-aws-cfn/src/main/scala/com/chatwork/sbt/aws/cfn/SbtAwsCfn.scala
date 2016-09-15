@@ -30,11 +30,13 @@ trait SbtAwsCfn extends SbtAwsS3 {
     val logger = streams.value.log
     val r = (region in aws).value
     val cpc = (credentialsProviderChain in aws).value
+    val cc = (clientConfiguration in aws).value
     logger.info(s"region = $r")
     createClient(
       cpc,
       classOf[AmazonCloudFormationClient],
-      Region.getRegion(r)
+      Region.getRegion(r),
+      cc
     )
   }
 

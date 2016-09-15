@@ -113,6 +113,8 @@ case class S3Repository(s3Client: AmazonS3Client,
             Message.warn(ex.getMessage)
             Thread.sleep(timeout)
             create0(retryCount - 1, result = false)
+          case Failure(ex: Throwable) =>
+            throw ex
         }
       }
     }

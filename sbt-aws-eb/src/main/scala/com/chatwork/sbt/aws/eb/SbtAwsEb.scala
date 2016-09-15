@@ -40,8 +40,9 @@ trait SbtAwsEb
     val logger = streams.value.log
     val r = (region in aws).value
     val cpc = (credentialsProviderChain in aws).value
+    val cc = (clientConfiguration in aws).value
     logger.debug(s"region = $r")
-    createClient(cpc, classOf[AWSElasticBeanstalkClient], Region.getRegion(r))
+    createClient(cpc, classOf[AWSElasticBeanstalkClient], Region.getRegion(r), cc)
   }
 
   def ebBuildBundleTask(): Def.Initialize[Task[File]] = Def.task {
