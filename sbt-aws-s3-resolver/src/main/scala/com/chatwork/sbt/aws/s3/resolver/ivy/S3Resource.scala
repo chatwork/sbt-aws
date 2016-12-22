@@ -5,13 +5,14 @@ import java.io.InputStream
 import com.amazonaws.AmazonServiceException
 import com.amazonaws.services.s3.AmazonS3Client
 import com.chatwork.sbt.aws.s3.resolver.S3Utility
+import org.apache.http.NoHttpResponseException
 import org.apache.ivy.plugins.repository.Resource
 
 case class S3Resource(s3Client: AmazonS3Client, uri: String) extends Resource {
 
-  val bucket = S3Utility.getBucket(uri)
+  private val bucket = S3Utility.getBucket(uri)
 
-  val key = S3Utility.getKey(uri)
+  private val key = S3Utility.getKey(uri)
 
   private var _exists: Boolean = false
   private var contentLength: Long = 0L
@@ -23,7 +24,12 @@ case class S3Resource(s3Client: AmazonS3Client, uri: String) extends Resource {
     contentLength = metadata.getContentLength
     lastModified = metadata.getLastModified.getTime
   } catch {
-    case ex: AmazonServiceException =>
+    case _: AmazonServiceException  =>
+    case _: NoHttpResponseException =>
+  }
+
+  override def toString: String = {
+    s"s3: uri = $uri, contentLength = $contentLength, lastModified = $lastModified"
   }
 
   override def getName: String = uri
