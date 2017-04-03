@@ -1,13 +1,11 @@
 package com.chatwork.sbt.aws.s3.resolver
 
-import java.net.{ URL, URLConnection, URLStreamHandler }
-
+import com.amazonaws.auth.AWSCredentialsProviderChain
 import com.amazonaws.services.s3.AmazonS3Client
 import com.chatwork.sbt.aws.core.SbtAwsCoreKeys
-import com.chatwork.sbt.aws.s3.{ SbtAwsS3Keys, SbtAwsS3Plugin }
-import com.chatwork.sbt.aws.s3.resolver.ivy.S3IvyResolver
+import com.chatwork.sbt.aws.s3.{SbtAwsS3Keys, SbtAwsS3Plugin}
 import sbt.Keys._
-import sbt.{ AutoPlugin, Plugins, Resolver }
+import sbt.{AutoPlugin, Plugins}
 
 object SbtAwsS3ResolverPlugin extends AutoPlugin with SbtAwsS3Resolver {
 
@@ -25,7 +23,6 @@ object SbtAwsS3ResolverPlugin extends AutoPlugin with SbtAwsS3Resolver {
 
   import SbtAwsCoreKeys._
   import SbtAwsS3Keys._
-
   import autoImport._
 
   override def projectSettings: Seq[_root_.sbt.Def.Setting[_]] = Seq(
@@ -35,7 +32,12 @@ object SbtAwsS3ResolverPlugin extends AutoPlugin with SbtAwsS3Resolver {
     s3Acl in aws := com.amazonaws.services.s3.model.CannedAccessControlList.PublicRead,
     s3OverwriteObject in aws := isSnapshot.value,
     s3Resolver in aws := { (name: String, location: String) =>
-      val cpc = (credentialsProviderChain in aws).value
+      (s3ResolverWithCredentialsProviderChain in aws).value(name, location, (credentialsProviderChain in aws).value)
+    },
+    s3ResolverWithCredentialProfileName in aws := { (name: String, location: String, profileName: String) =>
+      (s3ResolverWithCredentialsProviderChain in aws).value(name, location, (profileCredentialsProviderChain in aws).value(profileName))
+    },
+    s3ResolverWithCredentialsProviderChain in aws := { (name: String, location: String, cpc: AWSCredentialsProviderChain) =>
       val cc = (clientConfiguration in aws).value
       val regions = (region in aws).value
       val _s3Region = (s3Region in aws).value

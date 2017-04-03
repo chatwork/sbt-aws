@@ -15,6 +15,10 @@ trait SbtAwsCoreKeys {
 
   lazy val credentialsProviderChain = settingKey[AWSCredentialsProviderChain]("credentials-provider-chain")
 
+  lazy val defaultCredentialsProviderChain = settingKey[Option[String] => AWSCredentialsProviderChain]("default-credentials-provider-chain")
+
+  lazy val profileCredentialsProviderChain = settingKey[String => AWSCredentialsProviderChain]("profile-credentials-provider-chain")
+
   lazy val environmentName = settingKey[String]("env")
 
   lazy val configFileFolder = settingKey[File]("config-folder")

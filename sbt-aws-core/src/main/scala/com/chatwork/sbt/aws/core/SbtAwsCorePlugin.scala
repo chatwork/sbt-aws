@@ -2,10 +2,10 @@ package com.chatwork.sbt.aws.core
 
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
-import com.amazonaws.auth.{ AWSCredentialsProviderChain, EnvironmentVariableCredentialsProvider, InstanceProfileCredentialsProvider, SystemPropertiesCredentialsProvider }
+import com.amazonaws.auth.{AWSCredentialsProviderChain, EnvironmentVariableCredentialsProvider, InstanceProfileCredentialsProvider, SystemPropertiesCredentialsProvider}
 import com.amazonaws.regions.Regions
+import org.sisioh.config.{Configuration => SisiohConfiguration}
 import sbt._
-import org.sisioh.config.{ Configuration => SisiohConfiguration }
 import sbt.plugins.IvyPlugin
 
 object SbtAwsCorePlugin extends AutoPlugin {
@@ -16,16 +16,22 @@ object SbtAwsCorePlugin extends AutoPlugin {
 
   object autoImport extends SbtAwsCoreKeys
 
-  import SbtAwsCoreKeys._
+  import autoImport._
 
   override def projectSettings: Seq[Def.Setting[_]] = Seq(
     credentialProfileName in aws := None,
-    credentialsProviderChain in aws := new AWSCredentialsProviderChain(
-      new EnvironmentVariableCredentialsProvider(),
-      new SystemPropertiesCredentialsProvider(),
-      new ProfileCredentialsProvider((credentialProfileName in aws).value.orNull),
-      new InstanceProfileCredentialsProvider()
-    ),
+    defaultCredentialsProviderChain in aws := { (credentialProfileName: Option[String]) =>
+      new AWSCredentialsProviderChain(
+        new EnvironmentVariableCredentialsProvider(),
+        new SystemPropertiesCredentialsProvider(),
+        new ProfileCredentialsProvider(credentialProfileName.orNull),
+        new InstanceProfileCredentialsProvider()
+      )
+    },
+    profileCredentialsProviderChain in aws := { (credentialProfileName: String) =>
+      new AWSCredentialsProviderChain(new ProfileCredentialsProvider(credentialProfileName))
+    },
+    credentialsProviderChain in aws := (defaultCredentialsProviderChain in aws).value((credentialProfileName in aws).value),
     region in aws := Regions.AP_NORTHEAST_1,
     environmentName in aws := System.getProperty("aws.env", "dev"),
     configFileFolder in aws := file("env"),
