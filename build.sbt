@@ -1,7 +1,5 @@
 import sbt.ScriptedPlugin._
 
-import scalariform.formatter.preferences._
-
 val aws4sVersion = "1.0.7"
 
 val sisiohConfigVersion = "0.0.7"
@@ -45,7 +43,7 @@ lazy val baseSettings = Seq(
   }
 )
 
-lazy val pluginSettings = baseSettings ++ ScriptedPlugin.scriptedSettings ++ scalariformSettings ++ Seq(
+lazy val pluginSettings = baseSettings ++ ScriptedPlugin.scriptedSettings ++ Seq(
   sbtPlugin := true,
   resolvers ++= Seq(
     "Sonatype OSS Snapshot Repository" at "https://oss.sonatype.org/content/repositories/snapshots/",
@@ -58,14 +56,7 @@ lazy val pluginSettings = baseSettings ++ ScriptedPlugin.scriptedSettings ++ sca
     scriptedLaunchOpts.value ++
       Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
   },
-  scriptedBufferLog := false,
-  ScalariformKeys.preferences :=
-    ScalariformKeys.preferences.value
-      .setPreference(AlignParameters, true)
-      .setPreference(AlignSingleLineCaseStatements, true)
-      .setPreference(DoubleIndentClassDeclaration, true)
-      .setPreference(PreserveDanglingCloseParenthesis, true)
-      .setPreference(MultilineScaladocCommentsStartOnFirstLine, false)
+  scriptedBufferLog := false
 )
 
 
