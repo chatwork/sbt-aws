@@ -1,6 +1,6 @@
 package com.chatwork.sbt.aws.s3
 
-import com.amazonaws.services.s3.model.{ ObjectMetadata, Region }
+import com.amazonaws.services.s3.model.{ObjectMetadata, Region}
 import sbt._
 trait SbtAwsS3Keys {
   type S3ACL = com.amazonaws.services.s3.model.CannedAccessControlList
@@ -17,9 +17,13 @@ trait SbtAwsS3Keys {
 
   lazy val s3OverwriteObject = settingKey[Boolean]("s3-overwrite-object")
 
-  lazy val s3ServerSideEncryption = SettingKey[Boolean]("s3-server-side-encryption", "Controls whether publishing resolver will use server side encryption")
+  lazy val s3ServerSideEncryption = SettingKey[Boolean](
+    "s3-server-side-encryption",
+    "Controls whether publishing resolver will use server side encryption")
 
-  lazy val s3Acl = SettingKey[S3ACL]("s3-acl", "Controls whether published artifacts are accessible publicly via http(s) or not")
+  lazy val s3Acl = SettingKey[S3ACL](
+    "s3-acl",
+    "Controls whether published artifacts are accessible publicly via http(s) or not")
 
   lazy val s3Upload = taskKey[String]("s3-upload")
 

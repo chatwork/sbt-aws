@@ -2,10 +2,15 @@ package com.chatwork.sbt.aws.core
 
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
-import com.amazonaws.auth.{ AWSCredentialsProviderChain, EnvironmentVariableCredentialsProvider, InstanceProfileCredentialsProvider, SystemPropertiesCredentialsProvider }
+import com.amazonaws.auth.{
+  AWSCredentialsProviderChain,
+  EnvironmentVariableCredentialsProvider,
+  InstanceProfileCredentialsProvider,
+  SystemPropertiesCredentialsProvider
+}
 import com.amazonaws.regions.Regions
 import sbt._
-import org.sisioh.config.{ Configuration => SisiohConfiguration }
+import org.sisioh.config.{Configuration => SisiohConfiguration}
 import sbt.plugins.IvyPlugin
 
 object SbtAwsCorePlugin extends AutoPlugin {
@@ -34,7 +39,8 @@ object SbtAwsCorePlugin extends AutoPlugin {
       parent / ((environmentName in aws).value + ".conf")
     },
     config in aws := {
-      Option(SisiohConfiguration.parseFile((configFile in aws).value)).getOrElse(SisiohConfiguration.empty)
+      Option(SisiohConfiguration.parseFile((configFile in aws).value))
+        .getOrElse(SisiohConfiguration.empty)
     },
     awsConfig in aws := {
       (config in aws).value.getConfiguration(aws.key.label).getOrElse(SisiohConfiguration.empty)

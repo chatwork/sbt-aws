@@ -18,7 +18,7 @@ object SbtAwsEbPlugin extends AutoPlugin {
   object autoImport extends SbtAwsEbKeys with Models {
     lazy val ebDeploySettings: Seq[Def.Setting[_]] = Seq(
       // ---
-      ebConfigurationTemplateCreateOrUpdate in aws <<= (ebConfigurationTemplateCreateOrUpdate in aws) dependsOn(ebApplicationCreateOrUpdateAndWait in aws),
+      ebConfigurationTemplateCreateOrUpdate in aws <<= (ebConfigurationTemplateCreateOrUpdate in aws) dependsOn (ebApplicationCreateOrUpdateAndWait in aws),
       ebApplicationVersionCreateOrUpdateAndWait in aws <<= (ebApplicationVersionCreateOrUpdateAndWait in aws) dependsOn (ebConfigurationTemplateCreateOrUpdate in aws),
       ebEnvironmentCreateOrUpdateAndWait in aws <<= (ebEnvironmentCreateOrUpdateAndWait in aws) dependsOn (ebApplicationVersionCreateOrUpdateAndWait in aws),
       ebDeploy in aws := (ebEnvironmentCreateOrUpdateAndWait in aws).evaluated
@@ -29,7 +29,7 @@ object SbtAwsEbPlugin extends AutoPlugin {
     // ---
     ebBundleDirectory in aws := (baseDirectory in thisProjectRef).value / "ebBundle",
     ebBundleContext in aws := Map(
-      "name" -> (name in thisProjectRef).value,
+      "name"    -> (name in thisProjectRef).value,
       "version" -> (version in thisProjectRef).value
     ),
     ebTargetTemplates in aws := Map.empty,
@@ -91,7 +91,7 @@ object SbtAwsEbPlugin extends AutoPlugin {
     ebConfigurationTemplateDelete in aws <<= ebDeleteConfigurationTemplateTask(),
     // ---
     ebListAvailableSolutionStacks in aws <<= ebListAvailableSolutionStacksTask(),
-    ebBuildBundle in aws <<= (ebBuildBundle in aws) dependsOn(ebGenerateFilesInBundle in aws)
+    ebBuildBundle in aws <<= (ebBuildBundle in aws) dependsOn (ebGenerateFilesInBundle in aws)
   )
 
 }

@@ -1,6 +1,6 @@
 package com.chatwork.sbt.aws.s3.resolver.ivy
 
-import java.io.{ File, FileOutputStream, IOException }
+import java.io.{File, FileOutputStream, IOException}
 import java.util
 
 import com.amazonaws.AmazonServiceException
@@ -9,18 +9,19 @@ import com.amazonaws.services.s3.model._
 import com.chatwork.sbt.aws.s3.resolver.S3Utility
 import org.apache.ivy.core.module.descriptor.Artifact
 import org.apache.ivy.plugins.repository._
-import org.apache.ivy.util.{ FileUtil, Message }
+import org.apache.ivy.util.{FileUtil, Message}
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 case class S3Repository(s3Client: AmazonS3Client,
                         region: Region,
                         acl: CannedAccessControlList,
                         serverSideEncryption: Boolean,
-                        overwrite: Boolean) extends AbstractRepository {
+                        overwrite: Boolean)
+    extends AbstractRepository {
 
   private val cacheOfS3Resource = mutable.Map.empty[String, S3Resource]
 
@@ -41,9 +42,12 @@ case class S3Repository(s3Client: AmazonS3Client,
     } finally fireTransferCompleted(resource.getContentLength)
   }
 
-  override def put(artifact: Artifact, source: File, destination: String, overwrite: Boolean): Unit = {
-    val bucket = S3Utility.getBucket(destination)
-    val key = S3Utility.getKey(destination)
+  override def put(artifact: Artifact,
+                   source: File,
+                   destination: String,
+                   overwrite: Boolean): Unit = {
+    val bucket  = S3Utility.getBucket(destination)
+    val key     = S3Utility.getKey(destination)
     val request = new PutObjectRequest(bucket, key, source).withCannedAcl(acl)
 
     if (serverSideEncryption) {
@@ -77,7 +81,8 @@ case class S3Repository(s3Client: AmazonS3Client,
             .withDelimiter("/")
             .withMarker(marker.orNull)
           val listing = s3Client.listObjects(request)
-          val next = listing.getCommonPrefixes.asScala ++ listing.getObjectSummaries.asScala.map(_.getKey)
+          val next = listing.getCommonPrefixes.asScala ++ listing.getObjectSummaries.asScala
+            .map(_.getKey)
           val markerOpt = Option(listing.getMarker)
           getKeys(markerOpt.isDefined, marker, next.toList)
         }

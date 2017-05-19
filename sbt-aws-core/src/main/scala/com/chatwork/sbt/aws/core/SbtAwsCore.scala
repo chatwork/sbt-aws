@@ -2,26 +2,38 @@ package com.chatwork.sbt.aws.core
 
 import java.io.File
 
-import com.amazonaws.{ AmazonWebServiceClient, ClientConfiguration }
+import com.amazonaws.{AmazonWebServiceClient, ClientConfiguration}
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
-import com.amazonaws.auth.{ AWSCredentialsProviderChain, EnvironmentVariableCredentialsProvider, InstanceProfileCredentialsProvider, SystemPropertiesCredentialsProvider }
+import com.amazonaws.auth.{
+  AWSCredentialsProviderChain,
+  EnvironmentVariableCredentialsProvider,
+  InstanceProfileCredentialsProvider,
+  SystemPropertiesCredentialsProvider
+}
 import com.amazonaws.regions.Region
 import org.apache.commons.codec.digest.DigestUtils
-import org.sisioh.config.{ Configuration => SisiohConfiguration }
+import org.sisioh.config.{Configuration => SisiohConfiguration}
 import sbt._
 
 object SbtAwsCore extends SbtAwsCore
 
 trait SbtAwsCore {
 
-  protected def createClient[A <: AmazonWebServiceClient](awsCredentialsProviderChain: AWSCredentialsProviderChain, serviceClass: Class[A], region: Region, config: Option[ClientConfiguration] = None): A = {
+  protected def createClient[A <: AmazonWebServiceClient](
+      awsCredentialsProviderChain: AWSCredentialsProviderChain,
+      serviceClass: Class[A],
+      region: Region,
+      config: Option[ClientConfiguration] = None): A = {
     region.createClient(serviceClass, awsCredentialsProviderChain, config.orNull)
   }
 
   protected def md5(file: File): String =
     DigestUtils.md5Hex(IO.readBytes(file))
 
-  def getConfigValuesAsSeq[A](clazz: Class[A], config: SisiohConfiguration, key: String, defaultValue: Seq[A]): Seq[A] = {
+  def getConfigValuesAsSeq[A](clazz: Class[A],
+                              config: SisiohConfiguration,
+                              key: String,
+                              defaultValue: Seq[A]): Seq[A] = {
     clazz match {
       case x if x == classOf[String] =>
         config.getStringValues(key).getOrElse(defaultValue).asInstanceOf[Seq[A]]
@@ -55,12 +67,17 @@ trait SbtAwsCore {
     }
   }
 
-  def getConfigValue[A](clazz: Class[A], config: SisiohConfiguration, key: String, defaultValue: A) =
+  def getConfigValue[A](clazz: Class[A],
+                        config: SisiohConfiguration,
+                        key: String,
+                        defaultValue: A) =
     getConfigValueOpt(clazz, config, key).getOrElse(defaultValue)
 
   def getConfigValuesAsMap(config: SisiohConfiguration, key: String): Map[String, String] = {
-    config.getConfiguration(key)
-      .map(_.entrySet.map { case (k, v) => (k, v.unwrapped().toString) }.toMap).getOrElse(Map.empty)
+    config
+      .getConfiguration(key)
+      .map(_.entrySet.map { case (k, v) => (k, v.unwrapped().toString) }.toMap)
+      .getOrElse(Map.empty)
   }
 
 }

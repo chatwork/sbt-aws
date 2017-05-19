@@ -18,7 +18,7 @@ import sbt.Keys._
 import sbt._
 
 import scala.collection.JavaConverters._
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 object SbtAwsCfn extends SbtAwsCfn
 
@@ -28,9 +28,9 @@ trait SbtAwsCfn extends SbtAwsS3 {
 
   lazy val cfnClient = Def.task {
     val logger = streams.value.log
-    val r = (region in aws).value
-    val cpc = (credentialsProviderChain in aws).value
-    val cc = (clientConfiguration in aws).value
+    val r      = (region in aws).value
+    val cpc    = (credentialsProviderChain in aws).value
+    val cc     = (clientConfiguration in aws).value
     logger.info(s"region = $r")
     createClient(
       cpc,
@@ -42,7 +42,7 @@ trait SbtAwsCfn extends SbtAwsS3 {
 
   def uploadTemplateFileTask(): Def.Initialize[Task[URL]] = Def.task {
     val logger = streams.value.log
-    val files = (cfnTemplates in aws).value
+    val files  = (cfnTemplates in aws).value
     val file = files.headOption.getOrElse {
       throw new FileNotFoundException("*.template not found in this project")
     }
@@ -54,14 +54,14 @@ trait SbtAwsCfn extends SbtAwsS3 {
 
     logger.debug(IO.read(file))
 
-    val sdf = new SimpleDateFormat("yyyyMMdd'_'HHmmss")
+    val sdf       = new SimpleDateFormat("yyyyMMdd'_'HHmmss")
     val timestamp = sdf.format(new Date())
 
     val artifactId = (cfnArtifactId in aws).value
-    val version = (cfnVersion in aws).value
+    val version    = (cfnVersion in aws).value
 
     val keyMapper = (cfnS3KeyMapper in aws).value
-    val key = keyMapper(s"$artifactId-$version-$timestamp.templete")
+    val key       = keyMapper(s"$artifactId-$version-$timestamp.templete")
 
     logger.info(s"upload $file to ${bucketName.get}/$key")
     val result = s3PutObject(s3Client.value, bucketName.get, key, file, false, true)
@@ -69,14 +69,14 @@ trait SbtAwsCfn extends SbtAwsS3 {
     new URL(result.get)
   }
 
-  def validateTemplateOnURL(client: AmazonCloudFormationClient)(template: URL)(implicit logger: Logger): (URL, Try[Seq[String]]) = {
+  def validateTemplateOnURL(client: AmazonCloudFormationClient)(template: URL)(
+      implicit logger: Logger): (URL, Try[Seq[String]]) = {
     (template, {
       val request = ValidateTemplateRequestFactory.create().withTemplateURL(template.toString)
-      client.validateTemplateAsTry(request).map {
-        result =>
-          logger.debug(s"result from validating $template : $result")
-          logger.info(s"validated $template, $result")
-          result.parameters.map(_.parameterKeyOpt.get)
+      client.validateTemplateAsTry(request).map { result =>
+        logger.debug(s"result from validating $template : $result")
+        logger.info(s"validated $template, $result")
+        result.parameters.map(_.parameterKeyOpt.get)
       }
     })
   }
@@ -88,8 +88,9 @@ trait SbtAwsCfn extends SbtAwsS3 {
     logger.info("stack validate: url = " + url)
     val result = validateTemplateOnURL(cfnClient.value)(url)
     result._2 match {
-      case Failure(e) => logger.error(s"validation of ${result._1} failed with: \n ${e.getMessage}")
-      case _          =>
+      case Failure(e) =>
+        logger.error(s"validation of ${result._1} failed with: \n ${e.getMessage}")
+      case _ =>
     }
     if (result._2.isFailure) {
       sys.error("some AWS CloudFormation templates failed to validate!")
@@ -97,21 +98,21 @@ trait SbtAwsCfn extends SbtAwsS3 {
     result._1
   }
 
-  private[cfn] def validateTemplateOnFile(client: AmazonCloudFormationClient)(template: sbt.File)(implicit logger: Logger): (File, Try[Seq[String]]) = {
+  private[cfn] def validateTemplateOnFile(client: AmazonCloudFormationClient)(template: sbt.File)(
+      implicit logger: Logger): (File, Try[Seq[String]]) = {
     (template, {
       val request = ValidateTemplateRequestFactory.create().withTemplateBody(IO.read(template))
-      client.validateTemplateAsTry(request).map {
-        result =>
-          logger.debug(s"result from validating $template : $result")
-          logger.info(s"validated $template, $result")
-          result.parameters.map(_.parameterKeyOpt.get)
+      client.validateTemplateAsTry(request).map { result =>
+        logger.debug(s"result from validating $template : $result")
+        logger.info(s"validated $template, $result")
+        result.parameters.map(_.parameterKeyOpt.get)
       }
     })
   }
 
   def stackValidateOnFileTask(): Def.Initialize[Task[Seq[sbt.File]]] = Def.task {
     implicit val logger = streams.value.log
-    val files = (cfnTemplates in aws).value
+    val files           = (cfnTemplates in aws).value
     logger.info("stack validate: files = " + files)
     val results = files.map(validateTemplateOnFile(cfnClient.value))
     results.foreach { tr =>
@@ -126,7 +127,8 @@ trait SbtAwsCfn extends SbtAwsS3 {
     files
   }
 
-  private[cfn] def describeStacks(client: AmazonCloudFormationClient, stackName: String): Try[Seq[Stack]] = {
+  private[cfn] def describeStacks(client: AmazonCloudFormationClient,
+                                  stackName: String): Try[Seq[Stack]] = {
     val request = DescribeStacksRequestFactory.create().withStackName(stackName)
     client.describeStacksAsTry(request).map { result =>
       result.stacks
@@ -134,9 +136,9 @@ trait SbtAwsCfn extends SbtAwsS3 {
   }
 
   def describeStacksTask(): Def.Initialize[Task[Seq[Stack]]] = Def.task {
-    val logger = streams.value.log
+    val logger    = streams.value.log
     val stackName = (cfnStackName in aws).value
-    val client = cfnClient.value
+    val client    = cfnClient.value
 
     require(stackName.isDefined)
 
@@ -154,20 +156,26 @@ trait SbtAwsCfn extends SbtAwsS3 {
     }.getOrElse(Seq.empty)
   }
 
-  private[cfn] def getStackStatus(client: AmazonCloudFormationClient, stackName: String): Try[Option[String]] = {
+  private[cfn] def getStackStatus(client: AmazonCloudFormationClient,
+                                  stackName: String): Try[Option[String]] = {
     val request = DescribeStacksRequestFactory.create().withStackName(stackName)
-    client.describeStacksAsTry(request).map { result =>
-      result.stacks.headOption.flatMap { stack => stack.stackStatusOpt }
-    }.recoverWith {
-      case ex: AmazonServiceException if ex.getStatusCode == 400 =>
-        Success(None)
-    }
+    client
+      .describeStacksAsTry(request)
+      .map { result =>
+        result.stacks.headOption.flatMap { stack =>
+          stack.stackStatusOpt
+        }
+      }
+      .recoverWith {
+        case ex: AmazonServiceException if ex.getStatusCode == 400 =>
+          Success(None)
+      }
   }
 
   def statusStackTask(): Def.Initialize[Task[Option[String]]] = Def.task {
-    val logger = streams.value.log
+    val logger    = streams.value.log
     val stackName = (cfnStackName in aws).value
-    val client = cfnClient.value
+    val client    = cfnClient.value
 
     stackName.flatMap { sn =>
       logger.info(s"status: stackName = $sn")
@@ -207,12 +215,13 @@ trait SbtAwsCfn extends SbtAwsS3 {
     ps.toList.asJava
   }
 
-  private[cfn] def createStack(client: AmazonCloudFormationClient,
-                               stackName: String,
-                               templateUrl: URL,
-                               capabilities: Seq[String],
-                               parameters: Map[String, String],
-                               tags: Map[String, String])(implicit logger: Logger): Try[CreateStackResult] = {
+  private[cfn] def createStack(
+      client: AmazonCloudFormationClient,
+      stackName: String,
+      templateUrl: URL,
+      capabilities: Seq[String],
+      parameters: Map[String, String],
+      tags: Map[String, String])(implicit logger: Logger): Try[CreateStackResult] = {
     val request = CreateStackRequestFactory
       .create()
       .withStackName(stackName)
@@ -232,26 +241,28 @@ trait SbtAwsCfn extends SbtAwsS3 {
 
   def createStackTask(): Def.Initialize[Task[Option[String]]] = Def.task {
     implicit val logger = streams.value.log
-    val stackName = (cfnStackName in aws).value
-    val client = cfnClient.value
+    val stackName       = (cfnStackName in aws).value
+    val client          = cfnClient.value
 
     require(stackName.isDefined)
 
     stackName.flatMap { sn =>
       describeStacks(client, sn).recover {
         case ex: AmazonServiceException if ex.getStatusCode == 400 =>
-          logger.warn(s"occurred exception: message = ${ex.getMessage}, errorCode = ${ex.getErrorCode}")
+          logger.warn(
+            s"occurred exception: message = ${ex.getMessage}, errorCode = ${ex.getErrorCode}")
           Seq.empty
       }.flatMap { stacks =>
-        val templateUrl = (cfnUploadTemplate in aws).value
+        val templateUrl  = (cfnUploadTemplate in aws).value
         val capabilities = cfnStackCapabilitiesTask.value
-        val params = (cfnStackParams in aws).value
-        val tags = (cfnStackTags in aws).value
+        val params       = (cfnStackParams in aws).value
+        val tags         = (cfnStackTags in aws).value
         stacks.headOption.map { stack =>
           logger.info(s"stack is exists $sn")
           Success(None)
         }.getOrElse {
-          logger.info(s"create stack request : stackName = $sn, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params, tags = $tags")
+          logger.info(
+            s"create stack request : stackName = $sn, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params, tags = $tags")
           createStack(client, sn, templateUrl, capabilities, params, tags).map(Some(_))
         }
       }.map { resultOpt =>
@@ -265,8 +276,8 @@ trait SbtAwsCfn extends SbtAwsS3 {
 
   def createStackAndWaitTask(): Def.Initialize[Task[Option[String]]] = Def.task {
     implicit val logger = streams.value.log
-    val client = cfnClient.value
-    val interval = (poolingInterval in aws).value
+    val client          = cfnClient.value
+    val interval        = (poolingInterval in aws).value
 
     (cfnStackCreate in aws).value.flatMap { sn =>
       val (progressStatuses, headOption) = waitStack(client, sn)
@@ -278,23 +289,24 @@ trait SbtAwsCfn extends SbtAwsS3 {
     }
   }
 
-  private[cfn] def deleteStack(client: AmazonCloudFormationClient,
-                               stackName: String)(implicit logger: Logger): Try[Unit] = {
+  private[cfn] def deleteStack(client: AmazonCloudFormationClient, stackName: String)(
+      implicit logger: Logger): Try[Unit] = {
     val request = DeleteStackRequestFactory.create().withStackName(stackName)
     client.deleteStackAsTry(request)
   }
 
   def deleteStackTask(): Def.Initialize[Task[Option[String]]] = Def.task {
     implicit val logger = streams.value.log
-    val stackName = (cfnStackName in aws).value
-    val client = cfnClient.value
+    val stackName       = (cfnStackName in aws).value
+    val client          = cfnClient.value
 
     require(stackName.isDefined)
 
     stackName.flatMap { sn =>
       describeStacks(client, sn).recover {
         case ex: AmazonServiceException if ex.getStatusCode == 400 =>
-          logger.warn(s"occurred exception: message = ${ex.getMessage}, errorCode = ${ex.getErrorCode}")
+          logger.warn(
+            s"occurred exception: message = ${ex.getMessage}, errorCode = ${ex.getErrorCode}")
           Seq.empty
       }.flatMap { stacks =>
         stacks.headOption.map { stack =>
@@ -315,8 +327,8 @@ trait SbtAwsCfn extends SbtAwsS3 {
 
   def deleteStackAndWaitTask(): Def.Initialize[Task[Option[String]]] = Def.task {
     implicit val logger = streams.value.log
-    val client = cfnClient.value
-    val interval = (poolingInterval in aws).value
+    val client          = cfnClient.value
+    val interval        = (poolingInterval in aws).value
 
     (cfnStackDelete in aws).value.flatMap { sn =>
       val (progressStatuses, headOption) = waitStack(client, sn)
@@ -329,11 +341,12 @@ trait SbtAwsCfn extends SbtAwsS3 {
 
   }
 
-  private[cfn] def updateStack(client: AmazonCloudFormationClient,
-                               stackName: String,
-                               templateUrl: URL,
-                               capabilities: Seq[String],
-                               parameters: Map[String, String])(implicit logger: Logger): Try[Option[UpdateStackResult]] = {
+  private[cfn] def updateStack(
+      client: AmazonCloudFormationClient,
+      stackName: String,
+      templateUrl: URL,
+      capabilities: Seq[String],
+      parameters: Map[String, String])(implicit logger: Logger): Try[Option[UpdateStackResult]] = {
     val request = UpdateStackRequestFactory
       .create()
       .withStackName(stackName)
@@ -342,25 +355,27 @@ trait SbtAwsCfn extends SbtAwsS3 {
       .withParameters(parameters)
     client.updateStackAsTry(request).map(e => Some(e)).recoverWith {
       case ex: AmazonServiceException if ex.getStatusCode == 400 =>
-        logger.warn(s"occurred exception: message = ${ex.getMessage}, errorCode = ${ex.getErrorCode}")
+        logger.warn(
+          s"occurred exception: message = ${ex.getMessage}, errorCode = ${ex.getErrorCode}")
         Success(None)
     }
   }
 
   def updateStackTask(): Def.Initialize[Task[Option[String]]] = Def.task {
     implicit val logger = streams.value.log
-    val stackName = (cfnStackName in aws).value
-    val client = cfnClient.value
+    val stackName       = (cfnStackName in aws).value
+    val client          = cfnClient.value
 
     require(stackName.isDefined)
 
     stackName.flatMap { sn =>
       describeStacks(client, sn).flatMap { stacks =>
-        val templateUrl = (cfnUploadTemplate in aws).value
+        val templateUrl  = (cfnUploadTemplate in aws).value
         val capabilities = cfnStackCapabilitiesTask.value
-        val params = (cfnStackParams in aws).value
+        val params       = (cfnStackParams in aws).value
         stacks.headOption.map { stack =>
-          logger.info(s"update stack request : stackName = $sn, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params")
+          logger.info(
+            s"update stack request : stackName = $sn, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params")
           updateStack(client, sn, templateUrl, capabilities, params)
         }.getOrElse {
           logger.info("No updates are to be performed.")
@@ -377,15 +392,14 @@ trait SbtAwsCfn extends SbtAwsS3 {
 
   def updateStackAndWaitTask(): Def.Initialize[Task[Option[String]]] = Def.task {
     implicit val logger = streams.value.log
-    val client = cfnClient.value
-    val interval = (poolingInterval in aws).value
+    val client          = cfnClient.value
+    val interval        = (poolingInterval in aws).value
 
     (cfnStackUpdate in aws).value.flatMap { sn =>
       val (progressStatuses, headOption) = waitStack(client, sn)
-      progressStatuses.foreach {
-        s =>
-          logger.info(s"status = $s")
-          Thread.sleep(interval)
+      progressStatuses.foreach { s =>
+        logger.info(s"status = $s")
+        Thread.sleep(interval)
       }
       headOption()
     }
@@ -394,27 +408,32 @@ trait SbtAwsCfn extends SbtAwsS3 {
 
   def createOrUpdateStackTask(): Def.Initialize[Task[Option[String]]] = Def.task {
     implicit val logger = streams.value.log
-    val client = cfnClient.value
-    val stackName = (cfnStackName in aws).value
+    val client          = cfnClient.value
+    val stackName       = (cfnStackName in aws).value
 
     require(stackName.isDefined)
 
     stackName.flatMap { sn =>
       describeStacks(client, sn).recover {
         case ex: AmazonServiceException if ex.getStatusCode == 400 =>
-          logger.warn(s"occurred exception: message = ${ex.getMessage}, errorCode = ${ex.getErrorCode}")
+          logger.warn(
+            s"occurred exception: message = ${ex.getMessage}, errorCode = ${ex.getErrorCode}")
           Seq.empty
       }.flatMap { stacks =>
-        val templateUrl = (cfnUploadTemplate in aws).value
+        val templateUrl  = (cfnUploadTemplate in aws).value
         val capabilities = cfnStackCapabilitiesTask.value
-        val params = (cfnStackParams in aws).value
-        val tags = (cfnStackTags in aws).value
+        val params       = (cfnStackParams in aws).value
+        val tags         = (cfnStackTags in aws).value
         stacks.headOption.map { stack =>
-          logger.info(s"update stack request : stackName = $sn, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params")
+          logger.info(
+            s"update stack request : stackName = $sn, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params")
           updateStack(client, sn, templateUrl, capabilities, params)
         }.getOrElse {
-          logger.info(s"create stack request : stackName = $sn, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params, tags = $tags")
-          createStack(client, sn, templateUrl, capabilities, params, tags).map { result => println(result.toString); result }
+          logger.info(
+            s"create stack request : stackName = $sn, templateUrl = $templateUrl, capabilities = $capabilities, stackParams = $params, tags = $tags")
+          createStack(client, sn, templateUrl, capabilities, params, tags).map { result =>
+            println(result.toString); result
+          }
         }
       }.map {
         case result: CreateStackResult =>
@@ -435,42 +454,43 @@ trait SbtAwsCfn extends SbtAwsS3 {
 
   def createOrUpdateStackAndWaitTask(): Def.Initialize[Task[Option[String]]] = Def.task {
     implicit val logger = streams.value.log
-    val client = cfnClient.value
-    val interval = (poolingInterval in aws).value
+    val client          = cfnClient.value
+    val interval        = (poolingInterval in aws).value
 
     (cfnStackCreateOrUpdate in aws).value.flatMap { sn =>
       val (progressStatuses, headOption) = waitStack(client, sn)
-      progressStatuses.foreach {
-        s =>
-          logger.info(s"status = $s")
-          Thread.sleep(interval)
+      progressStatuses.foreach { s =>
+        logger.info(s"status = $s")
+        Thread.sleep(interval)
       }
       headOption()
     }
 
   }
 
-  private[cfn] def waitStack(client: AmazonCloudFormationClient,
-                             stackName: String)(implicit logger: Logger) = {
-    def statuses: Stream[String] = Stream.cons(getStackStatus(client, stackName).get.getOrElse(""), statuses)
+  private[cfn] def waitStack(client: AmazonCloudFormationClient, stackName: String)(
+      implicit logger: Logger) = {
+    def statuses: Stream[String] =
+      Stream.cons(getStackStatus(client, stackName).get.getOrElse(""), statuses)
 
-    val progressStatuses: Stream[String] = statuses.takeWhile { status => status.endsWith("_PROGRESS") }
+    val progressStatuses: Stream[String] = statuses.takeWhile { status =>
+      status.endsWith("_PROGRESS")
+    }
     (progressStatuses, () => statuses.headOption)
   }
 
   def waitStackTask(): Def.Initialize[Task[Option[String]]] = Def.task {
     implicit val logger = streams.value.log
-    val client = cfnClient.value
-    val stackName = (cfnStackName in aws).value
-    val interval = (poolingInterval in aws).value
+    val client          = cfnClient.value
+    val stackName       = (cfnStackName in aws).value
+    val interval        = (poolingInterval in aws).value
 
     require(stackName.isDefined)
 
     stackName.flatMap { sn =>
       val (progressStatuses, headOption) = waitStack(client, sn)
-      progressStatuses.foreach {
-        s =>
-          Thread.sleep(interval)
+      progressStatuses.foreach { s =>
+        Thread.sleep(interval)
       }
       headOption()
     }

@@ -1,9 +1,9 @@
 package com.chatwork.sbt.aws.s3.resolver.ivy
 
 import com.amazonaws.services.s3.AmazonS3Client
-import com.amazonaws.services.s3.model.{ CannedAccessControlList, Region }
+import com.amazonaws.services.s3.model.{CannedAccessControlList, Region}
 import org.apache.ivy.plugins.resolver.IBiblioResolver
-import sbt.{ Patterns, Resolver }
+import sbt.{Patterns, Resolver}
 import scala.collection.JavaConverters._
 
 case class S3IvyResolver(s3Client: AmazonS3Client,
@@ -13,7 +13,8 @@ case class S3IvyResolver(s3Client: AmazonS3Client,
                          acl: CannedAccessControlList,
                          serverSideEncryption: Boolean,
                          overwrite: Boolean,
-                         isMavenStyle: Boolean) extends IBiblioResolver {
+                         isMavenStyle: Boolean)
+    extends IBiblioResolver {
   setName(name)
   setRoot(location)
   setRepository(S3Repository(s3Client, region, acl, serverSideEncryption, overwrite))

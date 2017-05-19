@@ -14,9 +14,9 @@ case class S3Resource(s3Client: AmazonS3Client, uri: String) extends Resource {
 
   private val key = S3Utility.getKey(uri)
 
-  private var _exists: Boolean = false
+  private var _exists: Boolean    = false
   private var contentLength: Long = 0L
-  private var lastModified: Long = 0L
+  private var lastModified: Long  = 0L
 
   try {
     val metadata = s3Client.getObjectMetadata(bucket, key)
@@ -46,7 +46,8 @@ case class S3Resource(s3Client: AmazonS3Client, uri: String) extends Resource {
   }
 
   override def clone(cloneName: String): Resource = S3Resource(
-    s3Client, cloneName
+    s3Client,
+    cloneName
   )
 
   override def getLastModified: Long = lastModified

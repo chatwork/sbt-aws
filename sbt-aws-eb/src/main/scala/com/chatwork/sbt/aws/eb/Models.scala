@@ -2,18 +2,22 @@ package com.chatwork.sbt.aws.eb
 
 import java.util.Date
 
-import com.amazonaws.services.elasticbeanstalk.model.{ ConfigurationOptionSetting, EnvironmentTier, OptionSpecification, Tag }
+import com.amazonaws.services.elasticbeanstalk.model.{
+  ConfigurationOptionSetting,
+  EnvironmentTier,
+  OptionSpecification,
+  Tag
+}
 
 trait Models {
 
-  case class EbOptionSpecification(namespace: String, optionName: String) extends OptionSpecification {
+  case class EbOptionSpecification(namespace: String, optionName: String)
+      extends OptionSpecification {
     setNamespace(namespace)
     setOptionName(optionName)
   }
 
-  case class EbConfigurationOptionSetting(namespace: String,
-                                          optionName: String,
-                                          value: String)
+  case class EbConfigurationOptionSetting(namespace: String, optionName: String, value: String)
       extends ConfigurationOptionSetting(namespace, optionName, value)
 
   case class EbTag(key: String, value: String) extends Tag {
@@ -54,4 +58,3 @@ trait Models {
   }
 
 }
-

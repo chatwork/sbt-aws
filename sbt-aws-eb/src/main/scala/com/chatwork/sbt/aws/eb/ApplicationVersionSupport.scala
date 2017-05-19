@@ -12,21 +12,24 @@ import org.sisioh.aws4s.eb.model._
 import sbt.Keys._
 import sbt._
 
-import scala.util.{ Success, Try }
+import scala.util.{Success, Try}
 
-trait ApplicationVersionSupport {
-  this: SbtAwsEb =>
+trait ApplicationVersionSupport { this: SbtAwsEb =>
 
-  private[eb] def describeApplicationVersion(client: AWSElasticBeanstalkClient, applicationName: String, versionLabel: String): Try[Option[ApplicationVersionDescription]] = {
-    client.describeApplicationVersionsAsTry(
-      DescribeApplicationVersionsRequestFactory
-        .create()
-        .withApplicationName(applicationName)
-        .withVersionLabels(versionLabel)
-    ).map(_.applicationVersions.find { e =>
-        e.getApplicationName == applicationName && e.getVersionLabel == versionLabel
-      }
+  private[eb] def describeApplicationVersion(
+      client: AWSElasticBeanstalkClient,
+      applicationName: String,
+      versionLabel: String): Try[Option[ApplicationVersionDescription]] = {
+    client
+      .describeApplicationVersionsAsTry(
+        DescribeApplicationVersionsRequestFactory
+          .create()
+          .withApplicationName(applicationName)
+          .withVersionLabels(versionLabel)
       )
+      .map(_.applicationVersions.find { e =>
+        e.getApplicationName == applicationName && e.getVersionLabel == versionLabel
+      })
   }
 
   private[eb] def ebCreateApplicationVersion(client: AWSElasticBeanstalkClient,
@@ -34,13 +37,16 @@ trait ApplicationVersionSupport {
                                              versionLabel: String,
                                              versionDescription: Option[String] = None,
                                              s3Location: Option[S3Location] = None,
-                                             autoCreateApplication: Option[Boolean] = None)(implicit logger: Logger): Try[ApplicationVersionDescription] = {
+                                             autoCreateApplication: Option[Boolean] = None)(
+      implicit logger: Logger): Try[ApplicationVersionDescription] = {
     val result = describeApplicationVersion(client, applicationName, versionLabel).flatMap {
       _.map { _ =>
         logger.warn(s"The application already exists.: $applicationName, $versionLabel")
-        throw AlreadyExistsException(s"The application already exists.: $applicationName, $versionLabel")
+        throw AlreadyExistsException(
+          s"The application already exists.: $applicationName, $versionLabel")
       }.getOrElse {
-        logger.info(s"create applicationVersion start: $applicationName, $versionLabel, $versionDescription, $s3Location, $autoCreateApplication")
+        logger.info(
+          s"create applicationVersion start: $applicationName, $versionLabel, $versionDescription, $s3Location, $autoCreateApplication")
         val request = CreateApplicationVersionRequestFactory
           .create()
           .withApplicationName(applicationName)
@@ -49,31 +55,34 @@ trait ApplicationVersionSupport {
           .withAutoCreateApplicationOpt(autoCreateApplication)
           .withSourceBundleOpt(s3Location)
         val result = client.createApplicationVersionAsTry(request)
-        logger.info(s"create applicationVersion finish: $applicationName, $versionLabel, $versionDescription, $s3Location, $autoCreateApplication")
+        logger.info(
+          s"create applicationVersion finish: $applicationName, $versionLabel, $versionDescription, $s3Location, $autoCreateApplication")
         result.map(_.getApplicationVersion)
       }
     }
     result
   }
 
-  def ebCreateApplicationVersionTask(): Def.Initialize[Task[ApplicationVersionDescription]] = Def.task {
-    implicit val logger = streams.value.log
-    val s3Location = if ((ebUseBundle in aws).value) {
-      Some((ebUploadBundle in aws).value)
-    } else None
-    ebCreateApplicationVersion(
-      ebClient.value,
-      (ebApplicationName in aws).value,
-      (ebApplicationVersionLabel in aws).value,
-      (ebApplicationVersionDescription in aws).value,
-      s3Location,
-      (ebAutoCreateApplication in aws).value
-    ).get
-  }
+  def ebCreateApplicationVersionTask(): Def.Initialize[Task[ApplicationVersionDescription]] =
+    Def.task {
+      implicit val logger = streams.value.log
+      val s3Location = if ((ebUseBundle in aws).value) {
+        Some((ebUploadBundle in aws).value)
+      } else None
+      ebCreateApplicationVersion(
+        ebClient.value,
+        (ebApplicationName in aws).value,
+        (ebApplicationVersionLabel in aws).value,
+        (ebApplicationVersionDescription in aws).value,
+        s3Location,
+        (ebAutoCreateApplication in aws).value
+      ).get
+    }
 
-  def ebCreateApplicationVersionAndWaitTask(): Def.Initialize[Task[ApplicationVersionDescription]] = Def.task {
+  def ebCreateApplicationVersionAndWaitTask()
+    : Def.Initialize[Task[ApplicationVersionDescription]] = Def.task {
     implicit val logger = streams.value.log
-    val result = (ebApplicationVersionCreate in aws).value
+    val result          = (ebApplicationVersionCreate in aws).value
     val (progressStatuses, headOption) = wait(ebClient.value) {
       describeApplicationVersion(
         ebClient.value,
@@ -83,8 +92,8 @@ trait ApplicationVersionSupport {
     } {
       _.exists { e =>
         e.applicationNameOpt == result.applicationNameOpt &&
-          e.versionLabelOpt == result.versionLabelOpt &&
-          e.descriptionOpt == result.descriptionOpt
+        e.versionLabelOpt == result.versionLabelOpt &&
+        e.descriptionOpt == result.descriptionOpt
       }
     }
     progressStatuses.foreach { s =>
@@ -95,19 +104,27 @@ trait ApplicationVersionSupport {
     headOption().flatten.get
   }
 
-  private[eb] def ebUpdateApplicationVersion(client: AWSElasticBeanstalkClient, applicationName: String, versionLabel: String, description: Option[String])(implicit logger: Logger): Try[ApplicationVersionDescription] = {
+  private[eb] def ebUpdateApplicationVersion(
+      client: AWSElasticBeanstalkClient,
+      applicationName: String,
+      versionLabel: String,
+      description: Option[String])(implicit logger: Logger): Try[ApplicationVersionDescription] = {
     describeApplicationVersion(client, applicationName, versionLabel).flatMap {
       _.map { applicationVersion =>
         logger.info(s"update applicationVersion start: $applicationName, $versionLabel")
         val result = if (!description.exists(_ == applicationVersion.getDescription)) {
-          client.updateApplicationVersionAsTry(
-            UpdateApplicationVersionRequestFactory
-              .create(applicationName, versionLabel)
-              .withDescriptionOpt(description)
-          ).map(_.getApplicationVersion).recoverWith {
+          client
+            .updateApplicationVersionAsTry(
+              UpdateApplicationVersionRequestFactory
+                .create(applicationName, versionLabel)
+                .withDescriptionOpt(description)
+            )
+            .map(_.getApplicationVersion)
+            .recoverWith {
               case ex: AmazonServiceException if ex.getStatusCode == 404 =>
                 logger.warn(s"The applicationVersion is not found.: $applicationName, $version")
-                throw ApplicationVersionNotFoundException(s"The applicationVersion is not found.: $applicationName, $versionLabel")
+                throw ApplicationVersionNotFoundException(
+                  s"The applicationVersion is not found.: $applicationName, $versionLabel")
             }
         } else {
           logger.warn(s"The Updating is nothing. $applicationName, $versionLabel")
@@ -117,23 +134,25 @@ trait ApplicationVersionSupport {
         result
       }.getOrElse {
         logger.warn(s"The applicationVersion is not found.: $applicationName, $versionLabel")
-        throw ApplicationVersionNotFoundException(s"The applicationVersion is not found.: $applicationName, $versionLabel")
+        throw ApplicationVersionNotFoundException(
+          s"The applicationVersion is not found.: $applicationName, $versionLabel")
       }
     }
   }
 
-  def ebUpdateApplicationVersionTask(): Def.Initialize[Task[ApplicationVersionDescription]] = Def.task {
-    implicit val logger = streams.value.log
-    ebUpdateApplicationVersion(ebClient.value,
-      (ebApplicationName in aws).value,
-      (ebApplicationVersionLabel in aws).value,
-      (ebApplicationVersionDescription in aws).value
-    ).get
-  }
+  def ebUpdateApplicationVersionTask(): Def.Initialize[Task[ApplicationVersionDescription]] =
+    Def.task {
+      implicit val logger = streams.value.log
+      ebUpdateApplicationVersion(ebClient.value,
+                                 (ebApplicationName in aws).value,
+                                 (ebApplicationVersionLabel in aws).value,
+                                 (ebApplicationVersionDescription in aws).value).get
+    }
 
-  def ebUpdateApplicationVersionAndWaitTask(): Def.Initialize[Task[ApplicationVersionDescription]] = Def.task {
+  def ebUpdateApplicationVersionAndWaitTask()
+    : Def.Initialize[Task[ApplicationVersionDescription]] = Def.task {
     implicit val logger = streams.value.log
-    val result = (ebApplicationVersionUpdate in aws).value
+    val result          = (ebApplicationVersionUpdate in aws).value
     val (progressStatuses, headOption) = wait(ebClient.value) {
       describeApplicationVersion(
         ebClient.value,
@@ -143,7 +162,7 @@ trait ApplicationVersionSupport {
     } {
       _.exists { e =>
         e.applicationNameOpt == result.applicationNameOpt &&
-          e.versionLabelOpt == result.versionLabelOpt
+        e.versionLabelOpt == result.versionLabelOpt
       }
     }
     progressStatuses.foreach { s =>
@@ -154,7 +173,10 @@ trait ApplicationVersionSupport {
     headOption().flatten.get
   }
 
-  private[eb] def ebDeleteApplicationVersion(client: AWSElasticBeanstalkClient, applicationName: String, versionLabel: String)(implicit logger: Logger): Try[Unit] = {
+  private[eb] def ebDeleteApplicationVersion(
+      client: AWSElasticBeanstalkClient,
+      applicationName: String,
+      versionLabel: String)(implicit logger: Logger): Try[Unit] = {
     describeApplicationVersion(client, applicationName, versionLabel).flatMap {
       _.map { _ =>
         logger.info(s"delete applicationVersion start: $applicationName, $versionLabel")
@@ -166,7 +188,8 @@ trait ApplicationVersionSupport {
         result
       }.getOrElse {
         logger.warn(s"The applicationVersion is not found.: $applicationName, $versionLabel")
-        throw ApplicationVersionNotFoundException(s"The applicationVersion is not found.: $applicationName, $versionLabel")
+        throw ApplicationVersionNotFoundException(
+          s"The applicationVersion is not found.: $applicationName, $versionLabel")
       }
     }
   }
@@ -178,16 +201,18 @@ trait ApplicationVersionSupport {
       (ebApplicationName in aws).value,
       (ebApplicationVersionLabel in aws).value
     ).recover {
-        case ex: ApplicationVersionNotFoundException =>
-          ()
-      }.get
+      case ex: ApplicationVersionNotFoundException =>
+        ()
+    }.get
   }
 
   def ebDeleteApplicationVersionAndWaitTask(): Def.Initialize[Task[Unit]] = Def.task {
     implicit val logger = streams.value.log
     (ebApplicationVersionDelete in aws).value
     val (progressStatuses, _) = wait(ebClient.value) {
-      describeApplicationVersion(ebClient.value, (ebApplicationName in aws).value, (ebApplicationVersionLabel in aws).value).get
+      describeApplicationVersion(ebClient.value,
+                                 (ebApplicationName in aws).value,
+                                 (ebApplicationVersionLabel in aws).value).get
     } {
       _.isEmpty
     }
@@ -198,31 +223,32 @@ trait ApplicationVersionSupport {
     }
   }
 
-  private[eb] def ebCreateOrUpdateApplicationVersionTask(): Def.Initialize[Task[ApplicationVersionDescription]] = Def.task {
+  private[eb] def ebCreateOrUpdateApplicationVersionTask()
+    : Def.Initialize[Task[ApplicationVersionDescription]] = Def.task {
     implicit val logger = streams.value.log
     ebUpdateApplicationVersion(ebClient.value,
-      (ebApplicationName in aws).value,
-      (ebApplicationVersionLabel in aws).value,
-      (ebApplicationVersionDescription in aws).value
-    ).recoverWith {
-        case ex: ApplicationVersionNotFoundException =>
-          val s3Location = if ((ebUseBundle in aws).value) {
-            Some((ebUploadBundle in aws).value)
-          } else None
-          ebCreateApplicationVersion(
-            ebClient.value,
-            (ebApplicationName in aws).value,
-            (ebApplicationVersionLabel in aws).value,
-            (ebApplicationVersionDescription in aws).value,
-            s3Location,
-            (ebAutoCreateApplication in aws).value
-          )
-      }.get
+                               (ebApplicationName in aws).value,
+                               (ebApplicationVersionLabel in aws).value,
+                               (ebApplicationVersionDescription in aws).value).recoverWith {
+      case ex: ApplicationVersionNotFoundException =>
+        val s3Location = if ((ebUseBundle in aws).value) {
+          Some((ebUploadBundle in aws).value)
+        } else None
+        ebCreateApplicationVersion(
+          ebClient.value,
+          (ebApplicationName in aws).value,
+          (ebApplicationVersionLabel in aws).value,
+          (ebApplicationVersionDescription in aws).value,
+          s3Location,
+          (ebAutoCreateApplication in aws).value
+        )
+    }.get
   }
 
-  private[eb] def ebCreateOrUpdateApplicationVersionAndWaitTask(): Def.Initialize[Task[ApplicationVersionDescription]] = Def.task {
+  private[eb] def ebCreateOrUpdateApplicationVersionAndWaitTask()
+    : Def.Initialize[Task[ApplicationVersionDescription]] = Def.task {
     implicit val logger = streams.value.log
-    val result = (ebApplicationVersionCreateOrUpdate in aws).value
+    val result          = (ebApplicationVersionCreateOrUpdate in aws).value
     val (progressStatuses, headOption) = wait(ebClient.value) {
       describeApplicationVersion(
         ebClient.value,
@@ -232,15 +258,14 @@ trait ApplicationVersionSupport {
     } {
       _.exists { e =>
         e.applicationNameOpt == result.applicationNameOpt &&
-          e.versionLabelOpt == result.versionLabelOpt &&
-          e.descriptionOpt == result.descriptionOpt
+        e.versionLabelOpt == result.versionLabelOpt &&
+        e.descriptionOpt == result.descriptionOpt
       }
     }
-    progressStatuses.foreach {
-      s =>
-        val status = s.map(e => e.getApplicationName + "/" + e.getVersionLabel).get
-        logger.info(s"$status : INPROGRESS")
-        TimeUnit.SECONDS.sleep(waitingIntervalInSec)
+    progressStatuses.foreach { s =>
+      val status = s.map(e => e.getApplicationName + "/" + e.getVersionLabel).get
+      logger.info(s"$status : INPROGRESS")
+      TimeUnit.SECONDS.sleep(waitingIntervalInSec)
     }
     headOption().flatten.get
   }

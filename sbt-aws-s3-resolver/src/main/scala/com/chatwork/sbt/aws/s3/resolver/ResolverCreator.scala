@@ -1,9 +1,9 @@
 package com.chatwork.sbt.aws.s3.resolver
 
 import com.amazonaws.services.s3.AmazonS3Client
-import com.amazonaws.services.s3.model.{ CannedAccessControlList, Region }
+import com.amazonaws.services.s3.model.{CannedAccessControlList, Region}
 import com.chatwork.sbt.aws.s3.resolver.ivy.S3IvyResolver
-import sbt.{ RawRepository, Resolver }
+import sbt.{RawRepository, Resolver}
 
 object ResolverCreator {
 

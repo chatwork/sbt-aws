@@ -17,20 +17,25 @@ object SbtAwsCfnPlugin extends AutoPlugin {
   import SbtAwsCfnKeys._
   import SbtAwsCoreKeys._
 
-
   override def projectSettings: Seq[Def.Setting[_]] = Seq(
-    cfnTemplatesSourceFolder in aws <<= baseDirectory {
-      base => base / defaultTemplateDirectory
+    cfnTemplatesSourceFolder in aws <<= baseDirectory { base =>
+      base / defaultTemplateDirectory
     },
     cfnTemplates in aws := {
       val templates = (cfnTemplatesSourceFolder in aws).value ** GlobFilter("*.template")
       templates.get
     },
     cfnArtifactId := {
-      getConfigValue(classOf[String], (awsConfig in aws).value, cfnArtifactId.key.label, (name in ThisProject).value)
+      getConfigValue(classOf[String],
+                     (awsConfig in aws).value,
+                     cfnArtifactId.key.label,
+                     (name in ThisProject).value)
     },
     cfnVersion := {
-      getConfigValue(classOf[String], (awsConfig in aws).value, cfnVersion.key.label, (version in ThisProject).value)
+      getConfigValue(classOf[String],
+                     (awsConfig in aws).value,
+                     cfnVersion.key.label,
+                     (version in ThisProject).value)
     },
     cfnS3BucketName in aws := {
       getConfigValueOpt(classOf[String], (awsConfig in aws).value, cfnS3BucketName.key.label)
@@ -43,7 +48,10 @@ object SbtAwsCfnPlugin extends AutoPlugin {
       getConfigValuesAsMap((awsConfig in aws).value, cfnStackTags.key.label)
     },
     cfnStackCapabilities in aws := {
-      getConfigValuesAsSeq(classOf[String], (awsConfig in aws).value, cfnStackCapabilities.key.label, Seq.empty)
+      getConfigValuesAsSeq(classOf[String],
+                           (awsConfig in aws).value,
+                           cfnStackCapabilities.key.label,
+                           Seq.empty)
     },
     cfnStackRegion in aws := "",
     cfnStackName in aws := {

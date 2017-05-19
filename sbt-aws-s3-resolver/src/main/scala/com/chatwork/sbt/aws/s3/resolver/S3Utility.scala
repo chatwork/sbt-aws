@@ -1,6 +1,6 @@
 package com.chatwork.sbt.aws.s3.resolver
 
-import java.net.{ URI, URISyntaxException }
+import java.net.{URI, URISyntaxException}
 
 object S3Utility {
 

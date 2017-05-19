@@ -4,7 +4,7 @@ import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.AWSCredentialsProviderChain
 import com.amazonaws.regions.Regions
 import sbt._
-import org.sisioh.config.{ Configuration => SisiohConfiguration }
+import org.sisioh.config.{Configuration => SisiohConfiguration}
 
 trait SbtAwsCoreKeys {
   lazy val aws = taskKey[Unit]("aws")
@@ -13,7 +13,8 @@ trait SbtAwsCoreKeys {
 
   lazy val credentialProfileName = settingKey[Option[String]]("credential-profile-name")
 
-  lazy val credentialsProviderChain = settingKey[AWSCredentialsProviderChain]("credentials-provider-chain")
+  lazy val credentialsProviderChain =
+    settingKey[AWSCredentialsProviderChain]("credentials-provider-chain")
 
   lazy val environmentName = settingKey[String]("env")
 
