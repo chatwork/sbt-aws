@@ -4,6 +4,7 @@ import java.net.{URL, URLConnection, URLStreamHandler}
 
 import com.amazonaws.services.s3.AmazonS3Client
 import com.chatwork.sbt.aws.core.SbtAwsCoreKeys
+import com.chatwork.sbt.aws.s3
 import com.chatwork.sbt.aws.s3.{SbtAwsS3Keys, SbtAwsS3Plugin}
 import com.chatwork.sbt.aws.s3.resolver.ivy.S3IvyResolver
 import sbt.Keys._
@@ -34,13 +35,29 @@ object SbtAwsS3ResolverPlugin extends AutoPlugin with SbtAwsS3Resolver {
     s3ServerSideEncryption in aws := false,
     s3Acl in aws := com.amazonaws.services.s3.model.CannedAccessControlList.PublicRead,
     s3OverwriteObject in aws := isSnapshot.value,
+    s3Handler in aws := {
+      val cpc       = (credentialsProviderChain in aws).value
+      val cc        = (clientConfiguration in aws).value
+      val regions   = (region in aws).value
+      val _s3Region = (s3Region in aws).value
+      val sse       = (s3ServerSideEncryption in aws).value
+      val acl       = (s3Acl in aws).value
+      val overwrite = (s3OverwriteObject in aws).value
+      val s3Client = createClient(cpc,
+                                  classOf[AmazonS3Client],
+                                  com.amazonaws.regions.Region.getRegion(regions),
+                                  cc)
+      s3Client.setEndpoint(s"https://s3-${_s3Region.toString}.amazonaws.com")
+      S3StreamHandler.setup(s3Client, sse)
+      S3URLHandler.setup(s3Client, sse, acl, overwrite)
+    },
     s3Resolver in aws := { (name: String, location: String) =>
       val cpc         = (credentialsProviderChain in aws).value
       val cc          = (clientConfiguration in aws).value
       val regions     = (region in aws).value
       val _s3Region   = (s3Region in aws).value
-      val acl         = (s3Acl in aws).value
       val sse         = (s3ServerSideEncryption in aws).value
+      val acl         = (s3Acl in aws).value
       val overwrite   = (s3OverwriteObject in aws).value
       val deployStyle = (s3DeployStyle in aws).value
       val s3Client = createClient(cpc,

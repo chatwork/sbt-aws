@@ -79,7 +79,9 @@ lazy val s3 = (project in file("sbt-aws-s3")).settings(pluginSettings: _*).setti
 lazy val s3Resolver = (project in file("sbt-aws-s3-resolver")).settings(pluginSettings: _*).settings(
   name := "sbt-aws-s3-resolver",
   libraryDependencies ++= Seq(
-    "org.apache.ivy" % "ivy" % "2.4.0"
+    "org.apache.ivy" % "ivy" % "2.4.0",
+    "io.get-coursier" %% "coursier" % "1.0.0-RC3",
+    "io.get-coursier" %% "coursier-cache" % "1.0.0-RC3"
   )
 ).dependsOn(s3)
 
