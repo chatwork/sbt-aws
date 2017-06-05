@@ -1,5 +1,6 @@
 package com.chatwork.sbt.aws.eb
 
+import com.chatwork.sbt.aws.core.SbtAwsCore._
 import com.chatwork.sbt.aws.core.SbtAwsCoreKeys
 import com.chatwork.sbt.aws.eb.SbtAwsEb._
 import com.chatwork.sbt.aws.s3.SbtAwsS3Plugin
@@ -35,15 +36,21 @@ object SbtAwsEbPlugin extends AutoPlugin {
     ebTargetTemplates in aws := Map.empty,
     ebBundleTargetFiles in aws := Seq.empty,
     ebBundleFileName in aws := (name in thisProjectRef).value + "-bundle.zip",
-    ebS3CreateBucket in aws := false,
-    ebS3BucketName in aws := None,
+    ebS3CreateBucket in aws := {
+      getConfigValue(classOf[Boolean], (awsConfig in aws).value, ebS3CreateBucket.key.label, false)
+    },
+    ebS3BucketName in aws := {
+      getConfigValueOpt(classOf[String], (awsConfig in aws).value, ebS3BucketName.key.label)
+    },
     ebS3KeyMapper in aws := identity,
     ebGenerateFilesInBundle in aws <<= ebGenerateFilesInBundleTask(),
     ebBuildBundle in aws <<= ebBuildBundleTask(),
     ebUploadBundle in aws <<= ebUploadBundleTask(),
     // ---
     ebApplicationName in aws := (name in thisProjectRef).value,
-    ebApplicationDescription in aws := None,
+    ebApplicationDescription in aws := {
+      getConfigValueOpt(classOf[String], (awsConfig in aws).value, ebApplicationDescription.key.label)
+    },
     ebApplicationCreate in aws <<= ebCreateApplicationTask(),
     ebApplicationCreateAndWait in aws <<= ebCreateApplicationAndWaitTask(),
     ebApplicationUpdate in aws <<= ebUpdateApplicationTask(),
@@ -53,11 +60,19 @@ object SbtAwsEbPlugin extends AutoPlugin {
     ebApplicationCreateOrUpdate in aws <<= ebCreateOrUpdateApplicationTask(),
     ebApplicationCreateOrUpdateAndWait in aws <<= ebCreateOrUpdateApplicationTask(),
     // ---
-    ebUseBundle in aws := true,
-    ebAutoCreateApplication in aws := None,
-    ebEnvironmentName in aws := (name in thisProjectRef).value + "-env",
+    ebUseBundle in aws := {
+      getConfigValue(classOf[Boolean], (awsConfig in aws).value, ebUseBundle.key.label, true)
+    },
+    ebAutoCreateApplication in aws := {
+      getConfigValueOpt(classOf[Boolean], (awsConfig in aws).value, ebAutoCreateApplication.key.label)
+    },
+    ebEnvironmentName in aws := {
+      getConfigValue(classOf[String], (awsConfig in aws).value, ebEnvironmentName.key.label, System.getProperty("aws.env", (name in thisProjectRef).value + "-env"))
+    },
     ebApplicationVersionLabel in aws := (version in thisProjectRef).value + "_" + timestamp,
-    ebApplicationVersionDescription in aws := None,
+    ebApplicationVersionDescription in aws := {
+      getConfigValueOpt(classOf[String], (awsConfig in aws).value, ebApplicationVersionDescription.key.label)
+    },
     ebApplicationVersionCreate in aws <<= ebCreateApplicationVersionTask(),
     ebApplicationVersionCreateAndWait in aws <<= ebCreateApplicationVersionAndWaitTask(),
     ebApplicationVersionUpdate in aws <<= ebUpdateApplicationVersionTask(),
