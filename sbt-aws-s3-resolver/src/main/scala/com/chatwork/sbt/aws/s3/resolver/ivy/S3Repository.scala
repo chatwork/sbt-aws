@@ -4,7 +4,7 @@ import java.io.{File, FileOutputStream, IOException}
 import java.util
 
 import com.amazonaws.AmazonServiceException
-import com.amazonaws.services.s3.AmazonS3Client
+import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model._
 import com.chatwork.sbt.aws.s3.resolver.S3Utility
 import org.apache.ivy.core.module.descriptor.Artifact
@@ -13,17 +13,15 @@ import org.apache.ivy.util.{FileUtil, Message}
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 
-case class S3Repository(s3Client: AmazonS3Client,
+case class S3Repository(s3Client: AmazonS3,
                         region: Region,
+                        bucketName: String,
                         acl: CannedAccessControlList,
                         serverSideEncryption: Boolean,
                         overwrite: Boolean)
     extends AbstractRepository {
-
-  private val cacheOfS3Resource = mutable.Map.empty[String, S3Resource]
 
   override def get(source: String, destination: File): Unit = {
     val resource = getResource(source)
@@ -42,6 +40,22 @@ case class S3Repository(s3Client: AmazonS3Client,
     } finally fireTransferCompleted(resource.getContentLength)
   }
 
+  override def getResource(source: String): Resource = {
+    try {
+      val (bucket, name) = Option(S3Utility.getBucket(source)).map { bucketName =>
+        (bucketName, S3Utility.getKey(source))
+      }.getOrElse {
+        (bucketName, source)
+      }
+      val s3Object = s3Client.getObject(bucket, name)
+      val result   = S3Resource(s3Object, name)
+      result
+    } catch {
+      case _: Exception =>
+        MissingResource()
+    }
+  }
+
   override def put(artifact: Artifact,
                    source: File,
                    destination: String,
@@ -56,7 +70,7 @@ case class S3Repository(s3Client: AmazonS3Client,
       request.setMetadata(objectMetadata)
     }
 
-    if (!s3Client.doesBucketExist(bucket)) {
+    if (!s3Client.doesBucketExistV2(bucket)) {
       if (!createBucket(bucket, region)) {
         throw new Error("couldn't create bucket")
       }
@@ -73,8 +87,9 @@ case class S3Repository(s3Client: AmazonS3Client,
     try {
       @tailrec
       def getKeys(cond: Boolean, marker: Option[String], list: List[String]): List[String] = {
-        if (marker.isEmpty) list
-        else {
+        if (!cond) {
+          list
+        } else {
           val request = new ListObjectsRequest()
             .withBucketName(S3Utility.getBucket(parent))
             .withPrefix(S3Utility.getKey(parent))
@@ -84,7 +99,7 @@ case class S3Repository(s3Client: AmazonS3Client,
           val next = listing.getCommonPrefixes.asScala ++ listing.getObjectSummaries.asScala
             .map(_.getKey)
           val markerOpt = Option(listing.getMarker)
-          getKeys(markerOpt.isDefined, marker, next.toList)
+          getKeys(markerOpt.isDefined, markerOpt, next.toList)
         }
       }
       getKeys(cond = true, None, List.empty).asJava
@@ -94,23 +109,17 @@ case class S3Repository(s3Client: AmazonS3Client,
     }
   }
 
-  override def getResource(source: String): Resource = {
-    if (!cacheOfS3Resource.contains(source)) {
-      cacheOfS3Resource.put(source, S3Resource(s3Client, source))
-    }
-    cacheOfS3Resource(source)
-  }
-
   private def createBucket(name: String, region: Region): Boolean = {
     val timeout = 1000 * 20
+
     @tailrec
     def create0(retryCount: Int, result: Boolean): Boolean = {
       if (retryCount == 0)
         result
       else {
-        Try(s3Client.createBucket(name, region)) match {
+        Try(s3Client.createBucket(new CreateBucketRequest(name, region))) match {
           case Success(_) =>
-            if (s3Client.doesBucketExist(name))
+            if (s3Client.doesBucketExistV2(name))
               true
             else
               false
@@ -123,6 +132,7 @@ case class S3Repository(s3Client: AmazonS3Client,
         }
       }
     }
+
     create0(5, result = false)
   }
 

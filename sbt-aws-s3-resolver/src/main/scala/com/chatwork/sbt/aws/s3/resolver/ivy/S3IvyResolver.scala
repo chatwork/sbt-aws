@@ -1,12 +1,14 @@
 package com.chatwork.sbt.aws.s3.resolver.ivy
 
-import com.amazonaws.services.s3.AmazonS3Client
+import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.{CannedAccessControlList, Region}
+import com.chatwork.sbt.aws.s3.resolver.S3Utility
 import org.apache.ivy.plugins.resolver.IBiblioResolver
-import sbt.{Patterns, Resolver}
+import sbt.Resolver
+
 import scala.collection.JavaConverters._
 
-case class S3IvyResolver(s3Client: AmazonS3Client,
+case class S3IvyResolver(s3Client: AmazonS3,
                          region: Region,
                          name: String,
                          location: String,
@@ -15,19 +17,27 @@ case class S3IvyResolver(s3Client: AmazonS3Client,
                          overwrite: Boolean,
                          isMavenStyle: Boolean)
     extends IBiblioResolver {
-  setName(name)
-  setRoot(location)
-  setRepository(S3Repository(s3Client, region, acl, serverSideEncryption, overwrite))
 
-  def withBase(p: String): String =
+  private def withBase(p: String): String =
     location.stripSuffix("/") + "/" + p.stripPrefix("/")
 
+  setName(name)
+  setRoot(location)
+  setRepository(
+    S3Repository(s3Client,
+                 region,
+                 S3Utility.getBucket(location),
+                 acl,
+                 serverSideEncryption,
+                 overwrite))
   setM2compatible(isMavenStyle)
 
   if (isMavenStyle) {
-    setArtifactPatterns(Resolver.mavenStylePatterns.artifactPatterns.map(withBase).asJava)
+    val patterns = Resolver.mavenStylePatterns.artifactPatterns.map(withBase)
+    setArtifactPatterns(patterns.asJava)
   } else {
-    setIvyPatterns(Resolver.ivyStylePatterns.ivyPatterns.map(withBase).asJava)
+    val patterns = Resolver.ivyStylePatterns.ivyPatterns.map(withBase)
+    setIvyPatterns(patterns.asJava)
   }
 
 }
