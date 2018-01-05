@@ -1,6 +1,6 @@
 import sbt.ScriptedPlugin._
 
-val aws4sVersion = "1.0.7"
+val aws4sVersion = "1.0.15-SNAPSHOT"
 
 val sisiohConfigVersion = "0.0.7"
 
@@ -81,7 +81,9 @@ lazy val s3Resolver = (project in file("sbt-aws-s3-resolver")).settings(pluginSe
   libraryDependencies ++= Seq(
     "org.apache.ivy" % "ivy" % "2.4.0",
     "io.get-coursier" %% "coursier" % "1.0.0-RC3",
-    "io.get-coursier" %% "coursier-cache" % "1.0.0-RC3"
+    "io.get-coursier" %% "coursier-cache" % "1.0.0-RC3",
+    "org.slf4j" % "slf4j-api" % "1.7.25",
+    "ch.qos.logback" % "logback-classic" % "1.2.3"
   )
 ).dependsOn(s3)
 
