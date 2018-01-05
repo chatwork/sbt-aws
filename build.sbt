@@ -1,6 +1,6 @@
 import sbt.ScriptedPlugin._
 
-val aws4sVersion = "1.0.15-SNAPSHOT"
+val aws4sVersion = "1.0.15"
 
 val sisiohConfigVersion = "0.0.7"
 
