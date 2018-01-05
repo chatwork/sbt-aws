@@ -9,7 +9,7 @@ Add this to your project/plugins.sbt file:
 ```scala
 resolvers += "Sonatype OSS Release Repository" at "https://oss.sonatype.org/content/repositories/releases/"
 
-addSbtPlugin("com.chatwork" % "sbt-aws-s3" % "1.0.34")
+addSbtPlugin("com.chatwork" % "sbt-aws-s3" % "1.0.35")
 ```
 
 ## Usage
