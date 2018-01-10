@@ -1,11 +1,10 @@
 import sbt.ScriptedPlugin._
 
-val aws4sVersion = "1.0.15"
+val aws4sVersion = "1.0.16"
 
-val sisiohConfigVersion = "0.0.7"
+val sisiohConfigVersion = "0.0.12"
 
 lazy val baseSettings = Seq(
-  scalaVersion := "2.10.5",
   sonatypeProfileName := "com.chatwork",
   organization := "com.chatwork",
   shellPrompt := {
@@ -36,15 +35,15 @@ lazy val baseSettings = Seq(
         </developer>
       </developers>
   },
-  credentials <<= Def.task {
-    val ivyCredentials = (baseDirectory in LocalRootProject).value / ".credentials"
-    val result = Credentials(ivyCredentials) :: Nil
-    result
-  }
+  credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
+  scalacOptions -= "-Ybackend:GenBCode"
 )
 
-lazy val pluginSettings = baseSettings ++ ScriptedPlugin.scriptedSettings ++ Seq(
+lazy val pluginSettings = baseSettings ++ Seq(
   sbtPlugin := true,
+  crossSbtVersions := Seq("1.0.0", "0.13.16"),
+  scriptedBufferLog := false,
+    scriptedLaunchOpts ++= Seq("-Xmx1024M", "-Dplugin.version=" + version.value),
   resolvers ++= Seq(
     "Sonatype OSS Snapshot Repository" at "https://oss.sonatype.org/content/repositories/snapshots/",
     "Sonatype OSS Release Repository" at "https://oss.sonatype.org/content/repositories/releases/",
