@@ -1,10 +1,37 @@
-import sbt.ScriptedPlugin._
+import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
+import xerial.sbt.Sonatype.autoImport._
+
+val releaseSettings = Seq(
+  releaseCrossBuild := true,
+  releaseTagName := { (version in ThisBuild).value },
+  releasePublishArtifactsAction := PgpKeys.publishSigned.value,
+  releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  releaseStepCommandAndRemaining("^ test"),
+  setReleaseVersion,
+  commitReleaseVersion,
+  tagRelease,
+  releaseStepCommandAndRemaining("^ publishSigned"),
+  setNextVersion,
+  commitNextVersion,
+  releaseStepCommand("sonatypeReleaseAll"),
+  pushChanges
+  )
+)
 
 val aws4sVersion = "1.0.16"
 
-val sisiohConfigVersion = "0.0.12"
+val sisiohConfigVersion = "0.0.15"
+val sbtCrossVersion = sbtVersion in pluginCrossBuild
 
 lazy val baseSettings = Seq(
+  scalaVersion := (CrossVersion partialVersion sbtCrossVersion.value match {
+    case Some((0, 13)) => "2.10.6"
+    case Some((1, _))  => "2.12.4"
+    case _             => sys error s"Unhandled sbt version ${sbtCrossVersion.value}"
+  }),
   sonatypeProfileName := "com.chatwork",
   organization := "com.chatwork",
   shellPrompt := {
@@ -12,6 +39,7 @@ lazy val baseSettings = Seq(
   },
   publishMavenStyle := true,
   publishArtifact in Test := false,
+  publishTo := sonatypePublishTo.value,
   pomIncludeRepository := {
     _ => false
   },
@@ -39,11 +67,9 @@ lazy val baseSettings = Seq(
   scalacOptions -= "-Ybackend:GenBCode"
 )
 
-lazy val pluginSettings = baseSettings ++ Seq(
+lazy val pluginSettings = baseSettings ++ releaseSettings ++ Seq(
   sbtPlugin := true,
-  crossSbtVersions := Seq("1.0.0", "0.13.16"),
-  scriptedBufferLog := false,
-    scriptedLaunchOpts ++= Seq("-Xmx1024M", "-Dplugin.version=" + version.value),
+  crossSbtVersions := Seq("0.13.16", "1.0.0"),
   resolvers ++= Seq(
     "Sonatype OSS Snapshot Repository" at "https://oss.sonatype.org/content/repositories/snapshots/",
     "Sonatype OSS Release Repository" at "https://oss.sonatype.org/content/repositories/releases/",
@@ -51,9 +77,10 @@ lazy val pluginSettings = baseSettings ++ Seq(
   ),
   libraryDependencies ++= Seq(
   ),
+  scriptedBufferLog := false,
   scriptedLaunchOpts := {
     scriptedLaunchOpts.value ++
-      Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
+      Seq("-Xmx1024M", "-Dproject.version=" + version.value)
   },
   scriptedBufferLog := false
 )

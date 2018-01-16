@@ -1,6 +1,6 @@
-credentialProfileName in aws := Some("sbt-aws-scripted-test")
+credentialProfileName in aws := Some("sbt-aws")
 
-ebBundleTargetFiles in aws <<= Def.task {
+ebBundleTargetFiles in aws := Def.task {
   val base = baseDirectory.value
   val packageJarFile = (packageBin in Compile).value
   Seq(
@@ -8,13 +8,13 @@ ebBundleTargetFiles in aws <<= Def.task {
     (base / "Dockerrun.aws.json", "Dockerrun.aws.json"),
     (packageJarFile, packageJarFile.name)
   )
-}
+}.value
 
 ebApplicationName in aws := (name in thisProjectRef).value + "-" + new java.util.Date().getTime.toString
 
 ebEnvironmentName in aws := new java.util.Date().getTime.toString + "-env"
 
-ebS3BucketName in aws := Some("sbt-aws-eb-test")
+ebS3BucketName in aws := Some("sbt-aws-eb-cct-test")
 
 ebS3CreateBucket in aws := true
 
@@ -29,7 +29,7 @@ ebConfigurationTemplate in aws := {
     EbConfigurationTemplate(
       name = templateName,
       description = Some("test"),
-      solutionStackName = "64bit Amazon Linux 2015.09 v2.0.4 running Docker 1.7.1",
+      solutionStackName = "64bit Amazon Linux 2015.09 v2.0.6 running Docker 1.7.1",
       optionSettings = Seq.empty,
       optionsToRemoves = Seq.empty,
       recreate = true

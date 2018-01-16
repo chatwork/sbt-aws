@@ -10,4 +10,4 @@ resolvers ++= Seq[Resolver](
   (s3Resolver in aws).value("ChatWork's Maven Release Repository", "s3://tky-chatwork-inhouse-maven-repository/releases")
 )
 
-libraryDependencies += "com.chatwork" %% "sbt-aws-s3-resolver-deploy-test" % "0.0.1-SNAPSHOT"
+libraryDependencies += "com.chatwork" %% "sbt-aws-s3-resolver-deploy-test" % "0.0.3-SNAPSHOT"

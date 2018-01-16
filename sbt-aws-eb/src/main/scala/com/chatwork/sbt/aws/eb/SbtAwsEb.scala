@@ -47,23 +47,27 @@ trait SbtAwsEb
     (progressStatuses, () => statuses.headOption)
   }
 
-  lazy val ebClient = Def.task {
+  lazy val ebClient = Def.taskDyn {
     val logger = streams.value.log
     val r      = (region in aws).value
     val cpc    = (credentialsProviderChain in aws).value
     val cc     = (clientConfiguration in aws).value
-    logger.debug(s"region = $r")
-    createClient(cpc, classOf[AWSElasticBeanstalkClient], Region.getRegion(r), cc)
+    Def.task {
+      logger.debug(s"region = $r")
+      createClient(cpc, classOf[AWSElasticBeanstalkClient], Region.getRegion(r), cc)
+    }
   }
 
-  def ebBuildBundleTask(): Def.Initialize[Task[File]] = Def.task {
+  def ebBuildBundleTask(): Def.Initialize[Task[File]] = Def.taskDyn {
     val logger = streams.value.log
     val files  = (ebBundleTargetFiles in aws).value
     val path   = baseDirectory.value / "target" / (ebBundleFileName in aws).value
-    logger.info(s"create application-bundle: $path")
-    IO.zip(files, path)
-    logger.info(s"created application-bundle: $path")
-    path
+    Def.task {
+      logger.info(s"create application-bundle: $path")
+      IO.zip(files, path)
+      logger.info(s"created application-bundle: $path")
+      path
+    }
   }
 
   def timestamp: String = {
@@ -71,7 +75,7 @@ trait SbtAwsEb
     sdf.format(new Date())
   }
 
-  def ebUploadBundleTask(): Def.Initialize[Task[S3Location]] = Def.task {
+  def ebUploadBundleTask(): Def.Initialize[Task[S3Location]] = Def.taskDyn {
     val logger         = streams.value.log
     val path           = (ebBuildBundle in aws).value
     val createBucket   = (ebS3CreateBucket in aws).value
@@ -80,50 +84,50 @@ trait SbtAwsEb
     val bucketName     = (ebS3BucketName in aws).value
     val keyMapper      = (ebS3KeyMapper in aws).value
     val versionLabel   = (ebApplicationVersionLabel in aws).value
+Def.task {
+  require(bucketName.isDefined)
 
-    require(bucketName.isDefined)
+  val baseKey = s"$projectName/$projectName-$versionLabel.zip"
+  val key = keyMapper(baseKey)
 
-    val baseKey = s"$projectName/$projectName-$versionLabel.zip"
-    val key     = keyMapper(baseKey)
+  val overwrite = projectVersion.endsWith("-SNAPSHOT")
 
-    val overwrite = projectVersion.endsWith("-SNAPSHOT")
+  logger.info(s"upload application-bundle : $path to ${bucketName.get}/$key")
+  s3PutObject(logger, s3Client.value, bucketName.get, key, path, overwrite, createBucket).get
+  logger.info(s"uploaded application-bundle : ${bucketName.get}/$key")
 
-    logger.info(s"upload application-bundle : $path to ${bucketName.get}/$key")
-    s3PutObject(s3Client.value, bucketName.get, key, path, overwrite, createBucket).get
-    logger.info(s"uploaded application-bundle : ${bucketName.get}/$key")
-
-    S3LocationFactory.create().withS3Bucket(bucketName.get).withS3Key(key)
+  S3LocationFactory.create().withS3Bucket(bucketName.get).withS3Key(key)
+}
   }
 
-  def ebGenerateFilesInBundleTask(): Def.Initialize[Task[Seq[File]]] = Def.task {
+  def ebGenerateFilesInBundleTask(): Def.Initialize[Task[Seq[File]]] = Def.taskDyn {
     val logger = streams.value.log
     val src    = (ebBundleDirectory in aws).value
-    if (src.exists()) {
-      val cfg = new freemarker.template.Configuration(
-        freemarker.template.Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS)
-      cfg.setDirectoryForTemplateLoading(src)
-
-      val context = (ebBundleContext in aws).value.asJava
-
-      val templates = (ebTargetTemplates in aws).value
-
-      templates.map {
-        case (templatePath, outputFile) =>
-          var writer: FileWriter = null
-          try {
-            val template = cfg.getTemplate(templatePath)
-            writer = new FileWriter(outputFile)
-            template.process(context, writer)
-            logger.info("generated files in the bundle.")
-            outputFile
-          } finally {
-            if (writer != null)
-              writer.close()
-          }
-      }.toSeq
-    } else {
-      logger.warn(s"${src.getAbsolutePath} is not found.")
-      Seq.empty
+    val context = (ebBundleContext in aws).value.asJava
+    val templates = (ebTargetTemplates in aws).value
+    Def.task {
+      if (src.exists()) {
+        val cfg = new freemarker.template.Configuration(
+          freemarker.template.Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS)
+        cfg.setDirectoryForTemplateLoading(src)
+        templates.map {
+          case (templatePath, outputFile) =>
+            var writer: FileWriter = null
+            try {
+              val template = cfg.getTemplate(templatePath)
+              writer = new FileWriter(outputFile)
+              template.process(context, writer)
+              logger.info("generated files in the bundle.")
+              outputFile
+            } finally {
+              if (writer != null)
+                writer.close()
+            }
+        }.toSeq
+      } else {
+        logger.warn(s"${src.getAbsolutePath} is not found.")
+        Seq.empty
+      }
     }
   }
 
@@ -180,9 +184,12 @@ trait SbtAwsEb
   }
 
   def ebListAvailableSolutionStacksTask(): Def.Initialize[Task[Seq[SolutionStackDescription]]] =
-    Def.task {
+    Def.taskDyn {
       implicit val logger = streams.value.log
-      ebListAvailableSolutionStacks(ebClient.value).get
+      val client = ebClient.value
+      Def.task {
+        ebListAvailableSolutionStacks(client).get
+      }
     }
 
 }

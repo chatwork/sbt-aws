@@ -1,6 +1,6 @@
-credentialProfileName in aws := Some("sbt-aws-scripted-test")
+credentialProfileName in aws := Some("sbt-aws")
 
-ebBundleTargetFiles in aws <<= Def.task {
+ebBundleTargetFiles in aws := Def.task {
   val base = baseDirectory.value
   val packageJarFile = (packageBin in Compile).value
   Seq(
@@ -8,9 +8,9 @@ ebBundleTargetFiles in aws <<= Def.task {
     (base / "Dockerrun.aws.json", "Dockerrun.aws.json"),
     (packageJarFile, packageJarFile.name)
   )
-}
+}.value
 
-ebS3BucketName in aws := Some("sbt-aws-eb-test")
+ebS3BucketName in aws := Some("sbt-aws-eb-cav-test")
 
 ebS3CreateBucket in aws := true
 

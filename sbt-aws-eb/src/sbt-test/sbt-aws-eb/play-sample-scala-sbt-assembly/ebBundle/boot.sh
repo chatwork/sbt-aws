@@ -1,1 +1,0 @@
-java -jar play-sample-scala-assembly-1.0.1-SNAPSHOT.jar

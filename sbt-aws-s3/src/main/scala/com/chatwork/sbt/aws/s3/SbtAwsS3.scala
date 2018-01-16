@@ -2,7 +2,7 @@ package com.chatwork.sbt.aws.s3
 
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.regions.Region
-import com.amazonaws.services.s3.AmazonS3Client
+import com.amazonaws.services.s3.{AmazonS3, AmazonS3Client, AmazonS3ClientBuilder}
 import com.amazonaws.services.s3.model.{AmazonS3Exception, ObjectMetadata}
 import com.chatwork.sbt.aws.core.SbtAwsCore
 import com.chatwork.sbt.aws.core.SbtAwsCoreKeys._
@@ -30,23 +30,26 @@ trait SbtAwsS3 extends SbtAwsCore {
     configuration
   }
 
-  lazy val s3Client: Def.Initialize[Task[AmazonS3Client]] = Def.task {
+  lazy val s3Client: Def.Initialize[Task[AmazonS3]] = Def.task {
     val logger = streams.value.log
     val r      = (region in aws).value
     val cpc    = (credentialsProviderChain in aws).value
     val cc     = (clientConfiguration in aws).value
     logger.info(s"region = $r")
-    createClient(cpc, classOf[AmazonS3Client], Region.getRegion(r), cc)
+    val builder0           = AmazonS3ClientBuilder.standard().withRegion(r).withCredentials(cpc)
+    val builder            = cc.fold(builder0)(builder0.withClientConfiguration)
+    val s3Client: AmazonS3 = builder.build()
+    s3Client
   }
 
-  def s3ExistsS3Object(client: AmazonS3Client, bucketName: String, key: String): Try[Boolean] = {
+  def s3ExistsS3Object(client: AmazonS3, bucketName: String, key: String): Try[Boolean] = {
     s3GetS3ObjectMetadata(client, bucketName, key).map(_.isDefined)
   }
 
-  def s3GetS3ObjectMetadata(client: AmazonS3Client,
+  def s3GetS3ObjectMetadata(client: AmazonS3,
                             bucketName: String,
                             key: String): Try[Option[ObjectMetadata]] = {
-    client.getObjectMetadataAsTry(bucketName, key).map(Some(_)).recoverWith {
+    Try(client.getObjectMetadata(bucketName, key)).map(Some(_)).recoverWith {
       case ex: AmazonS3Exception if ex.getStatusCode == 404 =>
         Success(None)
       case ex =>
@@ -57,7 +60,7 @@ trait SbtAwsS3 extends SbtAwsCore {
   def isCond(file: File, metadataOpt: Option[ObjectMetadata], overwrite: Boolean): Boolean =
     metadataOpt.isEmpty || (overwrite && metadataOpt.get.getETag != md5(file))
 
-  def s3PutObjectAndGetUrl(client: AmazonS3Client,
+  def s3PutObjectAndGetUrl(logger: Logger, client: AmazonS3,
                            bucketName: String,
                            key: String,
                            file: File,
@@ -66,19 +69,19 @@ trait SbtAwsS3 extends SbtAwsCore {
                            createBucket: Boolean): Try[String] =
     if (isCond(file, metadataOpt, overwrite)) {
       for {
-        exist <- client.doesBucketExistAsTry(bucketName)
+        exist <- Try(client.doesBucketExistV2(bucketName))
         _ <- if (!exist && createBucket) {
-          client.createBucketAsTry(bucketName)
+          Try(client.createBucket(bucketName))
         } else Success(())
-        result <- client.putObjectAsTry(
-          PutObjectRequestFactory.create(bucketName, key, file).withMetadataOpt(metadataOpt))
-        resourceUrl <- client.getResourceUrlAsTry(bucketName, key)
+        _ <- Try(client.putObject(
+          PutObjectRequestFactory.create(bucketName, key, file).withMetadataOpt(metadataOpt)))
+        resourceUrl <- Try(client.getUrl(bucketName, key)).map(_.toString)
       } yield resourceUrl
     } else {
-      client.getResourceUrlAsTry(bucketName, key)
+      Try(client.getUrl(bucketName, key)).map(_.toString)
     }
 
-  def s3PutObject(client: AmazonS3Client,
+  def s3PutObject(logger: Logger, client: AmazonS3,
                   bucketName: String,
                   key: String,
                   file: File,
@@ -86,7 +89,7 @@ trait SbtAwsS3 extends SbtAwsCore {
                   createBucket: Boolean): Try[String] = {
     for {
       metadataOpt <- s3GetS3ObjectMetadata(client, bucketName, key)
-      url <- s3PutObjectAndGetUrl(client,
+      url <- s3PutObjectAndGetUrl(logger, client,
                                   bucketName,
                                   key,
                                   file,
@@ -97,7 +100,7 @@ trait SbtAwsS3 extends SbtAwsCore {
   }
 
   def s3UploadTask: Def.Initialize[Task[String]] = Def.task {
-    val logger       = streams.value.log
+    val logger: Logger = streams.value.log
     val client       = s3Client.value
     val bucketName   = (s3BucketName in aws).value
     val key          = (s3Key in aws).value
@@ -107,7 +110,7 @@ trait SbtAwsS3 extends SbtAwsCore {
 
     logger.info(
       s"put object request : bucketName = $bucketName, key = $key, file = $file, overwrite = $overwrite, createBucket = $createBucket")
-    val url = s3PutObject(client, bucketName, key, file, overwrite, createBucket).get
+    val url = s3PutObject(logger, client, bucketName, key, file, overwrite, createBucket).get
     logger.info(s"put object requested : bucketName = $bucketName key = $key, url = $url")
     url
   }

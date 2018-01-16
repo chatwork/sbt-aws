@@ -26,47 +26,51 @@ trait SbtAwsCfn extends SbtAwsS3 {
 
   val defaultTemplateDirectory = "aws/cfn/templates"
 
-  lazy val cfnClient = Def.task {
+  lazy val cfnClient = Def.taskDyn {
     val logger = streams.value.log
     val r      = (region in aws).value
     val cpc    = (credentialsProviderChain in aws).value
     val cc     = (clientConfiguration in aws).value
-    logger.info(s"region = $r")
-    createClient(
-      cpc,
-      classOf[AmazonCloudFormationClient],
-      Region.getRegion(r),
-      cc
-    )
+    Def.task {
+      logger.info(s"region = $r")
+      createClient(
+        cpc,
+        classOf[AmazonCloudFormationClient],
+        Region.getRegion(r),
+        cc
+      )
+    }
   }
 
-  def uploadTemplateFileTask(): Def.Initialize[Task[URL]] = Def.task {
+  def uploadTemplateFileTask(): Def.Initialize[Task[URL]] = Def.taskDyn {
     val logger = streams.value.log
     val files  = (cfnTemplates in aws).value
-    val file = files.headOption.getOrElse {
-      throw new FileNotFoundException("*.template not found in this project")
-    }
     val bucketName = (cfnS3BucketName in aws).value
-
-    logger.info(s"targetFile = $file, bucketName = $bucketName")
-
-    require(bucketName.isDefined)
-
-    logger.debug(IO.read(file))
-
-    val sdf       = new SimpleDateFormat("yyyyMMdd'_'HHmmss")
-    val timestamp = sdf.format(new Date())
-
     val artifactId = (cfnArtifactId in aws).value
-    val version    = (cfnVersion in aws).value
-
+    val version = (cfnVersion in aws).value
     val keyMapper = (cfnS3KeyMapper in aws).value
-    val key       = keyMapper(s"$artifactId-$version-$timestamp.templete")
+    Def.task {
+      val file = files.headOption.getOrElse {
+        throw new FileNotFoundException("*.template not found in this project")
+      }
 
-    logger.info(s"upload $file to ${bucketName.get}/$key")
-    val result = s3PutObject(s3Client.value, bucketName.get, key, file, false, true)
-    logger.info(s"uploaded $file to ${bucketName.get}/$key")
-    new URL(result.get)
+      logger.info(s"targetFile = $file, bucketName = $bucketName")
+
+      require(bucketName.isDefined)
+
+      logger.debug(IO.read(file))
+
+      val sdf = new SimpleDateFormat("yyyyMMdd'_'HHmmss")
+      val timestamp = sdf.format(new Date())
+
+
+      val key = keyMapper(s"$artifactId-$version-$timestamp.templete")
+
+      logger.info(s"upload $file to ${bucketName.get}/$key")
+      val result = s3PutObject(logger, s3Client.value, bucketName.get, key, file, false, true)
+      logger.info(s"uploaded $file to ${bucketName.get}/$key")
+      new URL(result.get)
+    }
   }
 
   def validateTemplateOnURL(client: AmazonCloudFormationClient)(template: URL)(
@@ -81,21 +85,23 @@ trait SbtAwsCfn extends SbtAwsS3 {
     })
   }
 
-  private[cfn] def stackValidateOnURLTask(): Def.Initialize[Task[URL]] = Def.task {
+  private[cfn] def stackValidateOnURLTask(): Def.Initialize[Task[URL]] = Def.taskDyn {
     implicit val logger = streams.value.log
-
     val url = (cfnUploadTemplate in aws).value
-    logger.info("stack validate: url = " + url)
-    val result = validateTemplateOnURL(cfnClient.value)(url)
-    result._2 match {
-      case Failure(e) =>
-        logger.error(s"validation of ${result._1} failed with: \n ${e.getMessage}")
-      case _ =>
+    val client = cfnClient.value
+    Def.task {
+      logger.info("stack validate: url = " + url)
+      val result = validateTemplateOnURL(client)(url)
+      result._2 match {
+        case Failure(e) =>
+          logger.error(s"validation of ${result._1} failed with: \n ${e.getMessage}")
+        case _ =>
+      }
+      if (result._2.isFailure) {
+        sys.error("some AWS CloudFormation templates failed to validate!")
+      }
+      result._1
     }
-    if (result._2.isFailure) {
-      sys.error("some AWS CloudFormation templates failed to validate!")
-    }
-    result._1
   }
 
   private[cfn] def validateTemplateOnFile(client: AmazonCloudFormationClient)(template: sbt.File)(
@@ -110,21 +116,24 @@ trait SbtAwsCfn extends SbtAwsS3 {
     })
   }
 
-  def stackValidateOnFileTask(): Def.Initialize[Task[Seq[sbt.File]]] = Def.task {
+  def stackValidateOnFileTask(): Def.Initialize[Task[Seq[sbt.File]]] = Def.taskDyn {
     implicit val logger = streams.value.log
     val files           = (cfnTemplates in aws).value
-    logger.info("stack validate: files = " + files)
-    val results = files.map(validateTemplateOnFile(cfnClient.value))
-    results.foreach { tr =>
-      tr._2 match {
-        case Failure(e) => logger.error(s"validation of ${tr._1} failed with: \n ${e.getMessage}")
-        case _          =>
+    val client = cfnClient.value
+    Def.task {
+      logger.info("stack validate: files = " + files)
+      val results = files.map(validateTemplateOnFile(client))
+      results.foreach { tr =>
+        tr._2 match {
+          case Failure(e) => logger.error(s"validation of ${tr._1} failed with: \n ${e.getMessage}")
+          case _ =>
+        }
       }
+      if (results.exists(_._2.isFailure)) {
+        sys.error("some AWS CloudFormation templates failed to validate!")
+      }
+      files
     }
-    if (results.exists(_._2.isFailure)) {
-      sys.error("some AWS CloudFormation templates failed to validate!")
-    }
-    files
   }
 
   private[cfn] def describeStacks(client: AmazonCloudFormationClient,
@@ -135,25 +144,26 @@ trait SbtAwsCfn extends SbtAwsS3 {
     }
   }
 
-  def describeStacksTask(): Def.Initialize[Task[Seq[Stack]]] = Def.task {
+  def describeStacksTask(): Def.Initialize[Task[Seq[Stack]]] = Def.taskDyn {
     val logger    = streams.value.log
     val stackName = (cfnStackName in aws).value
     val client    = cfnClient.value
+    Def.task {
+      require(stackName.isDefined)
 
-    require(stackName.isDefined)
-
-    stackName.map { sn =>
-      logger.info(s"describe stack request: stackName = $sn")
-      describeStacks(client, sn).get
-    }.map { stacks =>
-      if (stacks.isEmpty) {
-        logger.info("stacks is empty.")
-      } else
-        stacks.foreach { stack =>
-          logger.info(stack.toString)
-        }
-      stacks
-    }.getOrElse(Seq.empty)
+      stackName.map { sn =>
+        logger.info(s"describe stack request: stackName = $sn")
+        describeStacks(client, sn).get
+      }.map { stacks =>
+        if (stacks.isEmpty) {
+          logger.info("stacks is empty.")
+        } else
+          stacks.foreach { stack =>
+            logger.info(stack.toString)
+          }
+        stacks
+      }.getOrElse(Seq.empty)
+    }
   }
 
   private[cfn] def getStackStatus(client: AmazonCloudFormationClient,
@@ -172,23 +182,24 @@ trait SbtAwsCfn extends SbtAwsS3 {
       }
   }
 
-  def statusStackTask(): Def.Initialize[Task[Option[String]]] = Def.task {
+  def statusStackTask(): Def.Initialize[Task[Option[String]]] = Def.taskDyn {
     val logger    = streams.value.log
     val stackName = (cfnStackName in aws).value
     val client    = cfnClient.value
-
-    stackName.flatMap { sn =>
-      logger.info(s"status: stackName = $sn")
-      getStackStatus(client, sn).map { statusOpt =>
-        statusOpt.map { status =>
-          logger.info(s"${sn}'s status is $status")
-          Some(status)
-        }.getOrElse {
-          logger.info(s"$sn does not exists.")
-          None
-        }
-      }.get
-    }
+Def.task {
+  stackName.flatMap { sn =>
+    logger.info(s"status: stackName = $sn")
+    getStackStatus(client, sn).map { statusOpt =>
+      statusOpt.map { status =>
+        logger.info(s"${sn}'s status is $status")
+        Some(status)
+      }.getOrElse {
+        logger.info(s"$sn does not exists.")
+        None
+      }
+    }.get
+  }
+}
   }
 
   implicit private def parametersToList(params: Parameters): util.Collection[Parameter] = {
@@ -232,11 +243,17 @@ trait SbtAwsCfn extends SbtAwsS3 {
     client.createStackAsTry(request)
   }
 
-  lazy val cfnStackCapabilitiesTask: Def.Initialize[Task[Seq[String]]] = Def.task {
-    if ((cfnCapabilityIam in aws).value)
-      (cfnStackCapabilities in aws).value :+ Capability.CAPABILITY_IAM.toString
-    else
-      (cfnStackCapabilities in aws).value
+
+  lazy val cfnStackCapabilitiesTask: Def.Initialize[Task[Seq[String]]] = Def.taskDyn {
+    val b = (cfnCapabilityIam in aws).value
+    val s = (cfnStackCapabilities in aws).value
+
+    Def.task{
+    if(b)
+        s :+ Capability.CAPABILITY_IAM.toString
+      else
+        s
+    }
   }
 
   def createStackTask(): Def.Initialize[Task[Option[String]]] = Def.task {
