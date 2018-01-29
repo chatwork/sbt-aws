@@ -9,6 +9,8 @@ The sbt-aws is a sbt's plugin for AWS.
 
 ## Supported Services by sbt-aws's plugins.
 
+Supported sbt versions are 0.13.x and 1.0.x.
+
 - [sbt-aws-cfn / Cloud Formation](sbt-aws-cfn/README.md)
 
 - [sbt-aws-eb / Elastic Beanstalk](sbt-aws-eb/README.md)
