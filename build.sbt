@@ -63,7 +63,7 @@ lazy val baseSettings = Seq(
         </developer>
       </developers>
   },
-  credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
+  credentials += Credentials((baseDirectory in LocalRootProject).value / ".credentials"),
   scalacOptions -= "-Ybackend:GenBCode"
 )
 
