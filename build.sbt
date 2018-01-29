@@ -12,7 +12,7 @@ val releaseSettings = Seq(
   setReleaseVersion,
   commitReleaseVersion,
   tagRelease,
-  releaseStepCommand("publishSigned"),
+  releaseStepCommandAndRemaining("^ publishSigned"),
   setNextVersion,
   commitNextVersion,
   releaseStepCommand("sonatypeReleaseAll"),
