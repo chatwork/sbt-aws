@@ -1,11 +1,36 @@
-import sbt.ScriptedPlugin._
+import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
+import xerial.sbt.Sonatype.autoImport._
 
-val aws4sVersion = "1.0.15"
+val releaseSettings = Seq(
+  releaseCrossBuild := true,
+  releaseTagName := { (version in ThisBuild).value },
+  releasePublishArtifactsAction := PgpKeys.publishSigned.value,
+  releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  setReleaseVersion,
+  commitReleaseVersion,
+  tagRelease,
+  releaseStepCommandAndRemaining("^ publishSigned"),
+  setNextVersion,
+  commitNextVersion,
+  releaseStepCommand("sonatypeReleaseAll"),
+  pushChanges
+  )
+)
 
-val sisiohConfigVersion = "0.0.7"
+val aws4sVersion = "1.0.16"
+
+val sisiohConfigVersion = "0.0.15"
+val sbtCrossVersion = sbtVersion in pluginCrossBuild
 
 lazy val baseSettings = Seq(
-  scalaVersion := "2.10.5",
+  scalaVersion := (CrossVersion partialVersion sbtCrossVersion.value match {
+    case Some((0, 13)) => "2.10.6"
+    case Some((1, _))  => "2.12.4"
+    case _             => sys error s"Unhandled sbt version ${sbtCrossVersion.value}"
+  }),
   sonatypeProfileName := "com.chatwork",
   organization := "com.chatwork",
   shellPrompt := {
@@ -13,6 +38,7 @@ lazy val baseSettings = Seq(
   },
   publishMavenStyle := true,
   publishArtifact in Test := false,
+  publishTo := sonatypePublishTo.value,
   pomIncludeRepository := {
     _ => false
   },
@@ -36,15 +62,13 @@ lazy val baseSettings = Seq(
         </developer>
       </developers>
   },
-  credentials <<= Def.task {
-    val ivyCredentials = (baseDirectory in LocalRootProject).value / ".credentials"
-    val result = Credentials(ivyCredentials) :: Nil
-    result
-  }
+  credentials += Credentials((baseDirectory in LocalRootProject).value / ".credentials"),
+  scalacOptions -= "-Ybackend:GenBCode"
 )
 
-lazy val pluginSettings = baseSettings ++ ScriptedPlugin.scriptedSettings ++ Seq(
+lazy val pluginSettings = baseSettings ++ releaseSettings ++ Seq(
   sbtPlugin := true,
+  crossSbtVersions := Seq("0.13.16", "1.0.4"),
   resolvers ++= Seq(
     "Sonatype OSS Snapshot Repository" at "https://oss.sonatype.org/content/repositories/snapshots/",
     "Sonatype OSS Release Repository" at "https://oss.sonatype.org/content/repositories/releases/",
@@ -52,9 +76,10 @@ lazy val pluginSettings = baseSettings ++ ScriptedPlugin.scriptedSettings ++ Seq
   ),
   libraryDependencies ++= Seq(
   ),
+  scriptedBufferLog := false,
   scriptedLaunchOpts := {
     scriptedLaunchOpts.value ++
-      Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
+      Seq("-Xmx1024M", "-Dproject.version=" + version.value)
   },
   scriptedBufferLog := false
 )
@@ -102,7 +127,7 @@ lazy val cfn = (project in file("sbt-aws-cfn")).settings(pluginSettings: _*).set
   )
 ).dependsOn(s3)
 
-lazy val root = (project in file(".")).settings(baseSettings: _*).settings(
+lazy val root = (project in file(".")).settings(pluginSettings: _*).settings(
   name := "sbt-aws"
 ).aggregate(core, s3, eb, cfn, s3Resolver)
 

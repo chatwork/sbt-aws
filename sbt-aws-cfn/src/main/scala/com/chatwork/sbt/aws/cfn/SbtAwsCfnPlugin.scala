@@ -6,7 +6,7 @@ import com.chatwork.sbt.aws.s3.SbtAwsS3Plugin
 import sbt.Keys._
 import sbt._
 
-object SbtAwsCfnPlugin extends AutoPlugin {
+object SbtAwsCfnPlugin extends AutoPlugin with SbtPluginHelper {
 
   override def trigger = allRequirements
 
@@ -18,9 +18,9 @@ object SbtAwsCfnPlugin extends AutoPlugin {
   import SbtAwsCoreKeys._
 
   override def projectSettings: Seq[Def.Setting[_]] = Seq(
-    cfnTemplatesSourceFolder in aws <<= baseDirectory { base =>
+    cfnTemplatesSourceFolder in aws := baseDirectory { base =>
       base / defaultTemplateDirectory
-    },
+    }.value,
     cfnTemplates in aws := {
       val templates = (cfnTemplatesSourceFolder in aws).value ** GlobFilter("*.template")
       templates.get
@@ -61,21 +61,21 @@ object SbtAwsCfnPlugin extends AutoPlugin {
       getConfigValue(classOf[Boolean], (awsConfig in aws).value, cfnCapabilityIam.key.label, false)
     },
     // ---
-    cfnUploadTemplate in aws <<= uploadTemplateFileTask(),
-    cfnValidateTemplateOnS3 in aws <<= stackValidateOnFileTask(),
-    cfnValidateTemplateOnURL in aws <<= stackValidateOnURLTask(),
-    cfnStackDescribe in aws <<= describeStacksTask().map(s => s.headOption),
-    cfnStackStatus in aws <<= statusStackTask(),
-    cfnStackCreate in aws <<= createStackTask(),
-    cfnStackCreateAndWait in aws <<= createStackAndWaitTask(),
-    cfnStackUpdate in aws <<= updateStackTask(),
-    cfnStackUpdateAndWait in aws <<= updateStackAndWaitTask(),
-    cfnStackDelete in aws <<= deleteStackTask(),
-    cfnStackDeleteAndWait in aws <<= deleteStackAndWaitTask(),
-    cfnStackWait in aws <<= waitStackTask(),
-    cfnStackCreateOrUpdate in aws <<= createOrUpdateStackTask(),
-    cfnStackCreateOrUpdateAndWait in aws <<= createOrUpdateStackAndWaitTask(),
-    watchSources <++= (cfnTemplates in aws) map identity
+    cfnUploadTemplate in aws := uploadTemplateFileTask().value,
+    cfnValidateTemplateOnS3 in aws := stackValidateOnFileTask().value,
+    cfnValidateTemplateOnURL in aws := stackValidateOnURLTask().value,
+    cfnStackDescribe in aws := describeStacksTask().map(s => s.headOption).value,
+    cfnStackStatus in aws := statusStackTask().value,
+    cfnStackCreate in aws := createStackTask().value,
+    cfnStackCreateAndWait in aws := createStackAndWaitTask().value,
+    cfnStackUpdate in aws := updateStackTask().value,
+    cfnStackUpdateAndWait in aws := updateStackAndWaitTask().value,
+    cfnStackDelete in aws := deleteStackTask().value,
+    cfnStackDeleteAndWait in aws := deleteStackAndWaitTask().value,
+    cfnStackWait in aws := waitStackTask().value,
+    cfnStackCreateOrUpdate in aws := createOrUpdateStackTask().value,
+    cfnStackCreateOrUpdateAndWait in aws := createOrUpdateStackAndWaitTask().value,
+    watchSources ++= (cfnTemplates in aws).value
   )
 
 }

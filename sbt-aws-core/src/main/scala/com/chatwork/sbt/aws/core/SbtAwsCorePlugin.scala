@@ -39,7 +39,7 @@ object SbtAwsCorePlugin extends AutoPlugin {
       parent / ((environmentName in aws).value + ".conf")
     },
     config in aws := {
-      Option(SisiohConfiguration.parseFile((configFile in aws).value))
+      SisiohConfiguration.parseFile((configFile in aws).value).toOption
         .getOrElse(SisiohConfiguration.empty)
     },
     awsConfig in aws := {

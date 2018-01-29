@@ -1,10 +1,10 @@
 name := "sbt-aws-s3"
 
-s3BucketName in aws := "sbt-aws-s3-test"
+s3BucketName in aws := "sbt-aws-s3-upload-test"
 
 s3Key in aws := "build.sbt"
 
-credentialProfileName in aws := Some("sbt-aws-scripted-test")
+credentialProfileName in aws := Some("sbt-aws")
 
 s3File in aws := Some(file("build.sbt"))
 

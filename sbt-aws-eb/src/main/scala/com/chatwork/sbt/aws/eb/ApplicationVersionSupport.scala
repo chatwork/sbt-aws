@@ -64,19 +64,21 @@ trait ApplicationVersionSupport { this: SbtAwsEb =>
   }
 
   def ebCreateApplicationVersionTask(): Def.Initialize[Task[ApplicationVersionDescription]] =
-    Def.task {
-      implicit val logger = streams.value.log
-      val s3Location = if ((ebUseBundle in aws).value) {
-        Some((ebUploadBundle in aws).value)
-      } else None
-      ebCreateApplicationVersion(
-        ebClient.value,
-        (ebApplicationName in aws).value,
-        (ebApplicationVersionLabel in aws).value,
-        (ebApplicationVersionDescription in aws).value,
-        s3Location,
-        (ebAutoCreateApplication in aws).value
-      ).get
+    Def.taskDyn[ApplicationVersionDescription] {
+        implicit val logger = streams.value.log
+        val s3Location = if ((ebUseBundle in aws).value) {
+          Some((ebUploadBundle in aws).value)
+        } else None
+      Def.task {
+        ebCreateApplicationVersion(
+          ebClient.value,
+          (ebApplicationName in aws).value,
+          (ebApplicationVersionLabel in aws).value,
+          (ebApplicationVersionDescription in aws).value,
+          s3Location,
+          (ebAutoCreateApplication in aws).value
+        ).get
+      }
     }
 
   def ebCreateApplicationVersionAndWaitTask()
@@ -224,24 +226,26 @@ trait ApplicationVersionSupport { this: SbtAwsEb =>
   }
 
   private[eb] def ebCreateOrUpdateApplicationVersionTask()
-    : Def.Initialize[Task[ApplicationVersionDescription]] = Def.task {
+    : Def.Initialize[Task[ApplicationVersionDescription]] = Def.taskDyn[ApplicationVersionDescription] {
     implicit val logger = streams.value.log
     ebUpdateApplicationVersion(ebClient.value,
                                (ebApplicationName in aws).value,
                                (ebApplicationVersionLabel in aws).value,
-                               (ebApplicationVersionDescription in aws).value).recoverWith {
+                               (ebApplicationVersionDescription in aws).value).map{v =>
+      Def.task(v)
+    }.recoverWith {
       case ex: ApplicationVersionNotFoundException =>
         val s3Location = if ((ebUseBundle in aws).value) {
           Some((ebUploadBundle in aws).value)
         } else None
-        ebCreateApplicationVersion(
-          ebClient.value,
-          (ebApplicationName in aws).value,
-          (ebApplicationVersionLabel in aws).value,
-          (ebApplicationVersionDescription in aws).value,
-          s3Location,
-          (ebAutoCreateApplication in aws).value
-        )
+          ebCreateApplicationVersion(
+            ebClient.value,
+            (ebApplicationName in aws).value,
+            (ebApplicationVersionLabel in aws).value,
+            (ebApplicationVersionDescription in aws).value,
+            s3Location,
+            (ebAutoCreateApplication in aws).value
+          ).map(v => Def.task(v))
     }.get
   }
 

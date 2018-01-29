@@ -49,14 +49,18 @@ trait ConfigurationTemplateSupport { this: SbtAwsEb =>
   }
 
   def ebCreateConfigurationTemplateTask()
-    : Def.Initialize[Task[Option[EbConfigurationTemplateDescription]]] = Def.task {
+    : Def.Initialize[Task[Option[EbConfigurationTemplateDescription]]] = Def.taskDyn[Option[EbConfigurationTemplateDescription]] {
     implicit val logger = streams.value.log
-    (ebConfigurationTemplate in aws).value.map { v =>
-      ebCreateConfigurationTemplate(
-        ebClient.value,
-        (ebApplicationName in aws).value,
-        v
-      ).get
+    (ebConfigurationTemplate in aws).toTask.flatMap{ t =>
+      ebClient.taskValue.flatMap{ c =>
+        (ebApplicationName in aws).toTask.taskValue.map { n =>
+            ebCreateConfigurationTemplate(
+              c,
+              n,
+              t.get
+            ).toOption
+        }
+      }
     }
   }
 
@@ -115,34 +119,42 @@ trait ConfigurationTemplateSupport { this: SbtAwsEb =>
   }
 
   def ebUpdateConfigurationTemplateTask()
-    : Def.Initialize[Task[Option[EbConfigurationTemplateDescription]]] = Def.task {
+    : Def.Initialize[Task[Option[EbConfigurationTemplateDescription]]] = Def.taskDyn[Option[EbConfigurationTemplateDescription]]{
     implicit val logger = streams.value.log
-    (ebConfigurationTemplate in aws).value.map { v =>
-      ebUpdateConfigurationTemplate(
-        ebClient.value,
-        (ebApplicationName in aws).value,
-        v
-      ).get
+    (ebConfigurationTemplate in aws).flatMap { t =>
+      ebClient.taskValue.flatMap{ c =>
+        (ebApplicationName in aws).toTask.taskValue.map{ n =>
+          ebUpdateConfigurationTemplate(
+            c,
+            n,
+            t.get
+          ).toOption
+        }
+      }
     }
   }
 
   def ebCreateOrUpdateConfigurationTemplateTask()
-    : Def.Initialize[Task[Option[EbConfigurationTemplateDescription]]] = Def.task {
+    : Def.Initialize[Task[Option[EbConfigurationTemplateDescription]]] = Def.taskDyn {
     implicit val logger = streams.value.log
-    (ebConfigurationTemplate in aws).value.map { v =>
-      ebUpdateConfigurationTemplate(
-        ebClient.value,
-        (ebApplicationName in aws).value,
-        v
-      ).recoverWith {
-        case ex: ConfigurationTemplateNotFoundException =>
-          ebCreateConfigurationTemplate(
-            ebClient.value,
-            (ebApplicationName in aws).value,
-            v
-          )
-      }.get
-    }
+      (ebConfigurationTemplate in aws).flatMap { t =>
+        ebClient.taskValue.flatMap{ c =>
+          (ebApplicationName in aws).toTask.taskValue.map{ n =>
+            ebUpdateConfigurationTemplate(
+              c,
+              n,
+              t.get
+            ).recoverWith {
+              case ex: ConfigurationTemplateNotFoundException =>
+                ebCreateConfigurationTemplate(
+                  c,
+                  n,
+                  t.get
+                )
+            }.toOption
+          }
+        }
+      }
   }
 
   private[eb] def ebDeleteConfigurationTemplate(

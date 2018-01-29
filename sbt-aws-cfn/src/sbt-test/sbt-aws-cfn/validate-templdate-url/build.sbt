@@ -1,6 +1,6 @@
 region in aws := com.amazonaws.regions.Regions.AP_NORTHEAST_1
 
-credentialProfileName in aws := Some("sbt-aws-scripted-test")
+credentialProfileName in aws := Some("sbt-aws")
 
 //cfnS3BucketName in aws := Some("sbt-aws-cw-cfn-template-test")
 
