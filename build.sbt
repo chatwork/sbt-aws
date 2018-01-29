@@ -127,7 +127,7 @@ lazy val cfn = (project in file("sbt-aws-cfn")).settings(pluginSettings: _*).set
   )
 ).dependsOn(s3)
 
-lazy val root = (project in file(".")).settings(baseSettings: _*).settings(
+lazy val root = (project in file(".")).settings(pluginSettings: _*).settings(
   name := "sbt-aws"
 ).aggregate(core, s3, eb, cfn, s3Resolver)
 
