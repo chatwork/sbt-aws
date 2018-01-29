@@ -68,7 +68,7 @@ lazy val baseSettings = Seq(
 
 lazy val pluginSettings = baseSettings ++ releaseSettings ++ Seq(
   sbtPlugin := true,
-  crossSbtVersions := Seq("0.13.16", "1.0.0"),
+  crossSbtVersions := Seq("0.13.16", "1.0.4"),
   resolvers ++= Seq(
     "Sonatype OSS Snapshot Repository" at "https://oss.sonatype.org/content/repositories/snapshots/",
     "Sonatype OSS Release Repository" at "https://oss.sonatype.org/content/repositories/releases/",
