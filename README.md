@@ -1,3 +1,5 @@
+# DEPRECATED
+
 # sbt-aws
 
 [![Build Status](https://travis-ci.org/chatwork/sbt-aws.svg)](https://travis-ci.org/chatwork/sbt-aws)
@@ -7,17 +9,25 @@
 
 The sbt-aws is a sbt's plugin for AWS.
 
+**sbt-aws is no longer maintained.**<br>
+**Please consider migration to other tools, suggested below.**
+
 ## Supported Services by sbt-aws's plugins.
 
 Supported sbt versions are 0.13.x and 1.0.x.
 
 - [sbt-aws-cfn / Cloud Formation](sbt-aws-cfn/README.md)
+    - https://github.com/Dwolla/sbt-cloudformation-stack
+    - https://github.com/pigumergroup/sbt-aws-cloudformation
 
 - [sbt-aws-eb / Elastic Beanstalk](sbt-aws-eb/README.md)
+    - There seems no actively-maintained tools.
 
 - [sbt-aws-s3 / S3](sbt-aws-s3/README.md)
+    - There seems no actively-maintained tools.
 
 - [sbt-aws-s3-resolver / Sbt's Resolver for S3](sbt-aws-s3-resolver/README.md)
+    - https://github.com/frugalmechanic/fm-sbt-s3-resolver
 
 ## Common Usage
  
